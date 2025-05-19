@@ -140,7 +140,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="w-full py-12 md:py-16 bg-white dark:bg-background">
+      <section id="features" className="w-full py-12 md:py-16 bg-white dark:bg-background">
         <div className="container px-4 md:px-6">
           <motion.div 
             className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
@@ -217,6 +217,186 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="w-full py-12 md:py-16 bg-white dark:bg-background">
+        <div className="container px-4 md:px-6">
+          <motion.div 
+            className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD]">
+              Pricing
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Affordable</span> solutions for healthcare facilities
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
+                Our subscription plans are designed for clinics and hospitals of all sizes
+              </p>
+            </div>
+          </motion.div>
+
+          <div className="mx-auto max-w-5xl grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+            {/* Essential Plan */}
+            <motion.div 
+              className="flex flex-col rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background/80 dark:border-muted"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="mb-5">
+                <h3 className="text-xl font-bold">Essential</h3>
+                <p className="text-muted-foreground mt-1">For small clinics</p>
+              </div>
+
+              <div className="mb-5">
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold">₦5,000</span>
+                  <span className="text-muted-foreground ml-1">/month</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Per facility, billed annually</p>
+              </div>
+
+              <ul className="mb-6 flex-1 space-y-2">
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Basic AI risk prediction</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Patient record management</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Emergency alert system</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Up to 100 patients</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Email support</span>
+                </li>
+              </ul>
+
+              <Link href="/auth/register" className="mt-auto">
+                <Button size="lg" variant="outline" className="w-full rounded-full border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10">
+                  Get Started
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* Premium Plan */}
+            <motion.div 
+              className="flex flex-col rounded-xl border-2 border-[#2D7D89] p-6 shadow-md transition-all hover:shadow-lg bg-white dark:bg-background/80 relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#2D7D89] text-white text-xs font-bold px-3 py-1 rounded-full">
+                MOST POPULAR
+              </div>
+              
+              <div className="mb-5">
+                <h3 className="text-xl font-bold">Premium</h3>
+                <p className="text-muted-foreground mt-1">For medium hospitals</p>
+              </div>
+
+              <div className="mb-5">
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold">₦7,500</span>
+                  <span className="text-muted-foreground ml-1">/month</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Per facility, billed annually</p>
+              </div>
+
+              <ul className="mb-6 flex-1 space-y-2">
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Advanced AI risk prediction</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Real-time IoT vital monitoring</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Blockchain record keeping</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Up to 500 patients</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Priority email & phone support</span>
+                </li>
+              </ul>
+
+              <Link href="/auth/register" className="mt-auto">
+                <Button size="lg" className="w-full rounded-full bg-[#2D7D89] hover:bg-[#236570] text-white">
+                  Get Started
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* Enterprise Plan */}
+            <motion.div 
+              className="flex flex-col rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background/80 dark:border-muted"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div className="mb-5">
+                <h3 className="text-xl font-bold">Enterprise</h3>
+                <p className="text-muted-foreground mt-1">For large healthcare networks</p>
+              </div>
+
+              <div className="mb-5">
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold">₦10,000</span>
+                  <span className="text-muted-foreground ml-1">/month</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Per facility, custom billing available</p>
+              </div>
+
+              <ul className="mb-6 flex-1 space-y-2">
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Enterprise AI model customization</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Unlimited patient records</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Private blockchain deployment</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>Custom integration APIs</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-[#2D7D89] mr-2" />
+                  <span>24/7 dedicated support</span>
+                </li>
+              </ul>
+
+              <Link href="/contact" className="mt-auto">
+                <Button size="lg" variant="outline" className="w-full rounded-full border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10">
+                  Contact Sales
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="w-full py-12 md:py-16 border-t bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
         <div className="container px-4 md:px-6">
@@ -231,22 +411,25 @@ export default function HomePage() {
                 Ready to transform maternal healthcare in your community?
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
-                Join IyàCare today and help reduce maternal mortality with our AI-powered platform
+                Join the growing network of healthcare facilities using IyàCare to reduce maternal mortality rates
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto max-w-md mx-auto">
               <Link href="/auth/register" className="w-full sm:w-auto">
                 <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium w-full">
-                  Get Started
+                  Start Free Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/auth/login" className="w-full sm:w-auto">
+              <Link href="/contact" className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10 w-full">
-                  Sign In
+                  Contact Sales
                 </Button>
               </Link>
             </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              No credit card required for 14-day trial
+            </p>
           </motion.div>
         </div>
       </section>
