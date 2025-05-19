@@ -143,7 +143,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             {/* Center - Navigation */}
             <div className="hidden md:flex items-center">
               <nav className="flex items-center space-x-6 text-sm font-medium">
-                {isAuthenticated && (
+                {isAuthenticated ? (
                   <>
                     <DropdownMenu>
                       <DropdownMenuTrigger className="flex items-center transition-colors hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] text-foreground outline-none">
@@ -164,6 +164,29 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    <Link 
+                      href="/contact" 
+                      className={`transition-colors hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] ${
+                        pathname === '/contact' ? 'text-[#2D7D89] dark:text-[#4AA0AD]' : 'text-foreground'
+                      }`}
+                    >
+                      Contact
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      href="/#features" 
+                      className="transition-colors hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] text-foreground"
+                    >
+                      Features
+                    </Link>
+                    <Link 
+                      href="/#pricing" 
+                      className="transition-colors hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] text-foreground"
+                    >
+                      Pricing
+                    </Link>
                     <Link 
                       href="/contact" 
                       className={`transition-colors hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] ${
