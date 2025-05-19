@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Test</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        img { 
+            max-width: 100%; 
+            height: auto; 
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>Direct Image Test</h1>
+    <p>If you see the images below, they are correctly accessible.</p>
+    
+    <section>
+        <h2>Images in /images/ folder</h2>
+        
+        <h3>Image 1: /images/doctor-with-child.jpg</h3>
+        <img src="/images/doctor-with-child.jpg" alt="Doctor with child">
+        
+        <h3>Image 2: /images/maternal-care.jpg</h3>
+        <img src="/images/maternal-care.jpg" alt="Maternal care">
+    </section>
+    
+    <section>
+        <h2>Images in root folder</h2>
+        
+        <h3>Image 1: /doctor-with-child.jpg</h3>
+        <img src="/doctor-with-child.jpg" alt="Doctor with child">
+        
+        <h3>Image 2: /maternal-care.jpg</h3>
+        <img src="/maternal-care.jpg" alt="Maternal care">
+    </section>
+</body>
+</html> 
