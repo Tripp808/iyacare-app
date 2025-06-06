@@ -82,31 +82,85 @@ export function formatDateTime(date: Date | string | number): string {
 }
 
 // Calculate age from date of birth
-export function calculateAge(dateOfBirth: string | Date): number {
-  const dob = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth;
-  const diffMs = Date.now() - dob.getTime();
-  const ageDate = new Date(diffMs);
+export function calculateAge(dateOfBirth: string | Date | any): number {
+  if (!dateOfBirth) return 0;
   
-  return Math.abs(ageDate.getUTCFullYear() - 1970);
+  let dob: Date;
+  
+  try {
+    if (typeof dateOfBirth === 'string') {
+      dob = new Date(dateOfBirth);
+    } else if (dateOfBirth instanceof Date) {
+      dob = dateOfBirth;
+    } else if (dateOfBirth && typeof dateOfBirth.toDate === 'function') {
+      // Handle Firestore Timestamp
+      dob = dateOfBirth.toDate();
+    } else if (dateOfBirth && typeof dateOfBirth.seconds === 'number') {
+      // Handle Firestore Timestamp object
+      dob = new Date(dateOfBirth.seconds * 1000);
+    } else {
+      // Try to convert to Date
+      dob = new Date(dateOfBirth);
+    }
+    
+    // Validate the date
+    if (isNaN(dob.getTime())) {
+      return 0;
+    }
+    
+    const diffMs = Date.now() - dob.getTime();
+    const ageDate = new Date(diffMs);
+    
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+  } catch (error) {
+    console.error('Error calculating age:', error, 'Input:', dateOfBirth);
+    return 0;
+  }
 }
 
 // Calculate pregnancy week from EDD (Estimated Due Date)
-export function calculatePregnancyWeek(edd: string | Date): number {
+export function calculatePregnancyWeek(edd: string | Date | any): number {
   if (!edd) return 0;
   
-  const dueDate = typeof edd === 'string' ? new Date(edd) : edd;
-  const now = new Date();
+  let dueDate: Date;
   
-  // Full term is 40 weeks
-  const fullTermDays = 280;
-  
-  // Days left until due date
-  const daysLeft = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // Current week of pregnancy
-  const currentWeek = Math.floor((fullTermDays - daysLeft) / 7);
-  
-  return currentWeek > 0 ? (currentWeek <= 42 ? currentWeek : 42) : 0;
+  try {
+    if (typeof edd === 'string') {
+      dueDate = new Date(edd);
+    } else if (edd instanceof Date) {
+      dueDate = edd;
+    } else if (edd && typeof edd.toDate === 'function') {
+      // Handle Firestore Timestamp
+      dueDate = edd.toDate();
+    } else if (edd && typeof edd.seconds === 'number') {
+      // Handle Firestore Timestamp object
+      dueDate = new Date(edd.seconds * 1000);
+    } else {
+      // Try to convert to Date
+      dueDate = new Date(edd);
+    }
+    
+    // Validate the date
+    if (isNaN(dueDate.getTime())) {
+      return 0;
+    }
+    
+    const now = new Date();
+    
+    // Full term is 40 weeks
+    const fullTermDays = 280;
+    
+    // Days left until due date
+    const daysLeft = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Current week of pregnancy
+    const currentWeek = Math.floor((fullTermDays - daysLeft) / 7);
+    
+    return currentWeek > 0 ? (currentWeek <= 42 ? currentWeek : 42) : 0;
+  } catch (error) {
+    console.error('Error calculating pregnancy week:', error, 'Input:', edd);
+    return 0;
+  }
 }
 
 // Get trimester from pregnancy week

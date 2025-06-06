@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { signOut, signOutAndRedirect } from '@/lib/firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth } from '@/lib/firebase';
 
 export function SignOutButton() {
   const [isLoading, setIsLoading] = useState(false);

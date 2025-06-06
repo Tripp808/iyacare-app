@@ -2,7 +2,7 @@
 
 import { LogOut } from 'lucide-react';
 import { signOut } from '@/lib/firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth } from '@/lib/firebase';
 import { useState } from 'react';
 
 export function SignOutForm() {
@@ -25,7 +25,7 @@ export function SignOutForm() {
     }
     
     // Use the form submission to navigate
-    document.getElementById('signout-form')?.submit();
+    (document.getElementById('signout-form') as HTMLFormElement)?.submit();
   };
 
   return (

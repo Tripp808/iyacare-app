@@ -39,19 +39,19 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="w-full py-8 md:py-12 lg:py-16 xl:py-20 bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
+      <section className="w-full py-6 md:py-8 lg:py-12 bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="grid gap-8 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_550px]">
             <motion.div 
-              className="flex flex-col justify-center space-y-5 order-2 lg:order-1"
+              className="flex flex-col justify-center space-y-4 order-2 lg:order-1"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-[#e6f3f5]/70 backdrop-blur-md border border-[#b8e0e6]/30 shadow-sm text-[#2D7D89] dark:bg-[#e6f3f5]/20 dark:text-[#4AA0AD]">
+              <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-[#e6f3f5]/70 backdrop-blur-md border border-[#b8e0e6]/30 shadow-sm text-[#2D7D89] dark:bg-[#e6f3f5]/20 dark:text-[#4AA0AD] w-fit">
                 Transforming maternal healthcare in low-resource settings
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
                   <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Iyà</span>
                   <span className="text-[#F7913D]">Care</span>
@@ -61,20 +61,20 @@ export default function HomePage() {
                   An integrated digital platform using AI and IoT devices to predict pregnancy risks, monitor vital signs, and securely share health records via blockchain technology.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
-                <Link href="/auth/register" className="w-full sm:w-auto">
-                  <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium w-full">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Link href="/auth/register">
+                  <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
                     Get Started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/auth/login" className="w-full sm:w-auto">
-                  <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10 w-full">
+                <Link href="/auth/login">
+                  <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
                     Sign In
                   </Button>
                 </Link>
               </div>
-              <p className="text-sm text-muted-foreground mt-4">
+              <p className="text-sm text-muted-foreground pt-2">
                 Trusted by healthcare providers across multiple regions
               </p>
             </motion.div>
@@ -140,7 +140,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="w-full py-12 md:py-16 bg-white dark:bg-background">
+      <section id="features" className="w-full py-8 md:py-12 bg-white dark:bg-background">
         <div className="container px-4 md:px-6">
           <motion.div 
             className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
@@ -181,7 +181,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonial Section */}
-      <section className="w-full py-12 md:py-16 bg-transparent dark:bg-transparent">
+      <section className="w-full py-8 md:py-12 bg-transparent dark:bg-transparent">
         <div className="container px-4 md:px-6">
           <motion.div 
             className="mx-auto max-w-6xl rounded-2xl shadow-sm p-8 md:p-12 bg-white dark:bg-background/80 border border-gray-100 dark:border-gray-800"
@@ -218,7 +218,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="w-full py-12 md:py-16 bg-white dark:bg-background">
+      <section id="pricing" className="w-full py-8 md:py-12 bg-white dark:bg-background">
         <div className="container px-4 md:px-6">
           <motion.div 
             className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
@@ -398,15 +398,15 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="w-full py-12 md:py-16 border-t bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
+      <section className="w-full py-8 md:py-12 border-t bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
         <div className="container px-4 md:px-6">
           <motion.div 
-            className="flex flex-col items-center justify-center space-y-8 text-center"
+            className="flex flex-col items-center justify-center space-y-6 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
                 Ready to transform maternal healthcare in your community?
               </h2>
@@ -414,20 +414,20 @@ export default function HomePage() {
                 Join the growing network of healthcare facilities using IyàCare to reduce maternal mortality rates
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto max-w-md mx-auto">
-              <Link href="/auth/register" className="w-full sm:w-auto">
-                <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium w-full">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/auth/register">
+                <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/contact" className="w-full sm:w-auto">
-                <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10 w-full">
+              <Link href="/contact">
+                <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
                   Contact Sales
                 </Button>
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground">
               No credit card required for 14-day trial
             </p>
           </motion.div>

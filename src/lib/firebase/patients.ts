@@ -5,6 +5,7 @@ import {
   doc, 
   getDoc, 
   getDocs, 
+  deleteDoc,
   query, 
   where,
   orderBy,
@@ -13,7 +14,7 @@ import {
   QueryDocumentSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { db } from '../firebase';
 
 // Patient interface
 export interface Patient {
@@ -181,6 +182,19 @@ export const getPatientsWithUpcomingVisits = async (days: number = 7) => {
     return { 
       success: false, 
       error: error.message || 'Failed to get patients with upcoming visits'
+    };
+  }
+};
+
+// Delete a patient permanently
+export const deletePatient = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, 'patients', id));
+    return { success: true };
+  } catch (error: any) {
+    return { 
+      success: false, 
+      error: error.message || 'Failed to delete patient'
     };
   }
 }; 

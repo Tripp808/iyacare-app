@@ -2,7 +2,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Home as HomeIcon, Users, AlertCircle, Calendar, BarChart3, Settings } from "lucide-react";
+import { Home as HomeIcon, Users, AlertCircle, Calendar, BarChart3, Settings, Activity } from "lucide-react";
 
 const links = [
   {
@@ -14,6 +14,11 @@ const links = [
     title: "Patients",
     href: "/patients",
     icon: Users,
+  },
+  {
+    title: "Vital Signs",
+    href: "/vitals",
+    icon: Activity,
   },
   {
     title: "Alerts",

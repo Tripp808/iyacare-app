@@ -5,7 +5,7 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
-import { auth, db } from './config';
+import { auth, db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 // Register a new user

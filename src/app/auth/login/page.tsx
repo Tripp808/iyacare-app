@@ -7,12 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, UserPlus, Info } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn, sendVerificationEmail, firebaseUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignUpAlert, setShowSignUpAlert] = useState(false);
+  const [showVerificationAlert, setShowVerificationAlert] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,12 +32,56 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setShowSignUpAlert(false);
+    setShowVerificationAlert(false);
     
-    // For demo purposes, we'll just simulate a login and redirect to dashboard
-    setTimeout(() => {
+    try {
+      await signIn(formData.email, formData.password);
+      
+      // Check if email is verified after successful login
+      if (firebaseUser && !firebaseUser.emailVerified) {
+        setShowVerificationAlert(true);
+        toast.warning('Please verify your email address to continue.');
+        setIsLoading(false);
+        return;
+      }
+      
+      toast.success('Login successful!');
       router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email address. Please sign up first to create an account.';
+        setShowSignUpAlert(true);
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = 'This account has been disabled.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password. If you don\'t have an account, please sign up first.';
+        setShowSignUpAlert(true);
+      }
+      
+      toast.error(errorMessage);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      await sendVerificationEmail();
+      toast.success('Verification email sent! Please check your inbox.');
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      toast.error('Failed to send verification email. Please try again.');
+    }
   };
 
   return (
@@ -42,6 +92,44 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
+        {showSignUpAlert && (
+          <Alert className="mb-6 border-[#F7913D] bg-[#F7913D]/10">
+            <Info className="h-4 w-4 text-[#F7913D]" />
+            <AlertDescription className="text-sm">
+              <strong>Account not found!</strong> It looks like you don't have an account yet. 
+              <Link href="/auth/register" className="ml-1 font-medium text-[#2D7D89] hover:underline">
+                Click here to sign up
+              </Link> and join IyàCare.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {showVerificationAlert && (
+          <Alert className="mb-6 border-yellow-500 bg-yellow-50">
+            <Mail className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-sm">
+              <div className="space-y-3">
+                <div>
+                  <strong>Email verification required!</strong> Please verify your email address to access your account.
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Check your email (including spam folder) for a verification link, or request a new one below.
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleResendVerification}
+                    className="text-yellow-700 border-yellow-500 hover:bg-yellow-100"
+                  >
+                    Resend Verification Email
+                  </Button>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
@@ -63,7 +151,7 @@ export default function LoginPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="m.johnson@example.com"
+                    placeholder="your.email@example.com"
                     required
                     value={formData.email}
                     onChange={handleChange}

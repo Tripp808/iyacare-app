@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { use } from 'react';
 import { 
   Tabs, 
   TabsContent, 
@@ -34,8 +35,9 @@ import {
 import { Alert } from '@/lib/firebase/alerts';
 import { Patient } from '@/lib/firebase/patients';
 
-export default function PatientDetailsPage({ params }: { params: { id: string } }) {
+export default function PatientDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const resolvedParams = use(params);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,18 +46,18 @@ export default function PatientDetailsPage({ params }: { params: { id: string } 
     async function fetchPatientData() {
       try {
         setLoading(true);
-        if (!params.id) return;
+        if (!resolvedParams.id) return;
 
         // Fetch patient data
-        const patientResult = await getPatient(params.id);
+        const patientResult = await getPatient(resolvedParams.id);
         if (patientResult.success) {
-          setPatient(patientResult.patient);
+          setPatient(patientResult.patient || null);
         } else {
           console.error('Failed to fetch patient:', patientResult.error);
         }
 
         // Fetch patient alerts
-        const alertsResult = await getPatientAlerts(params.id);
+        const alertsResult = await getPatientAlerts(resolvedParams.id);
         if (alertsResult.success) {
           setAlerts(alertsResult.alerts || []);
         } else {
@@ -69,7 +71,7 @@ export default function PatientDetailsPage({ params }: { params: { id: string } 
     }
 
     fetchPatientData();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   // Mark an alert as read
   const handleMarkAsRead = async (alertId: string) => {
@@ -113,7 +115,7 @@ export default function PatientDetailsPage({ params }: { params: { id: string } 
   }
 
   // Functions to get risk level badge color
-  const getRiskBadgeColor = (risk: string) => {
+  const getRiskBadgeColor = (risk?: string) => {
     switch (risk?.toLowerCase()) {
       case 'high': return 'bg-red-100 text-red-800 hover:bg-red-100';
       case 'medium': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
@@ -363,7 +365,7 @@ export default function PatientDetailsPage({ params }: { params: { id: string } 
                   View all alerts related to this patient
                 </CardDescription>
               </div>
-              <Button onClick={() => router.push(`/alerts/create?patientId=${params.id}`)}>
+              <Button onClick={() => router.push(`/alerts/create?patientId=${resolvedParams.id}`)}>
                 <AlertCircle className="mr-2 h-4 w-4" />
                 Create Alert
               </Button>

@@ -12,7 +12,7 @@ import {
   QueryDocumentSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './config';
+import { db } from '../firebase';
 
 // Referral interface
 export interface Referral {
