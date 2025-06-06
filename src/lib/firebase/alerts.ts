@@ -1,4 +1,4 @@
-import { db } from './config';
+import { db } from '../firebase';
 import { 
   collection, 
   addDoc, 
@@ -64,29 +64,18 @@ export async function createAlert(alertData: Omit<Alert, 'id' | 'read' | 'create
  */
 export async function getAlerts(includeRead: boolean = false): Promise<AlertResponse> {
   try {
-    let alertsQuery;
-    
-    if (includeRead) {
-      // Get all alerts
-      alertsQuery = query(
-        collection(db, 'alerts'),
-        orderBy('createdAt', 'desc')
-      );
-    } else {
-      // Get only unread alerts
-      alertsQuery = query(
-        collection(db, 'alerts'),
-        where('read', '==', false),
-        orderBy('createdAt', 'desc')
-      );
-    }
+    // Use a simple query to avoid index requirements
+    const alertsQuery = query(
+      collection(db, 'alerts'),
+      orderBy('createdAt', 'desc')
+    );
     
     const querySnapshot = await getDocs(alertsQuery);
     const alerts: Alert[] = [];
     
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      alerts.push({
+      const alert = {
         id: doc.id,
         patientId: data.patientId,
         patientName: data.patientName,
@@ -96,7 +85,12 @@ export async function getAlerts(includeRead: boolean = false): Promise<AlertResp
         read: data.read,
         createdAt: data.createdAt,
         createdBy: data.createdBy
-      });
+      };
+      
+      // Filter in JavaScript if we don't want read alerts
+      if (includeRead || !data.read) {
+        alerts.push(alert);
+      }
     });
     
     return {
@@ -139,9 +133,9 @@ export async function markAlertAsRead(alertId: string): Promise<AlertResponse> {
  */
 export async function getPatientAlerts(patientId: string): Promise<AlertResponse> {
   try {
+    // Get all alerts and filter by patientId in JavaScript to avoid index requirements
     const alertsQuery = query(
       collection(db, 'alerts'),
-      where('patientId', '==', patientId),
       orderBy('createdAt', 'desc')
     );
     
@@ -150,17 +144,21 @@ export async function getPatientAlerts(patientId: string): Promise<AlertResponse
     
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      alerts.push({
-        id: doc.id,
-        patientId: data.patientId,
-        patientName: data.patientName,
-        message: data.message,
-        type: data.type,
-        priority: data.priority,
-        read: data.read,
-        createdAt: data.createdAt,
-        createdBy: data.createdBy
-      });
+      
+      // Filter by patientId in JavaScript
+      if (data.patientId === patientId) {
+        alerts.push({
+          id: doc.id,
+          patientId: data.patientId,
+          patientName: data.patientName,
+          message: data.message,
+          type: data.type,
+          priority: data.priority,
+          read: data.read,
+          createdAt: data.createdAt,
+          createdBy: data.createdBy
+        });
+      }
     });
     
     return {

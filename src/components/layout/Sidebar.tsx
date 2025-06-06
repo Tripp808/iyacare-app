@@ -10,7 +10,10 @@ import {
   GitMerge, 
   Settings, 
   Menu,
-  X
+  X,
+  BarChart3,
+  Calendar,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SignOutForm } from '@/components/SignOutForm';
@@ -82,8 +85,11 @@ export function Sidebar() {
           <nav className="space-y-1 mb-8">
             <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
             <NavItem href="/patients" icon={Users} label="Patients" />
+            <NavItem href="/appointments" icon={Calendar} label="Appointments" />
+            <NavItem href="/analytics" icon={BarChart3} label="Analytics" />
             <NavItem href="/alerts" icon={Bell} label="Alerts" />
             <NavItem href="/referrals" icon={GitMerge} label="Referrals" />
+            <NavItem href="/reports" icon={FileText} label="Reports" />
           </nav>
 
           <div className="mt-auto space-y-1">

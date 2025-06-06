@@ -37,7 +37,6 @@ export default function AddPatientPage() {
     notes: '',
     assignedDoctor: '',
     assignedMidwife: '',
-    riskLevel: '',
     isPregnant: false,
     // New fields for maternal health monitoring
     gravida: '',
@@ -117,11 +116,8 @@ export default function AddPatientPage() {
     }
 
     try {
-      // If risk level wasn't manually set, calculate it
+      // Submit patient data without risk level - AI will determine risk from vital signs
       const patientData = { ...formData };
-      if (!patientData.riskLevel) {
-        patientData.riskLevel = calculatePatientRisk();
-      }
 
       // Submit patient data
       const result = await addPatient(patientData);
@@ -627,7 +623,7 @@ export default function AddPatientPage() {
                     value={formData.preferredLanguage}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder="Select preferred language" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="English">English</SelectItem>
@@ -636,24 +632,6 @@ export default function AddPatientPage() {
                       <SelectItem value="Hausa">Hausa</SelectItem>
                       <SelectItem value="Pidgin">Pidgin</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Risk Level
-                  </label>
-                  <Select
-                    onValueChange={(value) => handleSelectChange(value, 'riskLevel')}
-                    value={formData.riskLevel}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select risk level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

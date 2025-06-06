@@ -157,10 +157,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                           <Link href="/patients" className="flex w-full">Patient Management</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer">
-                          <Link href="/alerts" className="flex w-full">Alerts System</Link>
+                          <Link href="/vitals" className="flex w-full">Vital Signs</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer">
-                          <Link href="/analytics" className="flex w-full">Analytics</Link>
+                          <Link href="/alerts" className="flex w-full">Alerts System</Link>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

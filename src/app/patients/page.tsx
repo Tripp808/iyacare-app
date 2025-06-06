@@ -25,47 +25,64 @@ import {
   AlertCircle,
   Phone
 } from 'lucide-react';
-import { getPatients } from '@/lib/firebase/patients';
+import { getPatients, Patient, deletePatient } from '@/lib/firebase/patients';
 import { formatDate, calculateAge } from '@/lib/utils';
-import { Patient } from '@/lib/firebase/patients';
+import { appointmentsService } from '@/lib/firebase/appointments';
+import { toast } from 'sonner';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [appointments, setAppointments] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [riskFilter, setRiskFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [patientsPerPage] = useState(10);
   const searchParams = useSearchParams();
   
   const risk = searchParams.get('risk') || '';
-  const patientsPerPage = 10;
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        setLoading(true);
-        const result = await getPatients();
-        
-        if (result.success) {
-          let filteredPatients = result.patients || [];
-          
-          // Filter by risk level if specified in URL
-          if (risk) {
-            filteredPatients = filteredPatients.filter(patient => patient.riskLevel === risk);
-          }
-          
-          setPatients(filteredPatients);
-        } else {
-          console.error('Failed to fetch patients:', result.error);
-        }
-      } catch (error) {
-        console.error('Error fetching patients:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchPatients();
-  }, [risk]);
+  }, []);
+
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const result = await getPatients();
+      if (result.success && result.patients) {
+        setPatients(result.patients);
+        
+        // Fetch next appointments for all patients
+        const appointmentPromises = result.patients.map(async (patient) => {
+          if (patient.id) {
+            const appointmentResult = await appointmentsService.getNextAppointment(patient.id);
+            return {
+              patientId: patient.id,
+              nextVisit: appointmentResult.appointment ? `${appointmentResult.appointment.date} ${appointmentResult.appointment.time}` : null
+            };
+          }
+          return { patientId: patient.id || '', nextVisit: null };
+        });
+        
+        const appointmentResults = await Promise.all(appointmentPromises);
+        const appointmentsMap: {[key: string]: string} = {};
+        
+        appointmentResults.forEach(({ patientId, nextVisit }) => {
+          if (nextVisit) {
+            appointmentsMap[patientId] = nextVisit;
+          }
+        });
+        
+        setAppointments(appointmentsMap);
+      }
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      toast.error('Failed to fetch patients');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter patients based on search term
   const filteredPatients = patients.filter(patient => {
@@ -180,12 +197,12 @@ export default function PatientsPage() {
                           </Link>
                         </TableCell>
                         <TableCell>{calculateAge(patient.dateOfBirth)} years</TableCell>
-                        <TableCell>{patient.pregnancyStage || "Not recorded"}</TableCell>
+                        <TableCell>{patient.pregnancyWeek ? `Week ${patient.pregnancyWeek}` : "Not recorded"}</TableCell>
                         <TableCell>
-                          {patient.nextVisit ? (
+                          {appointments[patient.id || ''] ? (
                             <div className="flex items-center">
                               <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {formatDate(patient.nextVisit)}
+                              {appointments[patient.id || '']}
                             </div>
                           ) : (
                             "Not scheduled"
