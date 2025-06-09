@@ -30,10 +30,10 @@ export function ModeToggle() {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rounded-xl border-muted bg-background/80 backdrop-blur-sm">
+      <DropdownMenuContent align="end" className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg">
         <DropdownMenuItem 
           onClick={() => setTheme("light")} 
-          className="cursor-pointer flex items-center gap-2"
+          className="cursor-pointer flex items-center gap-2 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <Sun className="h-4 w-4" />
           <span>Light</span>
@@ -47,7 +47,7 @@ export function ModeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("dark")} 
-          className="cursor-pointer flex items-center gap-2"
+          className="cursor-pointer flex items-center gap-2 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <Moon className="h-4 w-4" />
           <span>Dark</span>
@@ -61,7 +61,7 @@ export function ModeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("system")} 
-          className="cursor-pointer flex items-center gap-2"
+          className="cursor-pointer flex items-center gap-2 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />

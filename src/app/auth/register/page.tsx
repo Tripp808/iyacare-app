@@ -30,7 +30,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
+    email: 'ocheankeli99@gmail.com',
     password: '',
     confirmPassword: '',
     role: 'healthcare_provider',
@@ -160,7 +160,7 @@ export default function RegisterPage() {
             </AlertDescription>
           </Alert>
         )}
-        <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
+        <Card className="border-gray-200 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Create an account with </span>
@@ -185,7 +185,7 @@ export default function RegisterPage() {
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="pl-10"
+                      className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                     />
                   </div>
                 </div>
@@ -200,7 +200,7 @@ export default function RegisterPage() {
                       required
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="pl-10"
+                      className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                     />
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export default function RegisterPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                   />
                 </div>
               </div>
@@ -229,7 +229,7 @@ export default function RegisterPage() {
                     value={formData.role}
                     onValueChange={handleSelectChange}
                   >
-                    <SelectTrigger className="pl-10">
+                    <SelectTrigger className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -249,11 +249,11 @@ export default function RegisterPage() {
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="Min. 6 characters"
+                    placeholder="••••••••••"
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                   />
                 </div>
               </div>
@@ -265,11 +265,11 @@ export default function RegisterPage() {
                     id="confirmPassword"
                     name="confirmPassword"
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder="••••••••••"
                     required
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                   />
                 </div>
               </div>

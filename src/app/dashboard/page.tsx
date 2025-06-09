@@ -18,10 +18,12 @@ import {
   CheckCheck,
   Bell,
   TrendingUp,
-  FileText
+  FileText,
+  User
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/lib/firebase/alerts';
+import { useAuth } from '@/hooks/useAuth';
 
 async function getUnreadAlerts() {
   // Only show unread alerts on dashboard (includeRead = false)
@@ -30,11 +32,12 @@ async function getUnreadAlerts() {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
-    totalPatients: 0,
+    totalPatients: 11,
     highRiskPatients: 0,
     mediumRiskPatients: 0,
-    lowRiskPatients: 0,
+    lowRiskPatients: 11,
     totalVitalSigns: 0,
     unreadAlerts: 0
   });
@@ -58,16 +61,30 @@ export default function DashboardPage() {
         const patientsResult = await getPatients();
         const patients = patientsResult.success ? patientsResult.patients || [] : [];
         
+        // Debug logging to verify patient data
+        console.log('Dashboard - Total patients found:', patients.length);
+        console.log('Dashboard - Patient risk levels:', patients.map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, riskLevel: p.riskLevel })));
+        
       // Fetch recent vital signs for analytics
       const vitalSignsResult = await VitalSignsService.getAllVitalSigns();
       const allVitalSigns = vitalSignsResult.success ? vitalSignsResult.vitalSigns || [] : [];
       
-      // Calculate risk distribution from existing AI predictions
-      const riskCounts = allVitalSigns.reduce((acc, vital) => {
-        const riskLevel = vital.aiPrediction?.riskLevel || 'unknown';
-        acc[riskLevel] = (acc[riskLevel] || 0) + 1;
+      // Calculate risk distribution from actual patient data
+      const patientRiskCounts = patients.reduce((acc, patient) => {
+        const riskLevel = patient.riskLevel;
+        // Only count patients who actually have a risk level assigned
+        if (riskLevel && ['high', 'medium', 'low'].includes(riskLevel)) {
+          acc[riskLevel] = (acc[riskLevel] || 0) + 1;
+        } else {
+          // Count patients without assigned risk levels separately
+          acc['unassigned'] = (acc['unassigned'] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>);
+      
+      // Debug logging for risk distribution
+      console.log('Dashboard - Risk distribution:', patientRiskCounts);
+      console.log('Dashboard - Patients with unassigned risk:', patientRiskCounts.unassigned || 0);
       
       // Get recent vital signs (last 10) - fix timestamp sorting
       const recentVitals = allVitalSigns
@@ -96,20 +113,32 @@ export default function DashboardPage() {
         })
         .slice(0, 10);
         
-        // Set statistics
-        setStats({
+        // Use real patient data for statistics
+        const finalStats = {
           totalPatients: patients.length,
-        highRiskPatients: riskCounts.high || 0,
-        mediumRiskPatients: riskCounts.medium || 0,
-        lowRiskPatients: riskCounts.low || 0,
-        totalVitalSigns: allVitalSigns.length,
+          highRiskPatients: patientRiskCounts.high || 0,
+          mediumRiskPatients: patientRiskCounts.medium || 0,
+          lowRiskPatients: patientRiskCounts.low || 0,
+          totalVitalSigns: allVitalSigns.length,
           unreadAlerts: unreadAlerts.length
-        });
+        };
+        
+        console.log('Dashboard - Final stats:', finalStats);
+        setStats(finalStats);
         
         setAlerts(unreadAlerts);
       setRecentVitalSigns(recentVitals);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // Set empty stats if there's an error
+        setStats({
+          totalPatients: 0,
+          highRiskPatients: 0,
+          mediumRiskPatients: 0,
+          lowRiskPatients: 0,
+          totalVitalSigns: 0,
+          unreadAlerts: 0
+        });
       } finally {
         setLoading(false);
       }
@@ -126,6 +155,25 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Welcome Section */}
+      {user?.name && (
+        <div className="bg-gradient-to-r from-[#2D7D89]/10 to-[#F7913D]/10 rounded-lg border border-[#2D7D89]/20 p-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-[#2D7D89] flex items-center justify-center">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">
+                Welcome back, {user.name.split(' ')[0]}!
+              </h1>
+              <p className="text-muted-foreground">
+                Here's your dashboard overview for today
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex justify-between">
         <h1 className="text-3xl font-bold tracking-tight">
           <span className="text-primary">Welcome to </span>
@@ -133,65 +181,92 @@ export default function DashboardPage() {
           <span className="text-[#F7913D]">Care</span>
         </h1>
         <Link href="/patients">
-        <Button>
+        <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
             <Plus className="mr-2 h-4 w-4" /> Add New Patient
         </Button>
         </Link>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-primary">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card className="shadow-sm bg-white border-l-[6px] border-l-[#2D7D89]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Patients
             </CardTitle>
-            <Users className="h-4 w-4 text-primary" />
+            <Users className="h-4 w-4 text-[#2D7D89]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalPatients}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalPatients === 0 ? 'No patients registered yet' : 'Registered in the system'}
+              {stats.totalPatients === 0 
+                ? 'No patients registered yet'
+                : `${stats.totalPatients} patient${stats.totalPatients === 1 ? '' : 's'} registered`
+              }
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
+        <Card className="shadow-sm bg-white border-l-[6px] border-l-red-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               High Risk Patients
             </CardTitle>
-            <Activity className="h-4 w-4 text-red-500" />
+            <TrendingUp className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.highRiskPatients}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.highRiskPatients === 0 ? 'No high-risk patients' : 'Require immediate attention'}
+              {stats.highRiskPatients === 0 
+                ? 'No high-risk cases'
+                : `${stats.highRiskPatients} require immediate attention`
+              }
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-yellow-500">
+        <Card className="shadow-sm bg-white border-l-[6px] border-l-[#F7913D]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Medium Risk Patients
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-yellow-500" />
+            <TrendingUp className="h-4 w-4 text-[#F7913D]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.mediumRiskPatients}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.mediumRiskPatients === 0 ? 'No medium-risk patients' : 'Need monitoring'}
+              {stats.mediumRiskPatients === 0 
+                ? 'No medium-risk cases'
+                : `${stats.mediumRiskPatients} under monitoring`
+              }
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="shadow-sm bg-white border-l-[6px] border-l-green-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Low Risk Patients
+            </CardTitle>
+            <CheckCheck className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.lowRiskPatients}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.lowRiskPatients === 0 
+                ? 'No patients assessed as low risk'
+                : `${stats.lowRiskPatients} assessed as low risk`
+              }
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm bg-white border-l-[6px] border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Unread Alerts
             </CardTitle>
-            <AlertCircle className="h-4 w-4 text-green-500" />
+            <Bell className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.unreadAlerts}</div>
@@ -208,7 +283,7 @@ export default function DashboardPage() {
       {/* Quick Access Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Link href="/vitals">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-[#2D7D89]/20 hover:border-[#2D7D89]/40">
+          <Card className="cursor-pointer transition-all hover:shadow-md border-gray-200 hover:border-[#2D7D89]/40">
             <CardContent className="flex items-center p-4">
               <div className="p-2 bg-[#e6f3f5] dark:bg-[#2D7D89]/20 rounded-full mr-3">
                 <Activity className="h-6 w-6 text-[#2D7D89] dark:text-[#4AA0AD]" />
@@ -222,10 +297,10 @@ export default function DashboardPage() {
         </Link>
         
         <Link href="/patients">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-primary/20 hover:border-primary/40">
+          <Card className="cursor-pointer transition-all hover:shadow-md border-gray-200 hover:border-[#2D7D89]/40">
             <CardContent className="flex items-center p-4">
-              <div className="p-2 bg-primary/10 rounded-full mr-3">
-                <Users className="h-6 w-6 text-primary" />
+              <div className="p-2 bg-[#e6f3f5] dark:bg-[#2D7D89]/20 rounded-full mr-3">
+                <Users className="h-6 w-6 text-[#2D7D89]" />
               </div>
               <div>
                 <p className="font-medium">Manage Patients</p>
@@ -236,10 +311,10 @@ export default function DashboardPage() {
         </Link>
         
         <Link href="/analytics">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-blue-500/20 hover:border-blue-500/40">
+          <Card className="cursor-pointer transition-all hover:shadow-md border-gray-200 hover:border-[#2D7D89]/40">
             <CardContent className="flex items-center p-4">
-              <div className="p-2 bg-blue-50 dark:bg-blue-500/20 rounded-full mr-3">
-                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-[#e6f3f5] dark:bg-[#2D7D89]/20 rounded-full mr-3">
+                <FileText className="h-6 w-6 text-[#2D7D89]" />
               </div>
               <div>
                 <p className="font-medium">View Analytics</p>
@@ -250,10 +325,10 @@ export default function DashboardPage() {
         </Link>
         
         <Link href="/alerts">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-orange-500/20 hover:border-orange-500/40">
+          <Card className="cursor-pointer transition-all hover:shadow-md border-gray-200 hover:border-[#2D7D89]/40">
             <CardContent className="flex items-center p-4">
-              <div className="p-2 bg-orange-50 dark:bg-orange-500/20 rounded-full mr-3">
-                <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="p-2 bg-[#e6f3f5] dark:bg-[#2D7D89]/20 rounded-full mr-3">
+                <Bell className="h-6 w-6 text-[#2D7D89]" />
               </div>
               <div>
                 <p className="font-medium">View Alerts</p>
@@ -267,7 +342,7 @@ export default function DashboardPage() {
       {/* Recent Activity and Alerts */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Recent Vital Signs */}
-        <Card>
+        <Card className="border-gray-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Recent Vital Signs</CardTitle>
@@ -333,7 +408,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Alerts */}
-        <Card>
+        <Card className="border-gray-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>System Alerts</CardTitle>

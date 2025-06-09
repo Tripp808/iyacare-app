@@ -306,7 +306,7 @@ export default function CreateAlertPage() {
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="w-full bg-[#2D7D89] hover:bg-[#236570]"
+                className="w-full bg-[#2D7D89] hover:bg-[#236570] text-white"
               >
                 {isSubmitting ? (
                   <>

@@ -21,38 +21,45 @@ import {
   Calendar,
   Check,
   X,
-  Filter
+  Filter,
+  Plus,
+  RefreshCw,
+  Eye
 } from 'lucide-react';
-import { getAlerts, markAlertAsRead } from '@/lib/firebase/alerts';
+import { getAlerts } from '@/lib/firebase/alerts';
+import { useNotifications } from '@/hooks/useNotifications';
 import { formatDate } from '@/lib/utils';
 import { Alert } from '@/lib/firebase/alerts';
+import { toast } from 'sonner';
 
 export default function AlertsPage() {
+  const { refreshNotifications, markAsRead } = useNotifications();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread'>('unread');
 
-  // Fetch alerts
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        setLoading(true);
-        const includeRead = filter === 'all';
-        const result = await getAlerts(includeRead);
-        
-        if (result.success) {
-          setAlerts(result.alerts || []);
-        } else {
-          console.error('Failed to fetch alerts:', result.error);
-        }
-      } catch (error) {
-        console.error('Error fetching alerts:', error);
-      } finally {
-        setLoading(false);
+  // Fetch alerts function
+  const fetchAlerts = async () => {
+    try {
+      setLoading(true);
+      const includeRead = filter === 'all';
+      const result = await getAlerts(includeRead);
+      
+      if (result.success) {
+        setAlerts(result.alerts || []);
+      } else {
+        console.error('Failed to fetch alerts:', result.error);
       }
-    };
-    
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch alerts on component mount and filter change
+  useEffect(() => {
     fetchAlerts();
   }, [filter]);
 
@@ -65,16 +72,15 @@ export default function AlertsPage() {
   // Mark an alert as read
   const handleMarkAsRead = async (alertId: string) => {
     try {
-      const result = await markAlertAsRead(alertId);
+      await markAsRead(alertId);
       
-      if (result.success) {
-        // Update the alerts state to reflect the change
-        setAlerts(alerts.map(alert => 
-          alert.id === alertId ? { ...alert, read: true } : alert
-        ));
-      } else {
-        console.error('Failed to mark alert as read:', result.error);
-      }
+      // Update local state to reflect the change
+      setAlerts(alerts.map(alert => 
+        alert.id === alertId ? { ...alert, read: true } : alert
+      ));
+      
+      // Refresh notifications in the header
+      await refreshNotifications();
     } catch (error) {
       console.error('Error marking alert as read:', error);
     }
@@ -114,16 +120,64 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-[#2D7D89]">Alert</span>
-          <span className="text-[#F7913D]">Center</span>
-        </h1>
-        <Link href="/alerts/create">
-          <Button className="mt-4 sm:mt-0 bg-[#2D7D89] hover:bg-[#236570]">
-            <Bell className="mr-2 h-4 w-4" /> Create Alert
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Alerts</h1>
+          <p className="text-muted-foreground mt-1">
+            Monitor and manage patient alerts in real-time
+          </p>
+        </div>
+        <Button 
+          onClick={() => {
+            /* Create new alert functionality would go here */
+            toast.info('Alert creation feature coming soon!');
+          }}
+          className="bg-[#2D7D89] hover:bg-[#236570] text-white"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Create Alert
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={filter === 'all' ? 'default' : 'outline'}
+            onClick={() => setFilter('all')}
+            className={filter === 'all' 
+              ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' 
+              : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'
+            }
+          >
+            All Alerts
           </Button>
-        </Link>
+          <Button
+            variant={filter === 'unread' ? 'default' : 'outline'}
+            onClick={() => setFilter('unread')}
+            className={filter === 'unread' 
+              ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' 
+              : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'
+            }
+          >
+            Unread Only
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={fetchAlerts}
+            disabled={loading}
+            className="border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white"
+          >
+            {loading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent mr-2"></div>
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card className="border-t-4 border-t-[#2D7D89]">
@@ -141,24 +195,6 @@ export default function AlertsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant={filter === 'unread' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setFilter('unread')}
-                className={filter === 'unread' ? 'bg-[#2D7D89] hover:bg-[#236570]' : ''}
-              >
-                Unread Only
-              </Button>
-              <Button 
-                variant={filter === 'all' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setFilter('all')}
-                className={filter === 'all' ? 'bg-[#2D7D89] hover:bg-[#236570]' : ''}
-              >
-                All Alerts
-              </Button>
             </div>
           </div>
 
@@ -231,17 +267,17 @@ export default function AlertsPage() {
                       </TableCell>
                       <TableCell>
                         {!alert.read ? (
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => alert.id && handleMarkAsRead(alert.id)} 
-                            className="text-blue-500 hover:text-blue-700"
+                            onClick={() => handleMarkAsRead(alert.id!)}
+                            disabled={alert.read}
+                            className="border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white"
                           >
-                            <Check className="h-4 w-4" />
-                            <span className="ml-1">Mark Read</span>
+                            <Eye className="h-4 w-4" />
                           </Button>
                         ) : (
-                          <span className="text-xs text-gray-500">Read</span>
+                          <span className="text-xs text-green-600 font-medium">Read</span>
                         )}
                       </TableCell>
                     </TableRow>

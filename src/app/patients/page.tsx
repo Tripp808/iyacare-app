@@ -16,6 +16,13 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
   Plus, 
   Search, 
   Filter,
@@ -23,7 +30,8 @@ import {
   ChevronRight,
   Calendar,
   AlertCircle,
-  Phone
+  Phone,
+  ArrowUpDown
 } from 'lucide-react';
 import { getPatients, Patient, deletePatient } from '@/lib/firebase/patients';
 import { formatDate, calculateAge } from '@/lib/utils';
@@ -36,6 +44,7 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [patientsPerPage] = useState(10);
   const searchParams = useSearchParams();
@@ -84,17 +93,38 @@ export default function PatientsPage() {
     }
   };
 
-  // Filter patients based on search term
-  const filteredPatients = patients.filter(patient => {
-    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
-  });
+  // Filter and sort patients
+  const filteredAndSortedPatients = patients
+    .filter(patient => {
+      const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
+      const matchesSearch = fullName.includes(searchTerm.toLowerCase());
+      const matchesRisk = !risk || patient.riskLevel === risk;
+      return matchesSearch && matchesRisk;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+        case 'name-desc':
+          return `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`);
+        case 'date-newest':
+          const dateA = a.createdAt ? (a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate()) : new Date(0);
+          const dateB = b.createdAt ? (b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate()) : new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        case 'date-oldest':
+          const dateA2 = a.createdAt ? (a.createdAt instanceof Date ? a.createdAt : a.createdAt.toDate()) : new Date(0);
+          const dateB2 = b.createdAt ? (b.createdAt instanceof Date ? b.createdAt : b.createdAt.toDate()) : new Date(0);
+          return dateA2.getTime() - dateB2.getTime();
+        default:
+          return 0;
+      }
+    });
 
   // Pagination
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
-  const currentPatients = filteredPatients.slice(indexOfFirstPatient, indexOfLastPatient);
-  const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
+  const currentPatients = filteredAndSortedPatients.slice(indexOfFirstPatient, indexOfLastPatient);
+  const totalPages = Math.ceil(filteredAndSortedPatients.length / patientsPerPage);
 
   // Change page
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
@@ -118,7 +148,7 @@ export default function PatientsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Patients</h1>
         <Link href="/patients/add">
-          <Button className="mt-4 sm:mt-0">
+          <Button className="mt-4 sm:mt-0 bg-[#2D7D89] hover:bg-[#236570] text-white">
             <Plus className="mr-2 h-4 w-4" /> Add Patient
           </Button>
         </Link>
@@ -126,34 +156,66 @@ export default function PatientsPage() {
 
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search patients..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search patients..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <ArrowUpDown className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="date-newest">Date Added (Newest)</SelectItem>
+                    <SelectItem value="date-oldest">Date Added (Oldest)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Link href="/patients">
-                <Button variant={!risk ? 'default' : 'outline'} size="sm">
+                <Button 
+                  className={!risk ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'} 
+                  variant={!risk ? 'default' : 'outline'} 
+                  size="sm"
+                >
                   All
                 </Button>
               </Link>
               <Link href="/patients?risk=high">
-                <Button variant={risk === 'high' ? 'destructive' : 'outline'} size="sm">
+                <Button 
+                  className={risk === 'high' ? 'bg-[#F7913D] hover:bg-[#E6822A] text-white' : 'border-[#F7913D] text-[#F7913D] hover:bg-[#F7913D] hover:text-white'} 
+                  variant={risk === 'high' ? 'default' : 'outline'} 
+                  size="sm"
+                >
                   High Risk
                 </Button>
               </Link>
               <Link href="/patients?risk=medium">
-                <Button variant={risk === 'medium' ? 'secondary' : 'outline'} size="sm">
+                <Button 
+                  className={risk === 'medium' ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'} 
+                  variant={risk === 'medium' ? 'default' : 'outline'} 
+                  size="sm"
+                >
                   Medium Risk
                 </Button>
               </Link>
               <Link href="/patients?risk=low">
-                <Button variant={risk === 'low' ? 'default' : 'outline'} size="sm">
+                <Button 
+                  className={risk === 'low' ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'} 
+                  variant={risk === 'low' ? 'default' : 'outline'} 
+                  size="sm"
+                >
                   Low Risk
                 </Button>
               </Link>
@@ -165,11 +227,11 @@ export default function PatientsPage() {
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em]"></div>
               <p className="mt-2 text-sm text-gray-500">Loading patients...</p>
             </div>
-          ) : filteredPatients.length === 0 ? (
+          ) : filteredAndSortedPatients.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg text-gray-500 mb-4">No patients found</p>
               <Link href="/patients/add">
-                <Button>
+                <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
                   <Plus className="mr-2 h-4 w-4" /> Add New Patient
                 </Button>
               </Link>
@@ -216,16 +278,16 @@ export default function PatientsPage() {
                         <TableCell>
                           <div className="flex space-x-2">
                             <Link href={`/patients/${patient.id}`}>
-                              <Button variant="outline" size="sm">View</Button>
+                              <Button variant="outline" size="sm" className="border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white">View</Button>
                             </Link>
                             <Link href={`tel:${patient.phone}`}>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" className="text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white">
                                 <Phone className="h-4 w-4" />
                               </Button>
                             </Link>
                             {patient.riskLevel === 'high' && (
                               <Link href={`/patients/${patient.id}/alerts`}>
-                                <Button variant="ghost" size="icon" className="text-red-500">
+                                <Button variant="ghost" size="icon" className="text-[#F7913D] hover:bg-[#F7913D] hover:text-white">
                                   <AlertCircle className="h-4 w-4" />
                                 </Button>
                               </Link>
@@ -242,12 +304,13 @@ export default function PatientsPage() {
               {totalPages > 1 && (
                 <div className="flex justify-between items-center mt-4">
                   <p className="text-sm text-gray-500">
-                    Showing {indexOfFirstPatient + 1}-{Math.min(indexOfLastPatient, filteredPatients.length)} of {filteredPatients.length} patients
+                    Showing {indexOfFirstPatient + 1}-{Math.min(indexOfLastPatient, filteredAndSortedPatients.length)} of {filteredAndSortedPatients.length} patients
                   </p>
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white"
                       onClick={() => paginate(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
@@ -262,6 +325,7 @@ export default function PatientsPage() {
                         return (
                           <Button
                             key={i}
+                            className={currentPage === pageNum ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'}
                             variant={currentPage === pageNum ? "default" : "outline"}
                             size="sm"
                             onClick={() => paginate(pageNum)}
@@ -275,6 +339,7 @@ export default function PatientsPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white"
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
                     >

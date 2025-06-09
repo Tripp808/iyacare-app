@@ -18,11 +18,23 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const { firebaseUser } = useAuth();
+  const router = useRouter();
   const [activeImage, setActiveImage] = useState(0);
   const [imageError, setImageError] = useState<{[key: string]: boolean}>({});
   
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (firebaseUser) {
+      router.push('/dashboard');
+    }
+  }, [firebaseUser, router]);
+
+  // Move this useEffect before any conditional returns
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveImage((prev) => (prev === 0 ? 1 : 0));
@@ -30,6 +42,11 @@ export default function HomePage() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Don't render the landing page if user is authenticated
+  if (firebaseUser) {
+    return null;
+  }
 
   const handleImageError = (imagePath: string) => {
     console.error(`Failed to load image: ${imagePath}`);

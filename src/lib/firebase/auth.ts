@@ -31,7 +31,12 @@ export const registerUser = async (
       role: userData.role,
       facility: userData.facility || '',
       specialization: userData.specialization || '',
+      profilePicture: '',
+      phone: '',
+      address: '',
+      verified: false,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
     
     return { success: true, user };

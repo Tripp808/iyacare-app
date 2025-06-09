@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [showSignUpAlert, setShowSignUpAlert] = useState(false);
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    email: 'ocheankeli99@gmail.com',
     password: '',
   });
 
@@ -130,7 +130,7 @@ export default function LoginPage() {
           </Alert>
         )}
         
-        <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
+        <Card className="border-gray-200 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Sign in to </span>
@@ -155,7 +155,7 @@ export default function LoginPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                   />
                 </div>
               </div>
@@ -175,10 +175,11 @@ export default function LoginPage() {
                     id="password"
                     name="password"
                     type="password"
+                    placeholder="••••••••••"
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 border-gray-200 focus:border-[#2D7D89] focus:ring-[#2D7D89]/20"
                   />
                 </div>
               </div>

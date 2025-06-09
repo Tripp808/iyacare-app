@@ -1,0 +1,3 @@
+[33m6a7a217[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Major update: Fix appointments-patients connection, remove manual vital signs entry, add synthetic patient data with IoT simulation. Features: Firebase appointments service, 10 synthetic patients with realistic profiles, 160+ IoT vital signs records, AI-ready risk classification system. Technical: Clean TypeScript, proper Firebase integration, real-time vital signs tracking.
+[33mbeac7c9[m Add pricing section to homepage and update navigation
+[33me1bb785[m[33m ([m[1;31morigin/master[m[33m)[m Initial commit of IyàCare: maternal health monitoring platform with AI risk prediction and blockchain integration

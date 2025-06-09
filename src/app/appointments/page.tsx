@@ -24,22 +24,11 @@ import {
   Trash2
 } from 'lucide-react';
 import { getPatients, Patient } from '@/lib/firebase/patients';
-import { appointmentsService, Appointment } from '@/lib/firebase/appointments';
+import { appointmentsService, Appointment as FirebaseAppointment } from '@/lib/firebase/appointments';
 import { toast } from 'sonner';
 
-// Appointment interface
-interface Appointment {
-  id?: string;
-  patientId: string;
-  patientName: string;
-  date: string;
-  time: string;
-  type: 'routine' | 'emergency' | 'follow-up' | 'consultation';
-  status: 'scheduled' | 'confirmed' | 'pending' | 'completed' | 'cancelled';
-  location: string;
-  notes?: string;
-  createdAt?: Date;
-}
+// Local appointment type for component state
+type AppointmentType = FirebaseAppointment;
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -54,7 +43,7 @@ const getStatusColor = (status: string) => {
 
 export default function AppointmentsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

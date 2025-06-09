@@ -173,7 +173,10 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button className="bg-[#2D7D89] hover:bg-[#236570]">
+          <Button 
+            className="bg-[#2D7D89] hover:bg-[#236570] text-white"
+            onClick={() => router.push(`/patients/${resolvedParams.id}/edit`)}
+          >
             Edit Patient
           </Button>
         </div>
@@ -382,7 +385,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               ) : (
                 <div className="space-y-4">
                   {alerts.map((alert) => (
-                    <Card key={alert.id} className={alert.read ? 'bg-gray-50' : 'bg-white border-l-4 border-l-blue-500'}>
+                    <Card key={alert.id} className={alert.read ? 'bg-gray-50' : 'bg-white'}>
                       <CardContent className="p-4">
                         <div className="flex justify-between">
                           <div className="flex items-center">

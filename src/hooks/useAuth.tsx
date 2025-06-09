@@ -22,6 +22,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   signOut: () => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,6 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const refreshUserData = async () => {
+    if (!firebaseUser) return;
+    
+    try {
+      const userData = await UserService.getUser(firebaseUser.uid);
+      setUser(userData);
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  };
+
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
@@ -132,7 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
-    sendVerificationEmail
+    sendVerificationEmail,
+    refreshUserData
   };
 
   return (
