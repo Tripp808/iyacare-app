@@ -26,12 +26,14 @@ export interface Alert {
 }
 
 // Response type for alert operations
-type AlertResponse = {
+export interface AlertResponse {
   success: boolean;
   error?: string;
   alertId?: string;
+  id?: string;
   alerts?: Alert[];
-};
+  message?: string;
+}
 
 /**
  * Create a new alert
@@ -171,5 +173,115 @@ export async function getPatientAlerts(patientId: string): Promise<AlertResponse
       success: false,
       error: 'Failed to retrieve patient alerts'
     };
+  }
+}
+
+/**
+ * Create an alert for a high-risk patient automatically
+ */
+export async function createHighRiskAlert(
+  patientId: string,
+  patientName: string,
+  riskFactors?: string[]
+): Promise<AlertResponse> {
+  try {
+    // Check if a high-risk alert already exists for this patient in the last 24 hours
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    
+    const existingAlertsQuery = query(
+      collection(db, 'alerts'),
+      where('patientId', '==', patientId),
+      where('type', '==', 'risk'),
+      where('priority', '==', 'high'),
+      where('createdAt', '>=', Timestamp.fromDate(oneDayAgo)),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const existingAlertsSnapshot = await getDocs(existingAlertsQuery);
+    
+    // If an alert already exists in the last 24 hours, don't create another one
+    if (!existingAlertsSnapshot.empty) {
+      return {
+        success: true,
+        message: 'High-risk alert already exists for this patient'
+      };
+    }
+
+    // Generate alert message based on risk factors
+    let message = `HIGH RISK PATIENT ALERT: ${patientName} has been classified as high-risk and requires immediate attention.`;
+    
+    if (riskFactors && riskFactors.length > 0) {
+      message += ` Risk factors: ${riskFactors.join(', ')}.`;
+    }
+    
+    message += ' Please prioritize this patient for monitoring and care.';
+
+    const alertData = {
+      patientId,
+      patientName,
+      message,
+      type: 'risk' as const,
+      priority: 'high' as const,
+      read: false,
+      createdAt: serverTimestamp(),
+      createdBy: 'system'
+    };
+
+    const alertsRef = collection(db, 'alerts');
+    const docRef = await addDoc(alertsRef, alertData);
+    
+    console.log(`High-risk alert created for patient ${patientName} (ID: ${patientId})`);
+    
+    return {
+      success: true,
+      id: docRef.id,
+      message: 'High-risk alert created successfully'
+    };
+  } catch (error) {
+    console.error('Error creating high-risk alert:', error);
+    return {
+      success: false,
+      error: 'Failed to create high-risk alert'
+    };
+  }
+}
+
+/**
+ * Check all patients and create alerts for high-risk patients who don't have recent alerts
+ */
+export async function checkAndCreateHighRiskAlerts(): Promise<void> {
+  try {
+    // Import getPatients function here to avoid circular imports
+    const { getPatients } = await import('./patients');
+    
+    const patientsResult = await getPatients();
+    if (!patientsResult.success || !patientsResult.patients) {
+      console.error('Failed to fetch patients for high-risk alert check');
+      return;
+    }
+
+    const highRiskPatients = patientsResult.patients.filter(
+      patient => patient.riskLevel === 'high'
+    );
+
+    console.log(`Found ${highRiskPatients.length} high-risk patients`);
+
+    // Create alerts for each high-risk patient
+    for (const patient of highRiskPatients) {
+      if (patient.id) {
+        const patientName = `${patient.firstName} ${patient.lastName}`;
+        
+        // Determine risk factors based on patient data
+        const riskFactors: string[] = [];
+        if (patient.isPregnant) riskFactors.push('pregnancy complications');
+        if (patient.medicalHistory?.includes('hypertension')) riskFactors.push('hypertension');
+        if (patient.medicalHistory?.includes('diabetes')) riskFactors.push('diabetes');
+        
+        await createHighRiskAlert(patient.id, patientName, riskFactors);
+      }
+    }
+  } catch (error) {
+    console.error('Error in checkAndCreateHighRiskAlerts:', error);
   }
 } 

@@ -189,15 +189,15 @@ export default function DashboardPage() {
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="shadow-sm bg-white border-l-[6px] border-l-[#2D7D89]">
+        <Card className="shadow-sm bg-white dark:bg-gray-800 border-l-[6px] border-l-[#2D7D89] dark:border-l-[#4AA0AD]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Total Patients
             </CardTitle>
-            <Users className="h-4 w-4 text-[#2D7D89]" />
+            <Users className="h-4 w-4 text-[#2D7D89] dark:text-[#4AA0AD]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPatients}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalPatients}</div>
             <p className="text-xs text-muted-foreground">
               {stats.totalPatients === 0 
                 ? 'No patients registered yet'
@@ -207,15 +207,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm bg-white border-l-[6px] border-l-red-500">
+        <Card className="shadow-sm bg-white dark:bg-gray-800 border-l-[6px] border-l-red-500 dark:border-l-red-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
               High Risk Patients
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-red-500" />
+            <TrendingUp className="h-4 w-4 text-red-500 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.highRiskPatients}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.highRiskPatients}</div>
             <p className="text-xs text-muted-foreground">
               {stats.highRiskPatients === 0 
                 ? 'No high-risk cases'
@@ -225,15 +225,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm bg-white border-l-[6px] border-l-[#F7913D]">
+        <Card className="shadow-sm bg-white dark:bg-gray-800 border-l-[6px] border-l-[#F7913D] dark:border-l-[#FFA558]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Medium Risk Patients
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-[#F7913D]" />
+            <TrendingUp className="h-4 w-4 text-[#F7913D] dark:text-[#FFA558]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.mediumRiskPatients}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.mediumRiskPatients}</div>
             <p className="text-xs text-muted-foreground">
               {stats.mediumRiskPatients === 0 
                 ? 'No medium-risk cases'
@@ -243,15 +243,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm bg-white border-l-[6px] border-l-green-500">
+        <Card className="shadow-sm bg-white dark:bg-gray-800 border-l-[6px] border-l-green-500 dark:border-l-green-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Low Risk Patients
             </CardTitle>
-            <CheckCheck className="h-4 w-4 text-green-500" />
+            <CheckCheck className="h-4 w-4 text-green-500 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.lowRiskPatients}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.lowRiskPatients}</div>
             <p className="text-xs text-muted-foreground">
               {stats.lowRiskPatients === 0 
                 ? 'No patients assessed as low risk'
@@ -261,15 +261,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm bg-white border-l-[6px] border-l-purple-500">
+        <Card className="shadow-sm bg-white dark:bg-gray-800 border-l-[6px] border-l-purple-500 dark:border-l-purple-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Unread Alerts
             </CardTitle>
-            <Bell className="h-4 w-4 text-purple-500" />
+            <Bell className="h-4 w-4 text-purple-500 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.unreadAlerts}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.unreadAlerts}</div>
             <p className="text-xs text-muted-foreground">
               {stats.unreadAlerts === 0 
                 ? 'All clear!'

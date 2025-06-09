@@ -196,391 +196,452 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] bg-white dark:bg-gray-900">
         <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-[#2D7D89]" />
-          <span>Loading patient data...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-[#2D7D89]" />
+          <span className="text-lg text-gray-900 dark:text-white">Loading patient data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !resolvedParams?.id) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Error Loading Patient</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <Button 
+            onClick={() => router.push('/patients')}
+            className="bg-[#2D7D89] hover:bg-[#245A62] text-white"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Patients
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-[#2D7D89]">Edit</span>
-          <span className="text-[#F7913D]"> Patient</span>
-        </h1>
+    <div className="container mx-auto px-4 py-8 max-w-4xl bg-white dark:bg-gray-900 min-h-screen">
+      <div className="flex items-center mb-6">
         <Button 
-          variant="outline" 
+          variant="ghost" 
           onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
-          className="flex items-center gap-2"
+          className="mr-4 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Patient
         </Button>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Patient</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Update Patient Information</CardTitle>
-          <CardDescription>
-            Modify the patient's personal and medical information
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            {error && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md">
-                {error}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-md">
+            {error}
+          </div>
+        )}
+
+        {/* Personal Information */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Personal Information</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Update the patient's basic information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  First Name *
+                </label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                  placeholder="Enter first name"
+                />
               </div>
-            )}
-            
-            {/* Personal Information Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    name="firstName"
-                    placeholder="First name"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    name="lastName"
-                    placeholder="Last name"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      name="dateOfBirth"
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    name="phone"
-                    placeholder="Phone number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Email Address
-                  </label>
-                  <Input
-                    name="email"
-                    type="email"
-                    placeholder="Email address"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Blood Type
-                  </label>
-                  <Select
-                    onValueChange={(value) => handleSelectChange(value, 'bloodType')}
-                    value={formData.bloodType}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select blood type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A+">A+</SelectItem>
-                      <SelectItem value="A-">A-</SelectItem>
-                      <SelectItem value="B+">B+</SelectItem>
-                      <SelectItem value="B-">B-</SelectItem>
-                      <SelectItem value="AB+">AB+</SelectItem>
-                      <SelectItem value="AB-">AB-</SelectItem>
-                      <SelectItem value="O+">O+</SelectItem>
-                      <SelectItem value="O-">O-</SelectItem>
-                      <SelectItem value="Unknown">Unknown</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Address
-                  </label>
-                  <Input
-                    name="address"
-                    placeholder="Physical address"
-                    value={formData.address}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Location/Region
-                  </label>
-                  <Input
-                    name="location"
-                    placeholder="e.g., Enugu, Nigeria"
-                    value={formData.location}
-                    onChange={handleChange}
-                  />
-                </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Last Name *
+                </label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                  placeholder="Enter last name"
+                />
               </div>
             </div>
 
-            {/* Pregnancy Information Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Date of Birth *
+                </label>
+                <Input
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  type="date"
+                  required
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Phone Number *
+                </label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                  placeholder="Enter phone number"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email Address
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div>
+                <label htmlFor="bloodType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Blood Type
+                </label>
+                <Select 
+                  value={formData.bloodType} 
+                  onValueChange={(value) => handleSelectChange(value, 'bloodType')}
+                >
+                  <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                    <SelectValue placeholder="Select blood type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+                    <SelectItem value="A+" className="text-gray-900 dark:text-white">A+</SelectItem>
+                    <SelectItem value="A-" className="text-gray-900 dark:text-white">A-</SelectItem>
+                    <SelectItem value="B+" className="text-gray-900 dark:text-white">B+</SelectItem>
+                    <SelectItem value="B-" className="text-gray-900 dark:text-white">B-</SelectItem>
+                    <SelectItem value="AB+" className="text-gray-900 dark:text-white">AB+</SelectItem>
+                    <SelectItem value="AB-" className="text-gray-900 dark:text-white">AB-</SelectItem>
+                    <SelectItem value="O+" className="text-gray-900 dark:text-white">O+</SelectItem>
+                    <SelectItem value="O-" className="text-gray-900 dark:text-white">O-</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div>
-              <h3 className="text-lg font-medium mb-4">Pregnancy Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Is Pregnant
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Address
+              </label>
+              <Input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+                className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                placeholder="Enter full address"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Location/Region
+              </label>
+              <Input
+                id="location"
+                name="location"
+                type="text"
+                value={formData.location}
+                onChange={handleChange}
+                className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                placeholder="Enter location or region"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pregnancy Information Section */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Pregnancy Information</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Update the patient's pregnancy information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Is Pregnant
+                </label>
+                <div className="flex items-center space-x-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="isPregnant"
+                    name="isPregnant"
+                    checked={formData.isPregnant}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        isPregnant: e.target.checked
+                      });
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="isPregnant" className="text-sm text-gray-700 dark:text-gray-300">
+                    Currently pregnant
                   </label>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <input
-                      type="checkbox"
-                      id="isPregnant"
-                      name="isPregnant"
-                      checked={formData.isPregnant}
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          isPregnant: e.target.checked
-                        });
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <label htmlFor="isPregnant" className="text-sm text-gray-700">
-                      Currently pregnant
-                    </label>
-                  </div>
                 </div>
-                {formData.isPregnant && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Pregnancy Stage
-                      </label>
+              </div>
+              {formData.isPregnant && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Pregnancy Stage
+                    </label>
+                    <Input
+                      name="pregnancyStage"
+                      placeholder="e.g., '2nd Trimester' or '24 weeks'"
+                      value={formData.pregnancyStage}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Estimated Due Date
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
-                        name="pregnancyStage"
-                        placeholder="e.g., '2nd Trimester' or '24 weeks'"
-                        value={formData.pregnancyStage}
+                        name="edd"
+                        type="date"
+                        value={formData.edd}
                         onChange={handleChange}
+                        className="pl-10"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Estimated Due Date
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                          name="edd"
-                          type="date"
-                          value={formData.edd}
-                          onChange={handleChange}
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              {formData.isPregnant && (
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Gravida (Total Pregnancies)
-                    </label>
-                    <Input
-                      name="gravida"
-                      type="number"
-                      min="1"
-                      placeholder="Number of pregnancies"
-                      value={formData.gravida}
-                      onChange={handleChange}
-                    />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Parity (Previous Births)
-                    </label>
-                    <Input
-                      name="parity"
-                      type="number"
-                      min="0"
-                      placeholder="Number of births"
-                      value={formData.parity}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
+                </>
               )}
             </div>
-
-            {/* Medical Information Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Medical Information</h3>
-              <div className="space-y-4">
+            
+            {formData.isPregnant && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Medical History
-                  </label>
-                  <Textarea
-                    name="medicalHistory"
-                    placeholder="Enter medical history, chronic conditions, allergies, etc."
-                    value={formData.medicalHistory}
-                    onChange={handleChange}
-                    className="min-h-[100px]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Notes
-                  </label>
-                  <Textarea
-                    name="notes"
-                    placeholder="Additional notes about the patient"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="min-h-[80px]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Healthcare Team Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Healthcare Team</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Assigned Doctor
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Gravida (Total Pregnancies)
                   </label>
                   <Input
-                    name="assignedDoctor"
-                    placeholder="Doctor's name"
-                    value={formData.assignedDoctor}
+                    name="gravida"
+                    type="number"
+                    min="1"
+                    placeholder="Number of pregnancies"
+                    value={formData.gravida}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Assigned Midwife
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Parity (Previous Births)
                   </label>
                   <Input
-                    name="assignedMidwife"
-                    placeholder="Midwife's name"
-                    value={formData.assignedMidwife}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Community Health Worker (CHW)
-                  </label>
-                  <Input
-                    name="assignedCHW"
-                    placeholder="CHW's name"
-                    value={formData.assignedCHW}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Emergency Contact
-                  </label>
-                  <Input
-                    name="emergencyContact"
-                    placeholder="Emergency contact number"
-                    value={formData.emergencyContact}
+                    name="parity"
+                    type="number"
+                    min="0"
+                    placeholder="Number of births"
+                    value={formData.parity}
                     onChange={handleChange}
                   />
                 </div>
               </div>
-            </div>
+            )}
+          </CardContent>
+        </Card>
 
-            {/* Consent */}
+        {/* Medical Information Section */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Medical Information</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Update the patient's medical history and notes
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="consentToBlockchain"
-                  name="consentToBlockchain"
-                  checked={formData.consentToBlockchain}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      consentToBlockchain: e.target.checked
-                    });
-                  }}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor="consentToBlockchain" className="text-sm text-gray-700">
-                  I consent to having my medical data securely stored on the blockchain for improved healthcare delivery
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Medical History
+              </label>
+              <Textarea
+                name="medicalHistory"
+                placeholder="Enter medical history, chronic conditions, allergies, etc."
+                value={formData.medicalHistory}
+                onChange={handleChange}
+                className="min-h-[100px] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Notes
+              </label>
+              <Textarea
+                name="notes"
+                placeholder="Additional notes about the patient"
+                value={formData.notes}
+                onChange={handleChange}
+                className="min-h-[80px] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Healthcare Team Section */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Healthcare Team</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Update the patient's assigned healthcare team
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Assigned Doctor
                 </label>
+                <Input
+                  name="assignedDoctor"
+                  placeholder="Doctor's name"
+                  value={formData.assignedDoctor}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Assigned Midwife
+                </label>
+                <Input
+                  name="assignedMidwife"
+                  placeholder="Midwife's name"
+                  value={formData.assignedMidwife}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Community Health Worker (CHW)
+                </label>
+                <Input
+                  name="assignedCHW"
+                  placeholder="CHW's name"
+                  value={formData.assignedCHW}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Emergency Contact
+                </label>
+                <Input
+                  name="emergencyContact"
+                  placeholder="Emergency contact number"
+                  value={formData.emergencyContact}
+                  onChange={handleChange}
+                />
               </div>
             </div>
           </CardContent>
+        </Card>
 
-          <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
-              className="w-full sm:w-auto order-2 sm:order-1"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={submitting} 
-              className="w-full sm:w-auto bg-[#2D7D89] hover:bg-[#236570] text-white order-1 sm:order-2"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating Patient...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Update Patient
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+        {/* Consent */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Consent</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Update the patient's consent to having their medical data securely stored on the blockchain
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="consentToBlockchain"
+                name="consentToBlockchain"
+                checked={formData.consentToBlockchain}
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    consentToBlockchain: e.target.checked
+                  });
+                }}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="consentToBlockchain" className="text-sm text-gray-700 dark:text-gray-300">
+                I consent to having my medical data securely stored on the blockchain for improved healthcare delivery
+              </label>
+            </div>
+          </CardContent>
+        </Card>
+
+        <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
+            className="w-full sm:w-auto order-2 sm:order-1 text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={submitting} 
+            className="w-full sm:w-auto bg-[#2D7D89] hover:bg-[#236570] text-white order-1 sm:order-2"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating Patient...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Update Patient
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </form>
     </div>
   );
 } 
