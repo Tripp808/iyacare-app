@@ -382,7 +382,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               ) : (
                 <div className="space-y-4">
                   {alerts.map((alert) => (
-                    <Card key={alert.id} className={alert.read ? 'bg-gray-50' : 'bg-white border-l-4 border-l-blue-500'}>
+                    <Card key={alert.id} className={alert.read ? 'bg-gray-50' : 'bg-white'}>
                       <CardContent className="p-4">
                         <div className="flex justify-between">
                           <div className="flex items-center">

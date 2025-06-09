@@ -1,33 +1,56 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Bell, User, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export function Header() {
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const { firebaseUser, user, signOut, loading } = useAuth();
+  const [unreadNotifications] = useState(3); // This would come from your notifications service
   const pathname = usePathname();
+  const router = useRouter();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setIsLoading(false);
-    });
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+      router.push('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast.error('Failed to log out');
+    }
+  };
 
-    // Simulate having unread notifications
-    setUnreadNotifications(3);
+  const handleClearStorage = () => {
+    // For debugging purposes - clear all browser storage
+    localStorage.clear();
+    sessionStorage.clear();
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          caches.delete(name);
+        });
+      });
+    }
+    toast.success('Browser storage cleared. Please refresh the page.');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
 
-    return () => unsubscribe();
-  }, []);
-
-  // Check if we're on the auth pages
+  // Check if we're on the auth pages - moved after all hooks
   const isAuthPage = pathname?.includes('/auth') || pathname === '/';
 
   if (isAuthPage) {
@@ -35,7 +58,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="flex items-center gap-2">
@@ -47,11 +70,13 @@ export function Header() {
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6 text-primary"
             >
-              {/* Use a placeholder svg for now - we'll replace with the actual logo */}
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
               <path d="M8 12L11 15L16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="text-xl font-bold text-primary">IyaCare</span>
+            <span className="text-xl font-bold">
+              <span className="text-[#2D7D89]">Iyà</span>
+              <span className="text-[#F7913D]">Care</span>
+            </span>
           </Link>
         </div>
 
@@ -73,6 +98,14 @@ export function Header() {
             Patients
           </Link>
           <Link
+            href="/vitals"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              pathname === '/vitals' ? 'text-primary' : 'text-gray-600'
+            }`}
+          >
+            Vital Signs
+          </Link>
+          <Link
             href="/alerts"
             className={`text-sm font-medium transition-colors hover:text-primary ${
               pathname === '/alerts' ? 'text-primary' : 'text-gray-600'
@@ -81,12 +114,12 @@ export function Header() {
             Alerts
           </Link>
           <Link
-            href="/referrals"
+            href="/analytics"
             className={`text-sm font-medium transition-colors hover:text-primary ${
-              pathname === '/referrals' ? 'text-primary' : 'text-gray-600'
+              pathname === '/analytics' ? 'text-primary' : 'text-gray-600'
             }`}
           >
-            Referrals
+            Analytics
           </Link>
         </nav>
 
@@ -103,18 +136,61 @@ export function Header() {
           </Link>
           
           <div className="flex items-center gap-4">
-            {user ? (
-              <Link href="/profile">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt={user.displayName || "User"} />
-                  <AvatarFallback className="bg-primary text-white">
-                    {user.email?.charAt(0).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
+            {firebaseUser ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={firebaseUser.photoURL || ""} alt={user?.name || firebaseUser.displayName || "User"} />
+                      <AvatarFallback className="bg-primary text-white">
+                        {(user?.name || firebaseUser.displayName || firebaseUser.email)?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex flex-col space-y-1 p-2">
+                    <p className="text-sm font-medium leading-none">
+                      {user?.name || firebaseUser.displayName || "User"}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {firebaseUser.email}
+                    </p>
+                    {!firebaseUser.emailVerified && (
+                      <p className="text-xs text-yellow-600">Email not verified</p>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {process.env.NODE_ENV === 'development' && (
+                    <DropdownMenuItem onClick={handleClearStorage} className="cursor-pointer text-yellow-600">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Clear Storage (Debug)</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/auth/login">
-                <Button variant="outline" size="sm">Sign in</Button>
+                <Button variant="outline" size="sm" disabled={loading}>
+                  {loading ? 'Loading...' : 'Sign in'}
+                </Button>
               </Link>
             )}
           </div>

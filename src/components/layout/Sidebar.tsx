@@ -23,17 +23,17 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Check if we're on the auth pages
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  // Check if we're on the auth pages - moved after all hooks
   const isAuthPage = pathname?.includes('/auth') || pathname === '/';
 
   if (isAuthPage) {
     return null;
   }
   
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
   const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => (
     <Link href={href} onClick={() => setIsOpen(false)}>
       <div
@@ -61,7 +61,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-white border-r border-gray-200 shadow-sm transition-transform duration-200 ease-in-out md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-white shadow-sm transition-transform duration-200 ease-in-out md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

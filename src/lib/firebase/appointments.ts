@@ -12,7 +12,7 @@ import {
   serverTimestamp,
   Timestamp 
 } from 'firebase/firestore';
-import { db } from './config';
+import { db } from '../firebase';
 
 export interface Appointment {
   id?: string;

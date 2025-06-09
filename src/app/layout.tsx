@@ -1,11 +1,10 @@
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
-
-const inter = Inter({ subsets: ["latin"] });
+import { NotificationProvider } from "@/hooks/useNotifications";
 
 export const metadata = {
   title: "IyàCare - Maternal Health Platform",
@@ -18,16 +17,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning className={GeistSans.variable}>
+      <body className={`${GeistSans.className} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem={false}
         >
           <AuthProvider>
-            <MainLayout>{children}</MainLayout>
-            <Toaster />
+            <NotificationProvider>
+              <MainLayout>{children}</MainLayout>
+              <Toaster />
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -8,6 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        geist: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -48,6 +52,13 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            fontFamily: "var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif",
+          }
+        }
+      }
     },
   },
   plugins: [require("tailwindcss-animate")],

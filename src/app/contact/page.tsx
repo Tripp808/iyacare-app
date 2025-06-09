@@ -53,7 +53,7 @@ export default function ContactPage() {
           </p>
         </div>
         
-        <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
+        <Card className="shadow-lg dark:shadow-[#2D7D89]/10">
           <CardHeader>
             <CardTitle>Get in Touch</CardTitle>
             <CardDescription>
@@ -65,7 +65,7 @@ export default function ContactPage() {
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="name"
                     name="name"
@@ -81,7 +81,7 @@ export default function ContactPage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="email"
                     name="email"
@@ -98,7 +98,7 @@ export default function ContactPage() {
               <div className="space-y-2">
                 <Label htmlFor="message">Message</Label>
                 <div className="relative">
-                  <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Textarea
                     id="message"
                     name="message"

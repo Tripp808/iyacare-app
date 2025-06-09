@@ -23,11 +23,13 @@ import {
   X,
   Filter
 } from 'lucide-react';
-import { getAlerts, markAlertAsRead } from '@/lib/firebase/alerts';
+import { getAlerts } from '@/lib/firebase/alerts';
+import { useNotifications } from '@/hooks/useNotifications';
 import { formatDate } from '@/lib/utils';
 import { Alert } from '@/lib/firebase/alerts';
 
 export default function AlertsPage() {
+  const { refreshNotifications, markAsRead } = useNotifications();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,16 +67,15 @@ export default function AlertsPage() {
   // Mark an alert as read
   const handleMarkAsRead = async (alertId: string) => {
     try {
-      const result = await markAlertAsRead(alertId);
+      await markAsRead(alertId);
       
-      if (result.success) {
-        // Update the alerts state to reflect the change
-        setAlerts(alerts.map(alert => 
-          alert.id === alertId ? { ...alert, read: true } : alert
-        ));
-      } else {
-        console.error('Failed to mark alert as read:', result.error);
-      }
+      // Update local state to reflect the change
+      setAlerts(alerts.map(alert => 
+        alert.id === alertId ? { ...alert, read: true } : alert
+      ));
+      
+      // Refresh notifications in the header
+      await refreshNotifications();
     } catch (error) {
       console.error('Error marking alert as read:', error);
     }
@@ -126,7 +127,7 @@ export default function AlertsPage() {
         </Link>
       </div>
 
-      <Card className="border-t-4 border-t-[#2D7D89]">
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle>Alert Management</CardTitle>
           <CardDescription>View and manage all alerts in the system</CardDescription>
@@ -134,7 +135,7 @@ export default function AlertsPage() {
         <CardContent>
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
               <Input
                 placeholder="Search alerts..."
                 className="pl-8"

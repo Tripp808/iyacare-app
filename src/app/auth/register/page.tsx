@@ -115,7 +115,7 @@ export default function RegisterPage() {
         className="w-full max-w-md"
       >
         {showLoginAlert && (
-          <Alert className="mb-6 border-[#F7913D] bg-[#F7913D]/10">
+          <Alert className="mb-6 bg-[#F7913D]/10">
             <Info className="h-4 w-4 text-[#F7913D]" />
             <AlertDescription className="text-sm">
               <strong>Account already exists!</strong> An account with this email address already exists. 
@@ -127,7 +127,7 @@ export default function RegisterPage() {
         )}
         
         {showVerificationInfo && (
-          <Alert className="mb-6 border-[#2D7D89] bg-[#2D7D89]/10">
+          <Alert className="mb-6 bg-[#2D7D89]/10">
             <Mail className="h-4 w-4 text-[#2D7D89]" />
             <AlertDescription className="text-sm">
               <div className="space-y-3">
@@ -143,7 +143,7 @@ export default function RegisterPage() {
                     variant="outline" 
                     size="sm" 
                     onClick={handleResendVerification}
-                    className="text-[#2D7D89] border-[#2D7D89] hover:bg-[#2D7D89] hover:text-white"
+                    className="text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white"
                   >
                     Resend Email
                   </Button>
@@ -160,7 +160,7 @@ export default function RegisterPage() {
             </AlertDescription>
           </Alert>
         )}
-        <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
+        <Card className="shadow-lg dark:shadow-[#2D7D89]/10">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Create an account with </span>
@@ -175,9 +175,9 @@ export default function RegisterPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+                  <Label htmlFor="firstName" className="text-sm">First Name</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                     <Input
                       id="firstName"
                       name="firstName"
@@ -190,9 +190,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium">Last Name</Label>
+                  <Label htmlFor="lastName" className="text-sm">Last Name</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                     <Input
                       id="lastName"
                       name="lastName"
@@ -206,9 +206,9 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                <Label htmlFor="email" className="text-sm">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="email"
                     name="email"
@@ -222,9 +222,9 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role" className="text-sm font-medium">Role</Label>
+                <Label htmlFor="role" className="text-sm">Role</Label>
                 <div className="relative">
-                  <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground z-10" />
+                  <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground z-10" strokeWidth="1.5" />
                   <Select
                     value={formData.role}
                     onValueChange={handleSelectChange}
@@ -242,9 +242,9 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-sm">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="password"
                     name="password"
@@ -258,9 +258,9 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
                 <div className="relative">
-                  <Check className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Check className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -278,7 +278,7 @@ export default function RegisterPage() {
               <Button 
                 type="submit" 
                 size="lg"
-                className="w-full bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium" 
+                className="w-full bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8" 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -289,7 +289,7 @@ export default function RegisterPage() {
                 ) : (
                   <>
                     Create Account
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-4 w-4" strokeWidth="1" />
                   </>
                 )}
               </Button>

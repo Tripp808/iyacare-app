@@ -5,8 +5,8 @@ import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container px-4 md:px-6 py-8">
+    <footer className="bg-background">
+      <div className="container mx-auto px-4 md:px-6 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col items-center md:items-start gap-4">
             <Link href="/" className="flex items-center">
@@ -31,12 +31,12 @@ export function Footer() {
                   />
                 </svg>
               </div>
-              <span className="ml-2 text-2xl font-bold">
+              <span className="ml-2 text-2xl font-bold font-geist">
                 <span className="text-[#2D7D89]">Iyà</span>
                 <span className="text-[#F7913D]">Care</span>
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground text-center md:text-left">
+            <p className="text-sm text-muted-foreground text-center md:text-left font-geist">
               Smart Care for Every Mother, Everywhere.
             </p>
             <div className="flex space-x-4">
@@ -60,14 +60,14 @@ export function Footer() {
           </div>
           
           <div className="flex flex-col items-center md:items-end">
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="text-sm text-muted-foreground mb-2 font-geist">
               &copy; {new Date().getFullYear()} IyàCare. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
-              <Link href="/terms" className="text-muted-foreground hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] transition-colors">
+              <Link href="/terms" className="text-muted-foreground hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] transition-colors font-geist">
                 Terms
               </Link>
-              <Link href="/privacy" className="text-muted-foreground hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] transition-colors">
+              <Link href="/privacy" className="text-muted-foreground hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] transition-colors font-geist">
                 Privacy
               </Link>
             </div>

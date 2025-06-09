@@ -1,0 +1,4 @@
+6a7a217 Fri Jun 6 22:01:36 2025 Major update: Fix appointments-patients connection, remove manual vital signs entry, add synthetic patient data with IoT simulation. Features: Firebase appointments service, 10 synthetic patients with realistic profiles, 160+ IoT vital signs records, AI-ready risk classification system. Technical: Clean TypeScript, proper Firebase integration, real-time vital signs tracking.
+beac7c9 Mon May 19 02:27:59 2025 Add pricing section to homepage and update navigation
+e1bb785 Mon May 19 02:05:39 2025 Initial commit of IyàCare: maternal health monitoring platform with AI risk prediction and blockchain integration
+20553ac Sat May 17 04:22:04 2025 Initial commit from Create Next App

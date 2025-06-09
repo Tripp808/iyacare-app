@@ -46,18 +46,18 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, []);
 
-    async function fetchDashboardData() {
-      try {
-        setLoading(true);
-        
-        // Fetch unread alerts
-        const alertsResult = await getAlerts(false);
-        const unreadAlerts = alertsResult.success ? alertsResult.alerts || [] : [];
-        
-        // Fetch patients to count stats
-        const patientsResult = await getPatients();
-        const patients = patientsResult.success ? patientsResult.patients || [] : [];
-        
+  async function fetchDashboardData() {
+    try {
+      setLoading(true);
+      
+      // Fetch unread alerts
+      const alertsResult = await getAlerts(false);
+      const unreadAlerts = alertsResult.success ? alertsResult.alerts || [] : [];
+      
+      // Fetch patients to count stats
+      const patientsResult = await getPatients();
+      const patients = patientsResult.success ? patientsResult.patients || [] : [];
+      
       // Fetch recent vital signs for analytics
       const vitalSignsResult = await VitalSignsService.getAllVitalSigns();
       const allVitalSigns = vitalSignsResult.success ? vitalSignsResult.vitalSigns || [] : [];
@@ -96,25 +96,26 @@ export default function DashboardPage() {
         })
         .slice(0, 10);
         
-        // Set statistics
-        setStats({
-          totalPatients: patients.length,
+      // Set statistics
+      setStats({
+        totalPatients: patients.length,
         highRiskPatients: riskCounts.high || 0,
         mediumRiskPatients: riskCounts.medium || 0,
         lowRiskPatients: riskCounts.low || 0,
         totalVitalSigns: allVitalSigns.length,
-          unreadAlerts: unreadAlerts.length
-        });
-        
-        setAlerts(unreadAlerts);
+        unreadAlerts: unreadAlerts.length
+      });
+      
+      setAlerts(unreadAlerts);
       setRecentVitalSigns(recentVitals);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  // Render loading state conditionally but after all hooks are called
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -133,15 +134,15 @@ export default function DashboardPage() {
           <span className="text-[#F7913D]">Care</span>
         </h1>
         <Link href="/patients">
-        <Button>
+          <Button>
             <Plus className="mr-2 h-4 w-4" /> Add New Patient
-        </Button>
+          </Button>
         </Link>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-primary">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Patients
@@ -156,7 +157,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               High Risk Patients
@@ -171,7 +172,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-yellow-500">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Medium Risk Patients
@@ -186,7 +187,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Unread Alerts
@@ -208,7 +209,7 @@ export default function DashboardPage() {
       {/* Quick Access Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Link href="/vitals">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-[#2D7D89]/20 hover:border-[#2D7D89]/40">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
             <CardContent className="flex items-center p-4">
               <div className="p-2 bg-[#e6f3f5] dark:bg-[#2D7D89]/20 rounded-full mr-3">
                 <Activity className="h-6 w-6 text-[#2D7D89] dark:text-[#4AA0AD]" />
@@ -222,7 +223,7 @@ export default function DashboardPage() {
         </Link>
         
         <Link href="/patients">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-primary/20 hover:border-primary/40">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
             <CardContent className="flex items-center p-4">
               <div className="p-2 bg-primary/10 rounded-full mr-3">
                 <Users className="h-6 w-6 text-primary" />
@@ -236,7 +237,7 @@ export default function DashboardPage() {
         </Link>
         
         <Link href="/analytics">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-blue-500/20 hover:border-blue-500/40">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
             <CardContent className="flex items-center p-4">
               <div className="p-2 bg-blue-50 dark:bg-blue-500/20 rounded-full mr-3">
                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -250,7 +251,7 @@ export default function DashboardPage() {
         </Link>
         
         <Link href="/alerts">
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50 border-orange-500/20 hover:border-orange-500/40">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
             <CardContent className="flex items-center p-4">
               <div className="p-2 bg-orange-50 dark:bg-orange-500/20 rounded-full mr-3">
                 <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -271,12 +272,12 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Recent Vital Signs</CardTitle>
-            <CardDescription>
+              <CardDescription>
                 {stats.totalVitalSigns > 0 
                   ? `${stats.totalVitalSigns} total readings recorded`
                   : 'No vital signs recorded yet'
                 }
-            </CardDescription>
+              </CardDescription>
             </div>
             <Link href="/vitals">
               <Button variant="outline" size="sm">
@@ -315,8 +316,8 @@ export default function DashboardPage() {
                             'Recent'
                           }
                         </p>
-                </div>
-              </div>
+                      </div>
+                    </div>
                     {vital.aiPrediction?.riskLevel && (
                       <Badge 
                         variant={vital.aiPrediction.riskLevel === 'high' ? 'destructive' : 
@@ -325,7 +326,7 @@ export default function DashboardPage() {
                         {vital.aiPrediction.riskLevel}
                       </Badge>
                     )}
-                </div>
+                  </div>
                 ))}
               </div>
             )}

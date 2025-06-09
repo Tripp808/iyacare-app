@@ -24,22 +24,11 @@ import {
   Trash2
 } from 'lucide-react';
 import { getPatients, Patient } from '@/lib/firebase/patients';
-import { appointmentsService, Appointment } from '@/lib/firebase/appointments';
+import { appointmentsService, Appointment as FirebaseAppointment } from '@/lib/firebase/appointments';
 import { toast } from 'sonner';
 
-// Appointment interface
-interface Appointment {
-  id?: string;
-  patientId: string;
-  patientName: string;
-  date: string;
-  time: string;
-  type: 'routine' | 'emergency' | 'follow-up' | 'consultation';
-  status: 'scheduled' | 'confirmed' | 'pending' | 'completed' | 'cancelled';
-  location: string;
-  notes?: string;
-  createdAt?: Date;
-}
+// Local appointment type for component state
+type AppointmentType = FirebaseAppointment;
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -54,7 +43,7 @@ const getStatusColor = (status: string) => {
 
 export default function AppointmentsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -338,7 +327,7 @@ export default function AppointmentsPage() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                 <Input
                 placeholder="Search appointments..."
                 className="pl-8"
@@ -417,7 +406,7 @@ export default function AppointmentsPage() {
                 
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Calendar className="h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                     <span>{appointment.location}</span>
                   </div>
                   {appointment.notes && (

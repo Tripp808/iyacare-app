@@ -1,86 +1,139 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  BarChart3, 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+import { 
   TrendingUp, 
-  TrendingDown, 
   Users, 
   AlertTriangle, 
-  Heart,
-  Calendar,
+  Activity,
   Download,
-  Filter,
-  Activity
+  Calendar,
+  MapPin,
+  Clock,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-
-// Sample analytics data
-const riskTrendsData = [
-  { month: 'Jan', high: 12, medium: 25, low: 48 },
-  { month: 'Feb', high: 8, medium: 30, low: 52 },
-  { month: 'Mar', high: 15, medium: 28, low: 45 },
-  { month: 'Apr', high: 10, medium: 32, low: 58 },
-  { month: 'May', high: 6, medium: 35, low: 62 },
-  { month: 'Jun', high: 9, medium: 33, low: 59 }
-];
-
-const vitalSignsData = [
-  { time: '06:00', systolic: 120, diastolic: 80, heartRate: 72 },
-  { time: '08:00', systolic: 125, diastolic: 82, heartRate: 75 },
-  { time: '10:00', systolic: 130, diastolic: 85, heartRate: 78 },
-  { time: '12:00', systolic: 128, diastolic: 84, heartRate: 76 },
-  { time: '14:00', systolic: 135, diastolic: 88, heartRate: 80 },
-  { time: '16:00', systolic: 132, diastolic: 86, heartRate: 77 },
-  { time: '18:00', systolic: 128, diastolic: 83, heartRate: 74 }
-];
-
-const riskDistributionData = [
-  { name: 'Low Risk', value: 65, color: '#22c55e' },
-  { name: 'Medium Risk', value: 25, color: '#f59e0b' },
-  { name: 'High Risk', value: 10, color: '#ef4444' }
-];
-
-const geographicData = [
-  { region: 'Lagos', patients: 145, alerts: 8 },
-  { region: 'Abuja', patients: 98, alerts: 5 },
-  { region: 'Kano', patients: 87, alerts: 12 },
-  { region: 'Port Harcourt', patients: 76, alerts: 6 },
-  { region: 'Ibadan', patients: 65, alerts: 4 },
-  { region: 'Enugu', patients: 54, alerts: 7 }
-];
+import { Badge } from '@/components/ui/badge';
+import { AnalyticsService, AnalyticsData } from '@/services/analytics.service';
+import { toast } from 'sonner';
 
 export default function AnalyticsPage() {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<'7days' | '30days' | '90days' | '1year'>('30days');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadAnalyticsData = async (selectedTimeRange?: '7days' | '30days' | '90days' | '1year') => {
+    try {
+      setIsLoading(true);
+      const data = await AnalyticsService.getAnalyticsData(selectedTimeRange || timeRange);
+      setAnalyticsData(data);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+      toast.error('Failed to load analytics data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadAnalyticsData();
+    setIsRefreshing(false);
+    toast.success('Analytics data refreshed');
+  };
+
+  const handleTimeRangeChange = (newTimeRange: '7days' | '30days' | '90days' | '1year') => {
+    setTimeRange(newTimeRange);
+    loadAnalyticsData(newTimeRange);
+  };
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading analytics...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analyticsData) {
+    return (
+      <div className="p-8">
+        <Card>
+          <CardContent className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
+              <p className="text-gray-500 mb-4">Unable to load analytics data</p>
+              <Button onClick={() => loadAnalyticsData()}>Retry</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Analytics Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive insights into maternal health trends and outcomes
+          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="text-gray-600 mt-2">
+            Comprehensive insights into patient health and system performance
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select defaultValue="30days">
+        <div className="flex gap-3">
+          <Select value={timeRange} onValueChange={handleTimeRangeChange}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7days">Last 7 days</SelectItem>
-              <SelectItem value="30days">Last 30 days</SelectItem>
-              <SelectItem value="90days">Last 90 days</SelectItem>
-              <SelectItem value="1year">Last year</SelectItem>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="90days">Last 90 Days</SelectItem>
+              <SelectItem value="1year">Last Year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
-          <Button size="sm" className="bg-[#2D7D89] hover:bg-[#236570] text-white">
+          <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -88,178 +141,227 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,247</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1 text-green-500" />
-              +12% from last month
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Patients</p>
+                <p className="text-3xl font-bold text-gray-900">{analyticsData.totalPatients.toLocaleString()}</p>
+                <p className="text-sm text-green-600 flex items-center mt-2">
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  {analyticsData.patientGrowth >= 0 ? '+' : ''}{analyticsData.patientGrowth.toFixed(1)}% from last period
+                </p>
+              </div>
+              <div className="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Risk Cases</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">89</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingDown className="h-3 w-3 inline mr-1 text-green-500" />
-              -8% from last month
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">High Risk Cases</p>
+                <p className="text-3xl font-bold text-gray-900">{analyticsData.highRiskCases}</p>
+                <p className="text-sm text-gray-500 mt-2">Active monitoring required</p>
+              </div>
+              <div className="h-12 w-12 bg-red-50 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Emergency Alerts</CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">23</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingDown className="h-3 w-3 inline mr-1 text-green-500" />
-              -15% from last month
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Emergency Alerts</p>
+                <p className="text-3xl font-bold text-gray-900">{analyticsData.emergencyAlerts}</p>
+                <p className="text-sm text-gray-500 mt-2">Last {timeRange.replace('days', ' days')}</p>
+              </div>
+              <div className="h-12 w-12 bg-orange-50 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Monitoring</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">156</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1 text-green-500" />
-              +5% from last month
-            </p>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Monitoring</p>
+                <p className="text-3xl font-bold text-gray-900">{analyticsData.activeMonitoring}</p>
+                <p className="text-sm text-gray-500 mt-2">Currently being monitored</p>
+              </div>
+              <div className="h-12 w-12 bg-green-50 rounded-lg flex items-center justify-center">
+                <Activity className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Row 1 */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Risk Trends Chart */}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Risk Level Trends */}
         <Card>
           <CardHeader>
-            <CardTitle>Risk Level Trends</CardTitle>
-            <CardDescription>Monthly distribution of patient risk levels</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Risk Level Trends
+            </CardTitle>
           </CardHeader>
           <CardContent>
+            {analyticsData.riskTrends.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={riskTrendsData}>
+                <BarChart data={analyticsData.riskTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Legend />
-                <Bar dataKey="low" stackId="a" fill="#22c55e" name="Low Risk" />
-                <Bar dataKey="medium" stackId="a" fill="#f59e0b" name="Medium Risk" />
-                <Bar dataKey="high" stackId="a" fill="#ef4444" name="High Risk" />
+                  <Bar dataKey="high" stackId="a" fill="#ef4444" />
+                  <Bar dataKey="medium" stackId="a" fill="#f59e0b" />
+                  <Bar dataKey="low" stackId="a" fill="#22c55e" />
               </BarChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-center">
+                  <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Trend Data</h3>
+                  <p className="text-gray-500">Patient data will appear here as you add patients to the system</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Risk Distribution Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Risk Distribution</CardTitle>
-            <CardDescription>Breakdown of current patient risk levels</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={riskDistributionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {riskDistributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid gap-6 md:grid-cols-2">
         {/* Vital Signs Monitoring */}
         <Card>
           <CardHeader>
-            <CardTitle>Average Vital Signs Today</CardTitle>
-            <CardDescription>Real-time monitoring of patient vital signs</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Vital Signs Monitoring
+            </CardTitle>
           </CardHeader>
           <CardContent>
+            {analyticsData.vitalSignsData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={vitalSignsData}>
+                <LineChart data={analyticsData.vitalSignsData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="time" />
                 <YAxis />
                 <Tooltip />
-                <Legend />
                 <Line 
                   type="monotone" 
                   dataKey="systolic" 
-                  stroke="#2D7D89" 
+                    stroke="#3b82f6" 
                   strokeWidth={2}
                   name="Systolic BP"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="diastolic" 
-                  stroke="#F7913D" 
+                    stroke="#10b981" 
                   strokeWidth={2}
                   name="Diastolic BP"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="heartRate" 
-                  stroke="#22c55e" 
+                    stroke="#f59e0b" 
                   strokeWidth={2}
                   name="Heart Rate"
                 />
               </LineChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-center">
+                  <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Vital Signs Data</h3>
+                  <p className="text-gray-500">Vital signs monitoring data will appear here when patients' vitals are recorded</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Risk Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Risk Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analyticsData.riskDistribution.some(item => item.value > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={analyticsData.riskDistribution.filter(item => item.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {analyticsData.riskDistribution.filter(item => item.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-center">
+                  <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Risk Data</h3>
+                  <p className="text-gray-500">Risk distribution will appear here as you add patients to the system</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Geographic Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Geographic Distribution</CardTitle>
-            <CardDescription>Patient distribution and alerts by region</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Geographic Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={geographicData} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="region" type="category" width={80} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="patients" fill="#2D7D89" name="Patients" />
-                <Bar dataKey="alerts" fill="#F7913D" name="Alerts" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {analyticsData.geographicData.length > 0 ? (
+                analyticsData.geographicData.map((region, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{region.region}</p>
+                      <p className="text-sm text-gray-600">{region.patients} patients</p>
+                    </div>
+                    <Badge variant="secondary">
+                      {region.alerts} alerts
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">No geographic data available</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -267,54 +369,32 @@ export default function AnalyticsPage() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity Summary</CardTitle>
-          <CardDescription>Latest platform activities and insights</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Recent Activity
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                <div>
-                  <p className="font-medium">Successful Risk Prediction</p>
-                  <p className="text-sm text-muted-foreground">AI model identified 3 high-risk cases early</p>
+            {analyticsData.recentActivity.length > 0 ? (
+              analyticsData.recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                  <div className={`h-2 w-2 rounded-full bg-${activity.color}-500`}></div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{activity.title}</p>
+                    <p className="text-sm text-gray-600">{activity.description}</p>
                 </div>
-              </div>
-              <Badge variant="secondary">2 hours ago</Badge>
+                  <div className="text-sm text-gray-500">
+                    {activity.timestamp.toLocaleTimeString()}
             </div>
-
-            <div className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
-                <div>
-                  <p className="font-medium">IoT Device Alert</p>
-                  <p className="text-sm text-muted-foreground">Blood pressure spike detected in Lagos region</p>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No recent activity</p>
               </div>
-              <Badge variant="secondary">4 hours ago</Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                <div>
-                  <p className="font-medium">Blockchain Sync Complete</p>
-                  <p className="text-sm text-muted-foreground">127 patient records synchronized to consortium network</p>
-                </div>
-              </div>
-              <Badge variant="secondary">6 hours ago</Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 bg-purple-500 rounded-full"></div>
-                <div>
-                  <p className="font-medium">Weekly Report Generated</p>
-                  <p className="text-sm text-muted-foreground">Maternal health outcomes report for week ending Jan 21</p>
-                </div>
-              </div>
-              <Badge variant="secondary">1 day ago</Badge>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -155,7 +155,7 @@ export default function AddPatientPage() {
         </Button>
       </div>
 
-      <Card className="border-t-4 border-t-[#2D7D89]">
+      <Card>
         <CardHeader>
           <CardTitle>Patient Information</CardTitle>
           <CardDescription>
@@ -165,7 +165,7 @@ export default function AddPatientPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
             {error && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md border border-red-200">
+              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md">
                 {error}
               </div>
             )}

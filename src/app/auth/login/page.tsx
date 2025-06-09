@@ -93,7 +93,7 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         {showSignUpAlert && (
-          <Alert className="mb-6 border-[#F7913D] bg-[#F7913D]/10">
+          <Alert className="mb-6 bg-[#F7913D]/10">
             <Info className="h-4 w-4 text-[#F7913D]" />
             <AlertDescription className="text-sm">
               <strong>Account not found!</strong> It looks like you don't have an account yet. 
@@ -105,7 +105,7 @@ export default function LoginPage() {
         )}
         
         {showVerificationAlert && (
-          <Alert className="mb-6 border-yellow-500 bg-yellow-50">
+          <Alert className="mb-6 bg-yellow-50">
             <Mail className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-sm">
               <div className="space-y-3">
@@ -118,9 +118,10 @@ export default function LoginPage() {
                 <div className="flex gap-2 pt-2">
                   <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="sm"
                     onClick={handleResendVerification}
-                    className="text-yellow-700 border-yellow-500 hover:bg-yellow-100"
+                    disabled={isLoading}
+                    className="text-yellow-700 hover:bg-yellow-100"
                   >
                     Resend Verification Email
                   </Button>
@@ -130,7 +131,7 @@ export default function LoginPage() {
           </Alert>
         )}
         
-        <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
+        <Card className="shadow-lg dark:shadow-[#2D7D89]/10">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Sign in to </span>
@@ -144,9 +145,9 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                <Label htmlFor="email" className="text-sm">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="email"
                     name="email"
@@ -161,7 +162,7 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                  <Label htmlFor="password" className="text-sm">Password</Label>
                   <Link 
                     href="/auth/forgot-password"
                     className="text-xs text-[#2D7D89] hover:underline dark:text-[#4AA0AD]"
@@ -170,7 +171,7 @@ export default function LoginPage() {
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                   <Input
                     id="password"
                     name="password"
@@ -187,7 +188,7 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 size="lg"
-                className="w-full bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium" 
+                className="w-full bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8" 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -198,7 +199,7 @@ export default function LoginPage() {
                 ) : (
                   <>
                     Sign In
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-4 w-4" strokeWidth="1" />
                   </>
                 )}
               </Button>

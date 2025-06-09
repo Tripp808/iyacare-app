@@ -128,7 +128,7 @@ export default function PatientsPage() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
               <Input
                 placeholder="Search patients..."
                 className="pl-8"
@@ -201,7 +201,7 @@ export default function PatientsPage() {
                         <TableCell>
                           {appointments[patient.id || ''] ? (
                             <div className="flex items-center">
-                              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                               {appointments[patient.id || '']}
                             </div>
                           ) : (
