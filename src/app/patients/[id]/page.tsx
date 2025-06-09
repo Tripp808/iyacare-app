@@ -93,20 +93,20 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
-        <span className="ml-3">Loading patient data...</span>
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2D7D89] border-r-transparent"></div>
+        <span className="ml-3 text-gray-900 dark:text-white">Loading patient data...</span>
       </div>
     );
   }
 
   if (!patient) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <AlertCircle className="h-16 w-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Patient Not Found</h1>
+        <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Patient Not Found</h1>
         <p className="text-muted-foreground mb-6">The requested patient could not be found.</p>
-        <Button onClick={() => router.push('/patients')}>
+        <Button onClick={() => router.push('/patients')} className="bg-[#2D7D89] hover:bg-[#245A62] text-white">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Patients
         </Button>
@@ -117,56 +117,56 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
   // Functions to get risk level badge color
   const getRiskBadgeColor = (risk?: string) => {
     switch (risk?.toLowerCase()) {
-      case 'high': return 'bg-red-100 text-red-800 hover:bg-red-100';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-      case 'low': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+      case 'high': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900';
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900';
+      case 'low': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-100 dark:hover:bg-green-900';
+      default: return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
     }
   };
 
   // Get badge color for alert priority
   const getAlertBadgeColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 hover:bg-red-100';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-      case 'low': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+      case 'high': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900';
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900';
+      case 'low': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-100 dark:hover:bg-green-900';
+      default: return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
     }
   };
 
   // Get alert icon based on type
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case 'risk': return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case 'appointment': return <Calendar className="h-5 w-5 text-blue-500" />;
-      case 'medication': return <Bell className="h-5 w-5 text-purple-500" />;
+      case 'risk': return <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />;
+      case 'appointment': return <Calendar className="h-5 w-5 text-blue-500 dark:text-blue-400" />;
+      case 'medication': return <Bell className="h-5 w-5 text-purple-500 dark:text-purple-400" />;
       case 'system': 
-      default: return <Bell className="h-5 w-5 text-gray-500" />;
+      default: return <Bell className="h-5 w-5 text-gray-500 dark:text-gray-400" />;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white dark:bg-gray-900 min-h-screen p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <Button 
             variant="ghost" 
-            className="pl-0 -ml-4 mb-2" 
+            className="pl-0 -ml-4 mb-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800" 
             onClick={() => router.push('/patients')}
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Back to Patients
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-[#2D7D89]">{patient.firstName}</span>
-            <span className="text-[#F7913D]"> {patient.lastName}</span>
+            <span className="text-[#2D7D89] dark:text-[#4AA0AD]">{patient.firstName}</span>
+            <span className="text-[#F7913D] dark:text-[#FFA558]"> {patient.lastName}</span>
           </h1>
           <div className="flex items-center space-x-2">
             <Badge className={getRiskBadgeColor(patient.riskLevel)}>
               {patient.riskLevel || 'Unknown'} Risk
             </Badge>
             {patient.isPregnant && (
-              <Badge variant="outline" className="border-[#2D7D89] text-[#2D7D89]">
+              <Badge variant="outline" className="border-[#2D7D89] dark:border-[#4AA0AD] text-[#2D7D89] dark:text-[#4AA0AD] bg-white dark:bg-gray-800">
                 Pregnant
               </Badge>
             )}
@@ -174,7 +174,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-2">
           <Button 
-            className="bg-[#2D7D89] hover:bg-[#236570] text-white"
+            className="bg-[#2D7D89] hover:bg-[#245A62] text-white"
             onClick={() => router.push(`/patients/${resolvedParams.id}/edit`)}
           >
             Edit Patient
@@ -183,14 +183,14 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-3 md:w-auto md:grid-cols-4">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89]">Overview</TabsTrigger>
-          <TabsTrigger value="medical" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89]">Medical</TabsTrigger>
-          <TabsTrigger value="appointments" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89]">Appointments</TabsTrigger>
-          <TabsTrigger value="alerts" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89]">
+        <TabsList className="grid w-full grid-cols-3 md:w-auto md:grid-cols-4 bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89] dark:data-[state=active]:bg-[#4AA0AD]/10 dark:data-[state=active]:text-[#4AA0AD] text-gray-700 dark:text-gray-300">Overview</TabsTrigger>
+          <TabsTrigger value="medical" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89] dark:data-[state=active]:bg-[#4AA0AD]/10 dark:data-[state=active]:text-[#4AA0AD] text-gray-700 dark:text-gray-300">Medical</TabsTrigger>
+          <TabsTrigger value="appointments" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89] dark:data-[state=active]:bg-[#4AA0AD]/10 dark:data-[state=active]:text-[#4AA0AD] text-gray-700 dark:text-gray-300">Appointments</TabsTrigger>
+          <TabsTrigger value="alerts" className="data-[state=active]:bg-[#2D7D89]/10 data-[state=active]:text-[#2D7D89] dark:data-[state=active]:bg-[#4AA0AD]/10 dark:data-[state=active]:text-[#4AA0AD] text-gray-700 dark:text-gray-300">
             Alerts
             {alerts.filter(a => !a.read).length > 0 && (
-              <Badge variant="destructive" className="ml-2 bg-[#F7913D] hover:bg-[#F7913D]">
+              <Badge variant="destructive" className="ml-2 bg-[#F7913D] hover:bg-[#F7913D] dark:bg-[#FFA558] dark:hover:bg-[#FFA558] text-white">
                 {alerts.filter(a => !a.read).length}
               </Badge>
             )}

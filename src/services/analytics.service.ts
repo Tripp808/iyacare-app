@@ -60,9 +60,11 @@ interface PatientData {
   id: string;
   createdAt: Date;
   riskLevel?: 'low' | 'medium' | 'high';
-  address?: {
-    state?: string;
+  address?: string | {
+    street?: string;
     city?: string;
+    state?: string;
+    country?: string;
   };
   [key: string]: any;
 }
@@ -137,6 +139,15 @@ export class AnalyticsService {
       createdAt: doc.data().createdAt?.toDate() || new Date()
     })) as PatientData[];
 
+    // Debug logging to see what patients and risk levels we actually have
+    console.log('Analytics Debug - Total patients found:', patients.length);
+    console.log('Analytics Debug - Patient risk levels:', patients.map(p => ({ 
+      id: p.id, 
+      name: `${p.firstName || 'Unknown'} ${p.lastName || 'Unknown'}`, 
+      riskLevel: p.riskLevel,
+      rawRiskLevel: p.riskLevel
+    })));
+
     const totalPatients = patients.length;
     
     // Calculate patients created in the last period for growth rate
@@ -149,14 +160,32 @@ export class AnalyticsService {
 
     const patientGrowth = previousPeriodPatients.length > 0 
       ? ((recentPatients.length - previousPeriodPatients.length) / previousPeriodPatients.length) * 100
-      : 0;
+      : recentPatients.length > 0 ? 100 : 0;
 
-    // Calculate risk distribution
+    // Calculate risk distribution - handle both string and object risk levels
     const riskLevels = patients.reduce((acc: any, patient) => {
-      const riskLevel = patient.riskLevel || 'low';
-      acc[riskLevel] = (acc[riskLevel] || 0) + 1;
+      let riskLevel: string = patient.riskLevel || '';
+      
+      // Debug: Show each patient's original risk level
+      console.log('Analytics Debug - Patient:', `${patient.firstName || 'Unknown'} ${patient.lastName || 'Unknown'}`, 'Original riskLevel:', patient.riskLevel, 'Type:', typeof patient.riskLevel);
+      
+      // Only count patients who actually have a valid risk level assigned
+      if (riskLevel && ['high', 'medium', 'low'].includes(riskLevel.toLowerCase())) {
+        // Normalize risk level to lowercase
+        riskLevel = riskLevel.toLowerCase();
+        acc[riskLevel] = (acc[riskLevel] || 0) + 1;
+      } else {
+        // Count patients without assigned risk levels separately (like dashboard does)
+        acc['unassigned'] = (acc['unassigned'] || 0) + 1;
+        console.log('Analytics Debug - Unassigned patient:', `${patient.firstName || 'Unknown'} ${patient.lastName || 'Unknown'}`, 'riskLevel:', patient.riskLevel);
+      }
+      
       return acc;
-    }, {});
+    }, { low: 0, medium: 0, high: 0, unassigned: 0 });
+
+    // Debug the calculated risk distribution
+    console.log('Analytics Debug - Calculated risk distribution:', riskLevels);
+    console.log('Analytics Debug - Patients with unassigned risk:', riskLevels.unassigned || 0);
 
     const riskDistribution = [
       { name: 'Low Risk', value: riskLevels.low || 0, color: '#22c55e' },
@@ -181,9 +210,28 @@ export class AnalyticsService {
       return acc;
     }, {});
 
-    // Geographic distribution with real alert counts
+    // Geographic distribution - handle string addresses
     const regions = patients.reduce((acc: any, patient) => {
-      const region = patient.address?.state || patient.address?.city || 'Unknown Region';
+      let region = 'Unknown Region';
+      
+      // Handle different address formats
+      if (patient.address) {
+        if (typeof patient.address === 'string') {
+          // Parse string address like "Kigali, Kigali Province, Rwanda"
+          const addressParts = patient.address.split(',').map((part: string) => part.trim());
+          if (addressParts.length >= 2) {
+            // Use the last part (country) or second to last (state/province)
+            region = addressParts[addressParts.length - 1] || addressParts[addressParts.length - 2] || 'Unknown Region';
+          } else if (addressParts.length === 1) {
+            region = addressParts[0];
+          }
+        } else if (typeof patient.address === 'object' && patient.address !== null) {
+          // Handle object address
+          const addr = patient.address as { country?: string; state?: string; city?: string };
+          region = addr.country || addr.state || addr.city || 'Unknown Region';
+        }
+      }
+      
       if (!acc[region]) {
         acc[region] = { patients: 0, alerts: 0 };
       }
@@ -199,13 +247,25 @@ export class AnalyticsService {
         alerts: data.alerts
       }))
       .sort((a, b) => b.patients - a.patients)
-      .slice(0, 6);
+      .slice(0, 8); // Show top 8 regions
+
+    // Calculate high risk cases from actual patient data
+    const highRiskCases = riskLevels.high || 0;
+
+    // Debug: Show final calculations
+    console.log('Analytics Debug - Final calculations:');
+    console.log('- Total patients:', totalPatients);
+    console.log('- High risk cases:', highRiskCases);
+    console.log('- Medium risk cases:', riskLevels.medium || 0);
+    console.log('- Low risk cases:', riskLevels.low || 0);
+    console.log('- Unassigned risk:', riskLevels.unassigned || 0);
 
     return {
       totalPatients,
       patientGrowth,
       riskDistribution,
       geographicData,
+      highRiskCases, // Add this to return the actual high risk count
       activeMonitoring: Math.floor(totalPatients * 0.75) // Estimate 75% active
     };
   }
@@ -227,10 +287,6 @@ export class AnalyticsService {
     const cutoffDate = subDays(new Date(), daysAgo);
     const recentAlerts = alerts.filter(alert => alert.createdAt > cutoffDate);
 
-    const highRiskCases = recentAlerts.filter(alert => 
-      alert.priority === 'high' || alert.type === 'risk'
-    ).length;
-
     const emergencyAlerts = recentAlerts.filter(alert => 
       alert.priority === 'high' && alert.type === 'emergency'
     ).length;
@@ -248,7 +304,6 @@ export class AnalyticsService {
       }));
 
     return {
-      highRiskCases,
       emergencyAlerts,
       recentActivity
     };

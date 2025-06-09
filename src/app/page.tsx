@@ -27,13 +27,6 @@ export default function HomePage() {
   const [activeImage, setActiveImage] = useState(0);
   const [imageError, setImageError] = useState<{[key: string]: boolean}>({});
   
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (firebaseUser) {
-      router.push('/dashboard');
-    }
-  }, [firebaseUser, router]);
-
   // Move this useEffect before any conditional returns
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,11 +35,6 @@ export default function HomePage() {
     
     return () => clearInterval(interval);
   }, []);
-
-  // Don't render the landing page if user is authenticated
-  if (firebaseUser) {
-    return null;
-  }
 
   const handleImageError = (imagePath: string) => {
     console.error(`Failed to load image: ${imagePath}`);
@@ -79,20 +67,41 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link href="/auth/register">
-                  <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/auth/login">
-                  <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
-                    Sign In
-                  </Button>
-                </Link>
+                {firebaseUser ? (
+                  <>
+                    <Link href="/dashboard">
+                      <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
+                        Go to Dashboard
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link href="/patients">
+                      <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
+                        Manage Patients
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth/register">
+                      <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
+                        Get Started
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link href="/auth/login">
+                      <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
+                        Sign In
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
               <p className="text-sm text-muted-foreground pt-2">
-                Trusted by healthcare providers across multiple regions
+                {firebaseUser 
+                  ? "Welcome back! Access your healthcare dashboard and patient management tools."
+                  : "Trusted by healthcare providers across multiple regions"
+                }
               </p>
             </motion.div>
             <motion.div 
