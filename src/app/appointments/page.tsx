@@ -327,7 +327,7 @@ export default function AppointmentsPage() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                 placeholder="Search appointments..."
                 className="pl-8"
@@ -406,7 +406,7 @@ export default function AppointmentsPage() {
                 
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span>{appointment.location}</span>
                   </div>
                   {appointment.notes && (

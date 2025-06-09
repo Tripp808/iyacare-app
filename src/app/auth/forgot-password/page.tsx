@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="shadow-lg dark:shadow-[#2D7D89]/10">
+        <Card className="border-t-4 border-t-[#2D7D89] dark:border-t-[#4AA0AD] shadow-lg dark:shadow-[#2D7D89]/10">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               {emailSent ? 'Check your email' : 'Reset your password'}
@@ -68,9 +68,9 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
                       name="email"
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
                 <Button 
                   type="submit" 
                   size="lg"
-                  className="w-full bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8" 
+                  className="w-full bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                   ) : (
                     <>
                       Send Reset Link
-                      <ArrowRight className="ml-2 h-4 w-4" strokeWidth="1" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>

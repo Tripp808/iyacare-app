@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,13 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Calendar, Save, UserPlus, Loader2 } from 'lucide-react';
-import { addPatient } from '@/lib/firebase/patients';
-import { getRiskStatus } from '@/lib/utils';
+import { ArrowLeft, Calendar, Save, Loader2 } from 'lucide-react';
+import { getPatient, updatePatient } from '@/lib/firebase/patients';
 import { toast } from 'sonner';
 
-export default function AddPatientPage() {
+interface EditPatientPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function EditPatientPage({ params }: EditPatientPageProps) {
   const router = useRouter();
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -61,49 +65,105 @@ export default function AddPatientPage() {
     location: ''
   });
 
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolved = await params;
+      setResolvedParams(resolved);
+    };
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (resolvedParams?.id) {
+      fetchPatientData();
+    }
+  }, [resolvedParams]);
+
+  const fetchPatientData = async () => {
+    if (!resolvedParams?.id) return;
+    
+    try {
+      setLoading(true);
+      const result = await getPatient(resolvedParams.id);
+      
+      if (result.success && result.patient) {
+        const patient = result.patient;
+        
+        // Convert Firebase Timestamps to date strings for inputs
+        const formatDateForInput = (timestamp: any) => {
+          if (!timestamp) return '';
+          let date;
+          if (timestamp.toDate) {
+            date = timestamp.toDate();
+          } else if (timestamp instanceof Date) {
+            date = timestamp;
+          } else {
+            date = new Date(timestamp);
+          }
+          return date.toISOString().split('T')[0];
+        };
+
+        setFormData({
+          firstName: patient.firstName || '',
+          lastName: patient.lastName || '',
+          dateOfBirth: formatDateForInput(patient.dateOfBirth),
+          phone: patient.phone || '',
+          email: patient.email || '',
+          address: patient.address || '',
+          pregnancyStage: patient.pregnancyStage || '',
+          edd: formatDateForInput(patient.edd || patient.dueDate),
+          medicalHistory: patient.medicalHistory || '',
+          bloodType: patient.bloodType || '',
+          notes: patient.notes || '',
+          assignedDoctor: patient.assignedDoctor || '',
+          assignedMidwife: patient.assignedMidwife || '',
+          isPregnant: patient.isPregnant || false,
+          gravida: patient.gravida || '',
+          parity: patient.parity || '',
+          previousComplications: patient.previousComplications || '',
+          gestationalAgeWeeks: patient.gestationalAgeWeeks || '',
+          ancVisits: patient.ancVisits || '',
+          hemoglobin: patient.hemoglobin || '',
+          bmi: patient.bmi || '',
+          fetalMovementCount: patient.fetalMovementCount || '',
+          systolicBP: patient.systolicBP || '',
+          diastolicBP: patient.diastolicBP || '',
+          heartRate: patient.heartRate || '',
+          bloodSugar: patient.bloodSugar || '',
+          temperature: patient.temperature || '',
+          preferredLanguage: patient.preferredLanguage || '',
+          emergencyContact: patient.emergencyContact || '',
+          assignedCHW: patient.assignedCHW || '',
+          consentToBlockchain: patient.consentToBlockchain || false,
+          location: patient.location || ''
+        });
+      } else {
+        setError(result.error || 'Failed to load patient data');
+        toast.error(result.error || 'Failed to load patient data');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while loading patient data');
+      toast.error(err.message || 'An error occurred while loading patient data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing again
     if (error) setError('');
   };
 
   const handleSelectChange = (value: string, field: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user makes a selection
     if (error) setError('');
-  };
-
-  const calculatePatientRisk = () => {
-    // Calculate age from date of birth
-    let age = 0;
-    if (formData.dateOfBirth) {
-      const dob = new Date(formData.dateOfBirth);
-      const diffMs = Date.now() - dob.getTime();
-      const ageDate = new Date(diffMs);
-      age = Math.abs(ageDate.getUTCFullYear() - 1970);
-    }
-
-    // Calculate pregnancy week from EDD
-    let pregnancyWeek = 0;
-    if (formData.edd) {
-      const dueDate = new Date(formData.edd);
-      const now = new Date();
-      const fullTermDays = 280;
-      const daysLeft = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      pregnancyWeek = Math.floor((fullTermDays - daysLeft) / 7);
-      pregnancyWeek = pregnancyWeek > 0 ? (pregnancyWeek <= 42 ? pregnancyWeek : 42) : 0;
-    }
-
-    // Get risk assessment
-    return getRiskStatus(age, formData.medicalHistory, pregnancyWeek);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
-    if (submitting) return;
+    if (submitting || !resolvedParams?.id) return;
     
     setSubmitting(true);
     setError('');
@@ -116,18 +176,14 @@ export default function AddPatientPage() {
     }
 
     try {
-      // Submit patient data without risk level - AI will determine risk from vital signs
-      const patientData = { ...formData };
-
-      // Submit patient data
-      const result = await addPatient(patientData);
+      const result = await updatePatient(resolvedParams.id, formData);
       
       if (result.success) {
-        toast.success("Patient added successfully");
-        router.push(`/patients/${result.id}`);
+        toast.success("Patient updated successfully");
+        router.push(`/patients/${resolvedParams.id}`);
       } else {
-        setError(result.error || 'Failed to add patient');
-        toast.error(result.error || 'Failed to add patient');
+        setError(result.error || 'Failed to update patient');
+        toast.error(result.error || 'Failed to update patient');
       }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred';
@@ -138,28 +194,39 @@ export default function AddPatientPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin text-[#2D7D89]" />
+          <span>Loading patient data...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-[#2D7D89]">Add</span>
+          <span className="text-[#2D7D89]">Edit</span>
           <span className="text-[#F7913D]"> Patient</span>
         </h1>
         <Button 
           variant="outline" 
-          onClick={() => router.push('/patients')}
+          onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Patients
+          Back to Patient
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Patient Information</CardTitle>
+          <CardTitle>Update Patient Information</CardTitle>
           <CardDescription>
-            Enter the patient's personal and medical information
+            Modify the patient's personal and medical information
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -376,168 +443,44 @@ export default function AddPatientPage() {
                       onChange={handleChange}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Gestational Age (Weeks)
-                    </label>
-                    <Input
-                      name="gestationalAgeWeeks"
-                      type="number"
-                      min="0"
-                      max="42"
-                      placeholder="Current week of pregnancy"
-                      value={formData.gestationalAgeWeeks}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      ANC Visits (so far)
-                    </label>
-                    <Input
-                      name="ancVisits"
-                      type="number"
-                      min="0"
-                      placeholder="Number of antenatal care visits"
-                      value={formData.ancVisits}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Hemoglobin Level (g/dL)
-                    </label>
-                    <Input
-                      name="hemoglobin"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="e.g., 11.5"
-                      value={formData.hemoglobin}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      BMI
-                    </label>
-                    <Input
-                      name="bmi"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="e.g., 24.5"
-                      value={formData.bmi}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Fetal Movement Count
-                    </label>
-                    <Input
-                      name="fetalMovementCount"
-                      placeholder="e.g., 10 per hour"
-                      value={formData.fetalMovementCount}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Previous Complications
-                    </label>
-                    <Input
-                      name="previousComplications"
-                      placeholder="e.g., None, Preeclampsia, etc."
-                      value={formData.previousComplications}
-                      onChange={handleChange}
-                    />
-                  </div>
                 </div>
               )}
-            </div>
-
-            {/* Current Vitals Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Current Vitals</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Systolic BP (mmHg)
-                  </label>
-                  <Input
-                    name="systolicBP"
-                    type="number"
-                    min="0"
-                    max="300"
-                    placeholder="e.g., 120"
-                    value={formData.systolicBP}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Diastolic BP (mmHg)
-                  </label>
-                  <Input
-                    name="diastolicBP"
-                    type="number"
-                    min="0"
-                    max="200"
-                    placeholder="e.g., 80"
-                    value={formData.diastolicBP}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Heart Rate (BPM)
-                  </label>
-                  <Input
-                    name="heartRate"
-                    type="number"
-                    min="0"
-                    max="250"
-                    placeholder="e.g., 75"
-                    value={formData.heartRate}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Blood Sugar (mmol/L)
-                  </label>
-                  <Input
-                    name="bloodSugar"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    placeholder="e.g., 5.5"
-                    value={formData.bloodSugar}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Temperature (°C)
-                  </label>
-                  <Input
-                    name="temperature"
-                    type="number"
-                    step="0.1"
-                    min="30"
-                    max="45"
-                    placeholder="e.g., 36.8"
-                    value={formData.temperature}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Medical Information Section */}
             <div>
               <h3 className="text-lg font-medium mb-4">Medical Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Medical History
+                  </label>
+                  <Textarea
+                    name="medicalHistory"
+                    placeholder="Enter medical history, chronic conditions, allergies, etc."
+                    value={formData.medicalHistory}
+                    onChange={handleChange}
+                    className="min-h-[100px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Notes
+                  </label>
+                  <Textarea
+                    name="notes"
+                    placeholder="Additional notes about the patient"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Healthcare Team Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Healthcare Team</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
@@ -563,11 +506,11 @@ export default function AddPatientPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Community Health Worker
+                    Community Health Worker (CHW)
                   </label>
                   <Input
                     name="assignedCHW"
-                    placeholder="CHW name"
+                    placeholder="CHW's name"
                     value={formData.assignedCHW}
                     onChange={handleChange}
                   />
@@ -578,95 +521,42 @@ export default function AddPatientPage() {
                   </label>
                   <Input
                     name="emergencyContact"
-                    placeholder="Phone number"
+                    placeholder="Emergency contact number"
                     value={formData.emergencyContact}
                     onChange={handleChange}
                   />
                 </div>
               </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium mb-1">
-                  Medical History
-                </label>
-                <Textarea
-                  name="medicalHistory"
-                  placeholder="Previous pregnancies, existing conditions, medications, surgeries, etc."
-                  value={formData.medicalHistory}
-                  onChange={handleChange}
-                  rows={4}
-                />
-              </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium mb-1">
-                  Additional Notes
-                </label>
-                <Textarea
-                  name="notes"
-                  placeholder="Any other relevant information about the patient"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={3}
-                />
-              </div>
             </div>
 
-            {/* Communication & Blockchain Section */}
+            {/* Consent */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Communication & Blockchain Consent</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Preferred Language
-                  </label>
-                  <Select
-                    onValueChange={(value) => handleSelectChange(value, 'preferredLanguage')}
-                    value={formData.preferredLanguage}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select preferred language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="English">English</SelectItem>
-                      <SelectItem value="Igbo">Igbo</SelectItem>
-                      <SelectItem value="Yoruba">Yoruba</SelectItem>
-                      <SelectItem value="Hausa">Hausa</SelectItem>
-                      <SelectItem value="Pidgin">Pidgin</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center space-x-2 mt-2">
-                  <input
-                    type="checkbox"
-                    id="consentToBlockchain"
-                    name="consentToBlockchain"
-                    checked={formData.consentToBlockchain}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        consentToBlockchain: e.target.checked
-                      });
-                    }}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="consentToBlockchain" className="text-sm text-gray-700">
-                    Patient consents to storing their health records securely on blockchain for improved care coordination
-                  </label>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  By checking this box, the patient agrees to have their health information securely stored on a private blockchain network, 
-                  accessible only to authorized healthcare providers. This improves continuity of care even when visiting different facilities.
-                </p>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="consentToBlockchain"
+                  name="consentToBlockchain"
+                  checked={formData.consentToBlockchain}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      consentToBlockchain: e.target.checked
+                    });
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="consentToBlockchain" className="text-sm text-gray-700">
+                  I consent to having my medical data securely stored on the blockchain for improved healthcare delivery
+                </label>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row gap-4">
+
+          <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
             <Button 
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/patients')}
+              type="button" 
+              variant="outline" 
+              onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
               className="w-full sm:w-auto order-2 sm:order-1"
             >
               Cancel
@@ -679,12 +569,12 @@ export default function AddPatientPage() {
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding Patient...
+                  Updating Patient...
                 </>
               ) : (
                 <>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add Patient
+                  <Save className="mr-2 h-4 w-4" />
+                  Update Patient
                 </>
               )}
             </Button>

@@ -72,11 +72,11 @@ export function NotificationDropdown() {
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
+      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg">
+        <DropdownMenuLabel className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <span className="font-semibold text-gray-900 dark:text-gray-100">Notifications</span>
           {unreadCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs bg-[#F7913D] text-white">
               {unreadCount} new
             </Badge>
           )}
@@ -94,7 +94,7 @@ export function NotificationDropdown() {
             {notifications.slice(0, 5).map((notification) => (
               <DropdownMenuItem 
                 key={notification.id} 
-                className="flex items-start gap-3 p-3 cursor-pointer hover:bg-muted/50"
+                className="flex items-start gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                 onClick={() => handleMarkAsRead(notification.id!)}
               >
                 <div className="flex-shrink-0 mt-0.5">
@@ -102,7 +102,7 @@ export function NotificationDropdown() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
                       {notification.patientName}
                     </p>
                     <Badge 
@@ -112,17 +112,17 @@ export function NotificationDropdown() {
                       {notification.priority}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-1">
                     {notification.message}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-500 dark:text-gray-500">
                     {formatNotificationTime(notification.createdAt)}
                   </p>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 flex-shrink-0"
+                  className="h-6 w-6 p-0 flex-shrink-0 hover:bg-gray-200 dark:hover:bg-gray-600"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleMarkAsRead(notification.id!);
@@ -150,11 +150,11 @@ export function NotificationDropdown() {
           </>
         )}
         
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
         <DropdownMenuItem asChild>
           <Link 
             href="/alerts" 
-            className="text-center text-sm cursor-pointer"
+            className="text-center text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] hover:bg-gray-50 dark:hover:bg-gray-800 py-2"
             onClick={() => setIsOpen(false)}
           >
             Go to Alert Center

@@ -173,7 +173,10 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-2">
-          <Button className="bg-[#2D7D89] hover:bg-[#236570]">
+          <Button 
+            className="bg-[#2D7D89] hover:bg-[#236570] text-white"
+            onClick={() => router.push(`/patients/${resolvedParams.id}/edit`)}
+          >
             Edit Patient
           </Button>
         </div>

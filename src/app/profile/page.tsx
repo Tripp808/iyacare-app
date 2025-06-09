@@ -252,7 +252,7 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             <div className="flex flex-col items-center space-y-4">
               <div className="relative">
-                <div className="h-32 w-32 rounded-full bg-muted overflow-hidden border-4 border-border">
+                <div className="h-32 w-32 rounded-full bg-muted overflow-hidden border-[2px] border-gray-200 dark:border-gray-700 shadow-sm">
                   {profileData.profilePicture ? (
                     <img 
                       src={profileData.profilePicture} 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -139,6 +140,17 @@ export default function CreateAlertPage() {
     }
   };
 
+  // Get a human-readable label for alert types
+  const getAlertTypeLabel = (type: string) => {
+    switch (type) {
+      case 'risk': return 'Patient Risk';
+      case 'appointment': return 'Appointment';
+      case 'medication': return 'Medication';
+      case 'system': return 'System Alert';
+      default: return type;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -151,7 +163,7 @@ export default function CreateAlertPage() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="border-t-4 border-t-[#2D7D89]">
         <CardHeader>
           <CardTitle>Alert Details</CardTitle>
           <CardDescription>
@@ -294,7 +306,7 @@ export default function CreateAlertPage() {
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="w-full bg-[#2D7D89] hover:bg-[#236570]"
+                className="w-full bg-[#2D7D89] hover:bg-[#236570] text-white"
               >
                 {isSubmitting ? (
                   <>

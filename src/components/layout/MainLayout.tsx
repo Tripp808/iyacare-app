@@ -69,7 +69,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header 
-        className={`sticky top-0 z-50 w-full transition-all duration-200 ${
+        className={`sticky top-0 z-50 w-full border-b border-gray-300 dark:border-gray-600 transition-all duration-200 ${
           isScrolled 
             ? 'bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-sm' 
             : 'bg-background'
@@ -274,7 +274,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       </header>
       <div className={`flex-1 bg-background ${isAuthenticated && !showCleanLayout ? 'md:grid md:grid-cols-[220px_1fr]' : ''}`}>
         {isAuthenticated && !showCleanLayout && (
-          <aside className="hidden bg-muted/40 md:block">
+          <aside className="hidden bg-gray-50 dark:bg-gray-900 md:block border-r border-gray-300 dark:border-gray-600">
             <div className="flex h-full max-h-screen flex-col gap-2">
               <div className="flex-1 overflow-auto py-2">
                 <SidebarNav className="px-2 py-2" />
@@ -282,7 +282,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             </div>
           </aside>
         )}
-        <main className={`flex-1 overflow-auto p-4 md:p-6 pt-2 bg-background ${isAuthenticated && !showCleanLayout ? '' : 'min-h-[calc(100vh-112px)]'}`}>
+        <main className={`flex-1 overflow-auto p-4 md:p-6 pt-2 bg-white dark:bg-gray-800 ${isAuthenticated && !showCleanLayout ? '' : 'min-h-[calc(100vh-112px)]'}`}>
           <div className="container mx-auto max-w-6xl">{children}</div>
         </main>
       </div>

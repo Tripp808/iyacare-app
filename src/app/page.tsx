@@ -27,9 +27,14 @@ export default function HomePage() {
   const [activeImage, setActiveImage] = useState(0);
   const [imageError, setImageError] = useState<{[key: string]: boolean}>({});
   
-  // Don't automatically redirect authenticated users - let them see the homepage
-  // Only redirect if they explicitly try to sign up or log in when already authenticated
-  
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (firebaseUser) {
+      router.push('/dashboard');
+    }
+  }, [firebaseUser, router]);
+
+  // Move this useEffect before any conditional returns
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveImage((prev) => (prev === 0 ? 1 : 0));
@@ -38,32 +43,18 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Don't render the landing page if user is authenticated
+  if (firebaseUser) {
+    return null;
+  }
+
   const handleImageError = (imagePath: string) => {
     console.error(`Failed to load image: ${imagePath}`);
     setImageError(prev => ({...prev, [imagePath]: true}));
   };
 
-  const handleGetStarted = () => {
-    if (firebaseUser) {
-      router.push('/dashboard');
-    } else {
-      router.push('/auth/register');
-    }
-  };
-
-  const handleSignIn = () => {
-    if (firebaseUser) {
-      router.push('/dashboard');
-    } else {
-      router.push('/auth/login');
-    }
-  };
-
-  // Allow both authenticated and unauthenticated users to see the homepage
-  // Show different button text based on authentication status
-
   return (
-    <div className="flex flex-col font-inter">
+    <div className="flex flex-col">
       {/* Hero Section */}
       <section className="w-full py-6 md:py-8 lg:py-12 bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
         <div className="container px-4 md:px-6 mx-auto">
@@ -74,38 +65,33 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-[#e6f3f5]/70 backdrop-blur-md border border-[#b8e0e6]/30 shadow-sm text-[#2D7D89] dark:bg-[#e6f3f5]/20 dark:text-[#4AA0AD] w-fit font-inter">
+              <div className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-[#e6f3f5]/70 backdrop-blur-md border border-[#b8e0e6]/30 shadow-sm text-[#2D7D89] dark:bg-[#e6f3f5]/20 dark:text-[#4AA0AD] w-fit">
                 Transforming maternal healthcare in low-resource settings
               </div>
               <div className="space-y-3">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-inter">
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
                   <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Iyà</span>
                   <span className="text-[#F7913D]">Care</span>
                   <span className="block text-foreground mt-2 text-3xl sm:text-4xl xl:text-5xl">AI-Powered Maternal Health Monitoring</span>
                 </h1>
-                <p className="max-w-[600px] text-lg text-muted-foreground md:text-xl font-inter">
+                <p className="max-w-[600px] text-lg text-muted-foreground md:text-xl">
                   An integrated digital platform using AI and IoT devices to predict pregnancy risks, monitor vital signs, and securely share health records via blockchain technology.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button 
-                  size="lg" 
-                  className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium border-0 font-inter"
-                  onClick={handleGetStarted}
-                >
-                  {firebaseUser ? 'Go to Dashboard' : 'Get Started'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10 font-inter"
-                  onClick={handleSignIn}
-                >
-                  {firebaseUser ? 'Dashboard' : 'Sign In'}
-                </Button>
+                <Link href="/auth/register">
+                  <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/auth/login">
+                  <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
+                    Sign In
+                  </Button>
+                </Link>
               </div>
-              <p className="text-sm text-muted-foreground pt-2 font-inter">
+              <p className="text-sm text-muted-foreground pt-2">
                 Trusted by healthcare providers across multiple regions
               </p>
             </motion.div>
@@ -136,7 +122,7 @@ export default function HomePage() {
                       />
                       {imageError["/images/doctor-with-child.jpg"] && (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-2xl">
-                          <p className="text-gray-500 font-inter">Image not available</p>
+                          <p className="text-gray-500">Image not available</p>
                         </div>
                       )}
                     </div>
@@ -158,7 +144,7 @@ export default function HomePage() {
                       />
                       {imageError["/images/maternal-care.jpg"] && (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-2xl">
-                          <p className="text-gray-500 font-inter">Image not available</p>
+                          <p className="text-gray-500">Image not available</p>
                         </div>
                       )}
                     </div>
@@ -179,14 +165,14 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD] font-inter">
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD]">
               Our Platform
             </div>
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-inter">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
                 <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Features</span> designed for maternal care
               </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed font-inter">
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
                 Our platform offers comprehensive tools to support mothers and healthcare providers
               </p>
             </div>
@@ -195,7 +181,7 @@ export default function HomePage() {
             {features.map((feature, index) => (
               <motion.div 
                 key={index} 
-                className="flex flex-col h-full space-y-4 rounded-xl p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background"
+                className="flex flex-col h-full space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background dark:border-muted dark:hover:border-[#2D7D89]/50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 * index }}
@@ -203,8 +189,8 @@ export default function HomePage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e6f3f5] dark:bg-[#2D7D89]/20">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold font-inter">{feature.name}</h3>
-                <p className="text-muted-foreground flex-grow font-inter">{feature.description}</p>
+                <h3 className="text-xl font-bold">{feature.name}</h3>
+                <p className="text-muted-foreground flex-grow">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -257,14 +243,14 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD] font-inter">
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD]">
               Pricing
             </div>
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-inter">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
                 <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Affordable</span> solutions for healthcare facilities
               </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed font-inter">
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
                 Our subscription plans are designed for clinics and hospitals of all sizes
               </p>
             </div>
@@ -273,7 +259,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-5xl grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {/* Essential Plan */}
             <motion.div 
-              className="flex flex-col rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background/80 dark:border-muted font-inter"
+              className="flex flex-col rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background/80 dark:border-muted"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -323,7 +309,7 @@ export default function HomePage() {
 
             {/* Premium Plan */}
             <motion.div 
-              className="flex flex-col rounded-xl border-2 border-[#2D7D89] p-6 shadow-md transition-all hover:shadow-lg bg-white dark:bg-background/80 relative font-inter"
+              className="flex flex-col rounded-xl border-2 border-[#2D7D89] p-6 shadow-md transition-all hover:shadow-lg bg-white dark:bg-background/80 relative"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -377,7 +363,7 @@ export default function HomePage() {
 
             {/* Enterprise Plan */}
             <motion.div 
-              className="flex flex-col rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background/80 dark:border-muted font-inter"
+              className="flex flex-col rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background/80 dark:border-muted"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
@@ -429,7 +415,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="w-full py-8 md:py-12 bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
+      <section className="w-full py-8 md:py-12 border-t bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-background dark:to-muted/10">
         <div className="container px-4 md:px-6">
           <motion.div 
             className="flex flex-col items-center justify-center space-y-6 text-center"
@@ -438,10 +424,10 @@ export default function HomePage() {
             transition={{ duration: 0.5 }}
           >
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-inter">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
                 Ready to transform maternal healthcare in your community?
               </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed font-inter">
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
                 Join the growing network of healthcare facilities using IyàCare to reduce maternal mortality rates
               </p>
             </div>

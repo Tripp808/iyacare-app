@@ -228,6 +228,23 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1">
           Manage your account, notifications, and platform configuration
         </p>
+        {user?.name && (
+          <div className="mt-4 p-4 bg-gradient-to-r from-[#2D7D89]/10 to-[#F7913D]/10 rounded-lg border border-[#2D7D89]/20">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-[#2D7D89] flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-[#2D7D89] dark:text-[#4AA0AD]">
+                  Welcome, {user.name}!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {user.email} • {user.role?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="account" className="space-y-6">
@@ -285,7 +302,7 @@ export default function SettingsPage() {
                 <Label>Profile Picture</Label>
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="h-20 w-20 rounded-full bg-muted overflow-hidden border-2 border-border">
+                    <div className="h-20 w-20 rounded-full bg-muted overflow-hidden border-[1px] border-gray-200 dark:border-gray-700">
                       {profileData.profilePicture ? (
                         <img 
                           src={profileData.profilePicture} 
@@ -439,17 +456,17 @@ export default function SettingsPage() {
         {/* Notification Settings */}
         <TabsContent value="notifications" className="space-y-6">
           <Card>
-          <CardHeader>
+            <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
-            <CardDescription>
+              <CardDescription>
                 Configure how you want to receive alerts and updates
-            </CardDescription>
-          </CardHeader>
-            <CardContent className="space-y-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Email Notifications</Label>
+                    <Label className="text-foreground font-medium">Email Notifications</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive notifications via email
                     </p>
@@ -462,7 +479,7 @@ export default function SettingsPage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>SMS Notifications</Label>
+                    <Label className="text-foreground font-medium">SMS Notifications</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive critical alerts via SMS
                     </p>
@@ -475,7 +492,7 @@ export default function SettingsPage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Push Notifications</Label>
+                    <Label className="text-foreground font-medium">Push Notifications</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive real-time push notifications
                     </p>
@@ -488,7 +505,7 @@ export default function SettingsPage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Emergency Alerts</Label>
+                    <Label className="text-foreground font-medium">Emergency Alerts</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive emergency notifications (recommended)
                     </p>
@@ -501,7 +518,7 @@ export default function SettingsPage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Report Updates</Label>
+                    <Label className="text-foreground font-medium">Report Updates</Label>
                     <p className="text-sm text-muted-foreground">
                       Get notified when reports are ready
                     </p>
@@ -514,8 +531,8 @@ export default function SettingsPage() {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>System Updates</Label>
-            <p className="text-sm text-muted-foreground">
+                    <Label className="text-foreground font-medium">System Updates</Label>
+                    <p className="text-sm text-muted-foreground">
                       Platform updates and announcements
                     </p>
                   </div>
@@ -526,12 +543,14 @@ export default function SettingsPage() {
                 </div>
               </div>
               
-              <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
-                <Save className="h-4 w-4 mr-2" />
-                Save Notification Settings
-              </Button>
-          </CardContent>
-        </Card>
+              <div className="pt-6">
+                <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Notification Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Security Settings */}
