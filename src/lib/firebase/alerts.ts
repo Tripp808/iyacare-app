@@ -248,20 +248,11 @@ export async function createHighRiskAlert(
 }
 
 /**
- * Check all patients and create alerts for high-risk patients who don't have recent alerts
+ * Check provided patients and create alerts for high-risk patients who don't have recent alerts
  */
-export async function checkAndCreateHighRiskAlerts(): Promise<void> {
+export async function checkAndCreateHighRiskAlerts(patients: any[]): Promise<void> {
   try {
-    // Import getPatients function here to avoid circular imports
-    const { getPatients } = await import('./patients');
-    
-    const patientsResult = await getPatients();
-    if (!patientsResult.success || !patientsResult.patients) {
-      console.error('Failed to fetch patients for high-risk alert check');
-      return;
-    }
-
-    const highRiskPatients = patientsResult.patients.filter(
+    const highRiskPatients = patients.filter(
       patient => patient.riskLevel === 'high'
     );
 

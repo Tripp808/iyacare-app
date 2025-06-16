@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function HomePage() {
   const { firebaseUser } = useAuth();
@@ -39,6 +40,22 @@ export default function HomePage() {
   const handleImageError = (imagePath: string) => {
     console.error(`Failed to load image: ${imagePath}`);
     setImageError(prev => ({...prev, [imagePath]: true}));
+  };
+
+  const handleProtectedRoute = (route: string) => {
+    if (!firebaseUser) {
+      toast.error("Please sign in to access this feature");
+      router.push('/auth/login');
+      return;
+    }
+
+    if (!firebaseUser.emailVerified) {
+      toast.error("Please verify your email address first");
+      router.push('/auth/login');
+      return;
+    }
+
+    router.push(route);
   };
 
   return (
@@ -67,41 +84,20 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                {firebaseUser ? (
-                  <>
-                    <Link href="/dashboard">
-                      <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
-                        Go to Dashboard
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Link href="/patients">
-                      <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
-                        Manage Patients
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/auth/register">
-                      <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
-                        Get Started
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Link href="/auth/login">
-                      <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
-                        Sign In
-                      </Button>
-                    </Link>
-                  </>
-                )}
+                <Link href="/auth/register">
+                  <Button size="lg" className="bg-[#2D7D89] hover:bg-[#236570] dark:bg-[#4AA0AD] dark:hover:bg-[#2D7D89] text-white rounded-full h-12 px-8 font-medium">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/auth/login">
+                  <Button variant="outline" size="lg" className="rounded-full h-12 px-8 font-medium border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 dark:border-[#4AA0AD] dark:text-[#4AA0AD] dark:hover:bg-[#4AA0AD]/10">
+                    Sign In
+                  </Button>
+                </Link>
               </div>
               <p className="text-sm text-muted-foreground pt-2">
-                {firebaseUser 
-                  ? "Welcome back! Access your healthcare dashboard and patient management tools."
-                  : "Trusted by healthcare providers across multiple regions"
-                }
+                Trusted by healthcare providers across multiple regions
               </p>
             </motion.div>
             <motion.div 

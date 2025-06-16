@@ -48,29 +48,6 @@ export const addPatient = async (patientData: Omit<Patient, 'id' | 'createdAt' |
       updatedAt: serverTimestamp()
     });
     
-    // If patient is classified as high-risk, create an alert
-    if (patientData.riskLevel === 'high') {
-      try {
-        const patientName = `${patientData.firstName} ${patientData.lastName}`;
-        
-        // Import the alert function dynamically to avoid circular imports
-        const { createHighRiskAlert } = await import('./alerts');
-        
-        // Determine risk factors
-        const riskFactors: string[] = [];
-        if (patientData.isPregnant) riskFactors.push('pregnancy complications');
-        if (patientData.medicalHistory?.toLowerCase().includes('hypertension')) riskFactors.push('hypertension');
-        if (patientData.medicalHistory?.toLowerCase().includes('diabetes')) riskFactors.push('diabetes');
-        if (patientData.medicalHistory?.toLowerCase().includes('heart')) riskFactors.push('cardiac history');
-        
-        await createHighRiskAlert(docRef.id, patientName, riskFactors);
-        console.log(`Auto-created high-risk alert for new patient: ${patientName}`);
-      } catch (alertError) {
-        console.error('Failed to create high-risk alert for new patient:', alertError);
-        // Don't fail the patient creation if alert creation fails
-      }
-    }
-    
     return { success: true, id: docRef.id };
   } catch (error: any) {
     return { 
@@ -83,51 +60,11 @@ export const addPatient = async (patientData: Omit<Patient, 'id' | 'createdAt' |
 // Update a patient
 export const updatePatient = async (id: string, patientData: Partial<Patient>) => {
   try {
-    // Check if risk level is being updated to 'high'
-    const isNewHighRisk = patientData.riskLevel === 'high';
-    
-    // Get current patient data to check previous risk level
-    let previousRiskLevel = null;
-    if (isNewHighRisk) {
-      const currentPatientResult = await getPatient(id);
-      if (currentPatientResult.success && currentPatientResult.patient) {
-        previousRiskLevel = currentPatientResult.patient.riskLevel;
-      }
-    }
-    
     const patientRef = doc(db, 'patients', id);
     await updateDoc(patientRef, {
       ...patientData,
       updatedAt: serverTimestamp()
     });
-    
-    // If patient is newly classified as high-risk, create an alert
-    if (isNewHighRisk && previousRiskLevel !== 'high') {
-      try {
-        // Get updated patient data to get the name
-        const updatedPatientResult = await getPatient(id);
-        if (updatedPatientResult.success && updatedPatientResult.patient) {
-          const patient = updatedPatientResult.patient;
-          const patientName = `${patient.firstName} ${patient.lastName}`;
-          
-          // Import the alert function dynamically to avoid circular imports
-          const { createHighRiskAlert } = await import('./alerts');
-          
-          // Determine risk factors
-          const riskFactors: string[] = [];
-          if (patient.isPregnant) riskFactors.push('pregnancy complications');
-          if (patient.medicalHistory?.toLowerCase().includes('hypertension')) riskFactors.push('hypertension');
-          if (patient.medicalHistory?.toLowerCase().includes('diabetes')) riskFactors.push('diabetes');
-          if (patient.medicalHistory?.toLowerCase().includes('heart')) riskFactors.push('cardiac history');
-          
-          await createHighRiskAlert(id, patientName, riskFactors);
-          console.log(`Auto-created high-risk alert for patient: ${patientName}`);
-        }
-      } catch (alertError) {
-        console.error('Failed to create high-risk alert:', alertError);
-        // Don't fail the patient update if alert creation fails
-      }
-    }
     
     return { success: true };
   } catch (error: any) {

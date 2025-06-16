@@ -211,4 +211,154 @@ export interface HealthRecord {
   notes?: string;
   attachments?: string[];
   createdAt: Date;
+}
+
+// SMS and Communication Types
+export interface SMSMessage {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  phoneNumber: string;
+  message: string;
+  content: string;
+  type: 'reminder' | 'appointment' | 'health_tip' | 'alert' | 'medication' | 'follow_up' | 'survey' | 'emergency' | 'manual';
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'read' | 'scheduled';
+  priority: 'low' | 'normal' | 'medium' | 'high' | 'urgent' | 'critical';
+  sentAt?: Date;
+  deliveredAt?: Date;
+  readAt?: Date;
+  failureReason?: string;
+  scheduledFor?: Date;
+  isAutomated: boolean;
+  templateId?: string;
+  sentBy?: string;
+  language: string;
+  metadata?: {
+    appointmentId?: string;
+    alertId?: string;
+    campaignId?: string;
+    source?: string;
+    userId?: string;
+    [key: string]: any;
+  };
+  createdAt: Date;
+}
+
+export interface SMSTemplate {
+  id: string;
+  name: string;
+  category: 'reminder' | 'appointment' | 'health_tip' | 'alert' | 'medication' | 'follow_up' | 'survey' | 'emergency';
+  language: string;
+  subject?: string;
+  content: string;
+  description?: string;
+  variables: string[]; // e.g., ['patientName', 'appointmentDate', 'clinicName']
+  isActive: boolean;
+  usage: 'manual' | 'automated' | 'both';
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'once';
+  triggerConditions?: {
+    riskLevel?: string[];
+    appointmentType?: string[];
+    gestationalWeek?: { min?: number; max?: number };
+    daysBeforeAppointment?: number;
+  };
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastUsed?: Date;
+  usageCount: number;
+}
+
+export interface SMSCampaign {
+  id: string;
+  name: string;
+  description: string;
+  templateId: string;
+  templateName?: string;
+  targetCriteria: {
+    patientType?: string[];
+    ageRange?: {
+      min: number;
+      max: number;
+    };
+    lastVisit?: {
+      after: Date;
+      before: Date;
+    };
+    conditions?: string[];
+  };
+  frequency: 'once' | 'daily' | 'weekly' | 'monthly';
+  status: 'draft' | 'active' | 'paused' | 'completed';
+  scheduledDate?: Date;
+  sentCount: number;
+  deliveredCount: number;
+  readCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+}
+
+export interface SMSSettings {
+  id: string;
+  providerId: string;
+  providerName: 'twilio' | 'nexmo' | 'africas_talking' | 'termii' | 'custom';
+  apiKey: string;
+  secretKey: string;
+  senderId: string;
+  isActive: boolean;
+  dailyLimit?: number;
+  monthlyLimit?: number;
+  costPerSMS?: number;
+  supportedCountries: string[];
+  webhookUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SMSAnalytics {
+  totalSent: number;
+  totalDelivered: number;
+  totalFailed: number;
+  totalRead: number;
+  deliveryRate: number;
+  readRate: number;
+  failureRate: number;
+  totalCost?: number;
+  averageCostPerMessage?: number;
+  totalPatients?: number;
+  costAnalysis: {
+    totalCost: number;
+    costPerMessage: number;
+    monthlyCost: number;
+  };
+  popularTemplates: {
+    templateId: string;
+    templateName: string;
+    usageCount: number;
+  }[];
+  patientEngagement: {
+    patientId: string;
+    patientName: string;
+    messagesReceived: number;
+    messagesRead: number;
+    lastActivity: Date;
+  }[];
+  categoryBreakdown: {
+    category: string;
+    count: number;
+    deliveryRate: number;
+  }[];
+  timeAnalysis: {
+    hour: number;
+    sent: number;
+    delivered: number;
+    read: number;
+  }[];
+  dateRange: {
+    from: Date;
+    to: Date;
+    start?: Date;
+    end?: Date;
+  };
 } 

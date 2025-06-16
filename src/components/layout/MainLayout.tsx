@@ -32,12 +32,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !!firebaseUser;
   const showCleanLayout = pathname === '/' || pathname?.includes('/auth');
 
-  const checkAuth = () => {
-    const publicRoutes = ['/', '/auth/login', '/auth/register', '/auth/forgot-password', '/contact', '/about', '/privacy', '/terms'];
-    if (!isAuthenticated && !publicRoutes.includes(pathname)) {
-      window.location.href = '/auth/login';
-    }
-  };
+  // Define protected routes
+  const protectedRoutes = [
+    '/dashboard',
+    '/patients',
+    '/vitals',
+    '/alerts',
+    '/analytics',
+    '/settings',
+    '/appointments',
+    '/referrals'
+  ];
+
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname?.startsWith(route)
+  );
 
   const handleScroll = () => {
     const scrollPosition = window.scrollY;
@@ -61,10 +70,25 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isAuthenticated, pathname]);
+  }, []);
+
+  // Authentication check for protected routes
+  useEffect(() => {
+    if (isProtectedRoute && !isAuthenticated) {
+      console.log('Unauthorized access attempt to:', pathname);
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    if (isProtectedRoute && firebaseUser && !firebaseUser.emailVerified) {
+      console.log('Email not verified, redirecting to login');
+      toast.error('Please verify your email address to continue');
+      window.location.href = '/auth/login';
+      return;
+    }
+  }, [isProtectedRoute, isAuthenticated, firebaseUser, pathname]);
   
   return (
     <div className="flex min-h-screen flex-col bg-background">
