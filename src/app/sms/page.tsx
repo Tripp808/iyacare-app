@@ -50,9 +50,7 @@ const SMSPage: React.FC = () => {
   const checkTwilioConfiguration = () => {
     const configured = twilioService.isConfigured();
     setIsConfigured(configured);
-    if (!configured) {
-      setShowConfig(true);
-    }
+    // Don't automatically show config dialog - let users choose
   };
 
   const loadSMSData = async () => {
@@ -276,99 +274,120 @@ const SMSPage: React.FC = () => {
       {/* Configuration Alert */}
       {!isConfigured && (
         <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-          <AlertTriangle className="h-4 w-4" />
+          <Phone className="h-4 w-4" />
           <AlertDescription>
-            Twilio is not configured. Please set up your Twilio credentials to enable SMS functionality.
+            <strong>SMS features are available!</strong> Configure Twilio to start sending automated alerts and messages to patients.
             <Button 
               variant="link" 
               className="p-0 h-auto ml-2 text-amber-700 dark:text-amber-300"
               onClick={() => setShowConfig(true)}
             >
-              Configure now →
+              Set up Twilio →
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
       {/* Quick Stats & Actions */}
-      {isConfigured && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">High-Risk Patients</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{highRiskPatients}</div>
-              <p className="text-xs text-muted-foreground">Requiring monitoring</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Alerts Today</CardTitle>
-              <Zap className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{automatedAlertsCount}</div>
-              <p className="text-xs text-muted-foreground">Automated alerts sent</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-              <MessageSquare className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{messages.length}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Templates</CardTitle>
-              <Users className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{templates.length}</div>
-              <p className="text-xs text-muted-foreground">Ready to use</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      {isConfigured && (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Automated Actions
-            </CardTitle>
-            <CardDescription>
-              Quick actions for automated patient monitoring and communication
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">High-Risk Patients</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={triggerHighRiskMonitoring} className="flex-1">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Monitor High-Risk Patients
-              </Button>
-              <Button variant="outline" onClick={sendBulkHealthTips} className="flex-1">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Send Health Tips
-              </Button>
-              <Button variant="outline" onClick={refreshData} className="flex-1">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Refresh Data
-              </Button>
-            </div>
+            <div className="text-2xl font-bold text-orange-600">{highRiskPatients}</div>
+            <p className="text-xs text-muted-foreground">Requiring monitoring</p>
           </CardContent>
         </Card>
-      )}
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Alerts Today</CardTitle>
+            <Zap className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{automatedAlertsCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {isConfigured ? 'Automated alerts sent' : 'Configure Twilio to send alerts'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
+            <MessageSquare className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{messages.length}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Templates</CardTitle>
+            <Users className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{templates.length}</div>
+            <p className="text-xs text-muted-foreground">Ready to use</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Automated Actions
+          </CardTitle>
+          <CardDescription>
+            {isConfigured 
+              ? 'Quick actions for automated patient monitoring and communication'
+              : 'Configure Twilio to enable automated patient monitoring and messaging'
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              onClick={triggerHighRiskMonitoring} 
+              className="flex-1"
+              disabled={!isConfigured}
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Monitor High-Risk Patients
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={sendBulkHealthTips} 
+              className="flex-1"
+              disabled={!isConfigured}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Send Health Tips
+            </Button>
+            <Button variant="outline" onClick={refreshData} className="flex-1">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Refresh Data
+            </Button>
+          </div>
+          {!isConfigured && (
+            <p className="text-sm text-muted-foreground mt-3 text-center">
+              <Button 
+                variant="link" 
+                className="p-0 h-auto"
+                onClick={() => setShowConfig(true)}
+              >
+                Configure Twilio
+              </Button> to enable automated messaging features
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Main SMS Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
