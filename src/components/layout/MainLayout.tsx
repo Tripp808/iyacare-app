@@ -30,7 +30,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   // Calculate derived state from hooks
   const isAuthPage = pathname?.includes('/auth') || pathname === '/';
   const isAuthenticated = !!firebaseUser;
-  const showCleanLayout = pathname === '/' || pathname?.includes('/auth');
+  const showCleanLayout = pathname === '/' || pathname?.includes('/auth') || pathname === '/contact';
 
   // Define protected routes
   const protectedRoutes = [
@@ -116,27 +116,38 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       <div className="px-7 py-4">
                         <Link href="/" className="flex items-center">
                           <div>
-                            <svg width="40" height="40" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              {/* Circle head */}
-                              <circle cx="150" cy="90" r="40" fill="#2D7D89" />
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              {/* Main circle background with clean gradient */}
+                              <circle cx="20" cy="20" r="19" fill="url(#mainGradientMobile)"/>
                               
-                              {/* Heart shape */}
+                              {/* Gradient definitions */}
+                              <defs>
+                                <linearGradient id="mainGradientMobile" x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor="#2D7D89"/>
+                                  <stop offset="100%" stopColor="#1F5F68"/>
+                                </linearGradient>
+                                <linearGradient id="heartGradientMobile" x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor="#FF6B7A"/>
+                                  <stop offset="100%" stopColor="#E74C3C"/>
+                                </linearGradient>
+                              </defs>
+                              
+                              {/* Mother figure - clean and simple */}
+                              <circle cx="14" cy="13" r="3.5" fill="#ffffff"/>
+                              <ellipse cx="14" cy="20" rx="4" ry="6" fill="#ffffff"/>
+                              
+                              {/* Child figure - clean and simple */}
+                              <circle cx="26" cy="15" r="2.5" fill="#F7913D"/>
+                              <ellipse cx="26" cy="21" rx="3" ry="4.5" fill="#F7913D"/>
+                              
+                              {/* Heart symbol - clean and centered */}
                               <path 
-                                d="M150 140C180 110 220 130 220 170C220 210 150 250 150 250C150 250 80 210 80 170C80 130 120 110 150 140Z" 
-                                fill="#2D7D89" 
-                              />
-                              
-                              {/* Child figure - circle */}
-                              <circle cx="130" cy="180" r="20" fill="#F7913D" />
-                              
-                              {/* Parent/caregiver figure */}
-                              <path 
-                                d="M160 160C180 170 200 200 190 240C180 280 150 290 150 290C150 290 170 230 160 200C150 170 160 160 160 160Z" 
-                                fill="#F7913D" 
+                                d="M20 18c-1.5-1.8-4-1.8-4 1.2c0 2.8 4 6 4 6s4-3.2 4-6c0-3-2.5-3-4-1.2z" 
+                                fill="url(#heartGradientMobile)"
                               />
                             </svg>
                           </div>
-                          <span className="ml-2 text-2xl font-bold font-geist">
+                          <span className="text-xl font-bold">
                             <span className="text-[#2D7D89]">Iyà</span>
                             <span className="text-[#F7913D]">Care</span>
                           </span>
@@ -150,27 +161,38 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               
               <Link href="/" className="flex items-center">
                 <div>
-                  <svg width="40" height="40" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Circle head */}
-                    <circle cx="150" cy="90" r="40" fill="#2D7D89" />
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Main circle background with clean gradient */}
+                    <circle cx="20" cy="20" r="19" fill="url(#mainGradientHeader)"/>
                     
-                    {/* Heart shape */}
+                    {/* Gradient definitions */}
+                    <defs>
+                      <linearGradient id="mainGradientHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#2D7D89"/>
+                        <stop offset="100%" stopColor="#1F5F68"/>
+                      </linearGradient>
+                      <linearGradient id="heartGradientHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#FF6B7A"/>
+                        <stop offset="100%" stopColor="#E74C3C"/>
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Mother figure - clean and simple */}
+                    <circle cx="14" cy="13" r="3.5" fill="#ffffff"/>
+                    <ellipse cx="14" cy="20" rx="4" ry="6" fill="#ffffff"/>
+                    
+                    {/* Child figure - clean and simple */}
+                    <circle cx="26" cy="15" r="2.5" fill="#F7913D"/>
+                    <ellipse cx="26" cy="21" rx="3" ry="4.5" fill="#F7913D"/>
+                    
+                    {/* Heart symbol - clean and centered */}
                     <path 
-                      d="M150 140C180 110 220 130 220 170C220 210 150 250 150 250C150 250 80 210 80 170C80 130 120 110 150 140Z" 
-                      fill="#2D7D89" 
-                    />
-                    
-                    {/* Child figure - circle */}
-                    <circle cx="130" cy="180" r="20" fill="#F7913D" />
-                    
-                    {/* Parent/caregiver figure */}
-                    <path 
-                      d="M160 160C180 170 200 200 190 240C180 280 150 290 150 290C150 290 170 230 160 200C150 170 160 160 160 160Z" 
-                      fill="#F7913D" 
+                      d="M20 18c-1.5-1.8-4-1.8-4 1.2c0 2.8 4 6 4 6s4-3.2 4-6c0-3-2.5-3-4-1.2z" 
+                      fill="url(#heartGradientHeader)"
                     />
                   </svg>
                 </div>
-                <span className="ml-2 text-2xl font-bold font-geist">
+                <span className="text-xl font-bold">
                   <span className="text-[#2D7D89]">Iyà</span>
                   <span className="text-[#F7913D]">Care</span>
                 </span>
@@ -202,12 +224,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <Link 
-                      href="/contact" 
+                      href="/dashboard/contact" 
                       className={`transition-colors hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] ${
-                        pathname === '/contact' ? 'text-[#2D7D89] dark:text-[#4AA0AD]' : 'text-foreground'
+                        pathname === '/dashboard/contact' ? 'text-[#2D7D89] dark:text-[#4AA0AD]' : 'text-foreground'
                       }`}
                     >
-                      Contact
+                      Contact Support
                     </Link>
                   </>
                 ) : (

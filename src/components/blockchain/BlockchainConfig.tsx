@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Shield, 
   Key, 
@@ -19,7 +18,8 @@ import {
   EyeOff,
   RefreshCw,
   Zap,
-  TestTube
+  TestTube,
+  Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { blockchainService } from '@/services/blockchain.service';
@@ -30,47 +30,20 @@ interface BlockchainConfigProps {
 
 const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChange }) => {
   const [config, setConfig] = useState({
-    rpcUrl: 'https://sepolia.infura.io/v3/demo-key', // Default to Sepolia testnet
+    rpcUrl: 'https://rpc.sepolia.org', // Default free Sepolia endpoint
     contractAddress: '',
-    privateKey: '',
     encryptionKey: ''
   });
   const [isConfigured, setIsConfigured] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [showEncryptionKey, setShowEncryptionKey] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
-  const [stats, setStats] = useState({
-    totalPatients: 0,
-    totalAccesses: 0,
-    lastActivity: null as number | null,
-    isConnected: false,
-    networkInfo: { name: 'Not configured', isTestnet: false }
-  });
   const [connectionError, setConnectionError] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     checkConfiguration();
-    loadStats();
-    loadDefaultTestnetConfig();
   }, []);
-
-  const loadDefaultTestnetConfig = () => {
-    const defaultConfig = blockchainService.getDefaultTestnetConfig();
-    if (defaultConfig.rpcUrl) {
-      setConfig(prev => ({ ...prev, rpcUrl: defaultConfig.rpcUrl || prev.rpcUrl }));
-    }
-  };
-
-  const tryAlternativeEndpoint = () => {
-    const alternatives = blockchainService.getAlternativeTestnetEndpoints();
-    const currentIndex = alternatives.indexOf(config.rpcUrl);
-    const nextIndex = (currentIndex + 1) % alternatives.length;
-    const nextEndpoint = alternatives[nextIndex];
-    
-    setConfig(prev => ({ ...prev, rpcUrl: nextEndpoint }));
-    toast.info(`Switched to alternative endpoint: ${nextEndpoint}`);
-  };
 
   const checkConfiguration = () => {
     const configured = blockchainService.isConfigured();
@@ -79,11 +52,6 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
     if (onConfigurationChange) {
       onConfigurationChange();
     }
-  };
-
-  const loadStats = () => {
-    const blockchainStats = blockchainService.getBlockchainStats();
-    setStats(blockchainStats);
   };
 
   const handleConfigChange = (field: string, value: string) => {
@@ -98,6 +66,21 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
     toast.success('Encryption key generated successfully');
   };
 
+  const tryAlternativeEndpoint = () => {
+    const alternatives = [
+      'https://rpc.sepolia.org',
+      'https://sepolia.gateway.tenderly.co',
+      'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
+      'https://sepolia.drpc.org'
+    ];
+    const currentIndex = alternatives.indexOf(config.rpcUrl);
+    const nextIndex = (currentIndex + 1) % alternatives.length;
+    const nextEndpoint = alternatives[nextIndex];
+    
+    setConfig(prev => ({ ...prev, rpcUrl: nextEndpoint }));
+    toast.info(`Switched to: ${nextEndpoint.split('//')[1]}`);
+  };
+
   const testConnection = async () => {
     if (!config.rpcUrl || !config.encryptionKey) {
       toast.error('Please provide RPC URL and encryption key');
@@ -109,22 +92,19 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
     setConnectionError('');
 
     try {
-      const isTestnet = config.rpcUrl.includes('sepolia') || config.rpcUrl.includes('goerli') || config.rpcUrl.includes('testnet');
-      
       const result = await blockchainService.initialize({
         rpcUrl: config.rpcUrl,
         contractAddress: config.contractAddress || undefined,
-        privateKey: config.privateKey || undefined,
         encryptionKey: config.encryptionKey,
-        isTestnet
+        isTestnet: true // Always use testnet for now
       });
 
       if (result.success) {
         setConnectionStatus('connected');
         setIsConfigured(true);
         setConnectionError('');
-        toast.success(`Blockchain connection established successfully on ${isTestnet ? 'testnet' : 'mainnet'}!`);
-        loadStats();
+        setIsEditing(false);
+        toast.success('Blockchain configured successfully!');
         
         if (onConfigurationChange) {
           onConfigurationChange();
@@ -161,10 +141,6 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
     }
   };
 
-  const isTestnetUrl = (url: string) => {
-    return url.includes('sepolia') || url.includes('goerli') || url.includes('testnet');
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -176,20 +152,28 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {isTestnetUrl(config.rpcUrl) && (
-            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-              <TestTube className="h-4 w-4 mr-2" />
-              Testnet
-            </Badge>
-          )}
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+            <TestTube className="h-4 w-4 mr-2" />
+            Sepolia Testnet
+          </Badge>
           <Badge className={getStatusColor()}>
             {getStatusIcon()}
             <span className="ml-2 capitalize">{connectionStatus}</span>
           </Badge>
+          {isConfigured && !isEditing && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Edit Settings
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Connection Status Alert */}
+      {/* Status Alerts */}
       {connectionStatus === 'error' && connectionError && (
         <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
           <AlertTriangle className="h-4 w-4" />
@@ -199,45 +183,31 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
         </Alert>
       )}
 
-      {isConfigured && (
+      {isConfigured && !isEditing && (
         <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Blockchain is configured and ready!</strong> Patient data will be securely stored with encryption on {stats.networkInfo.name}.
+            <strong>Blockchain is configured and ready!</strong> Patient data will be securely stored with encryption on Sepolia Testnet.
           </AlertDescription>
         </Alert>
       )}
 
-      {isTestnetUrl(config.rpcUrl) && (
-        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-          <TestTube className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Testnet Mode:</strong> You're using a test network. This is perfect for development and testing without real costs.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Tabs defaultValue="configuration" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
-          <TabsTrigger value="statistics">Statistics</TabsTrigger>
-          <TabsTrigger value="security">Security Info</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="configuration" className="space-y-6">
+      {/* Configuration Form */}
+      {(!isConfigured || isEditing) && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Link className="h-5 w-5" />
-                Blockchain Connection
+                Network Connection
               </CardTitle>
               <CardDescription>
-                Configure your blockchain network connection settings. Using testnet is recommended for development.
+                Configure your Sepolia testnet connection (free for development)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="rpcUrl">RPC URL *</Label>
+                <Label htmlFor="rpcUrl">RPC Endpoint *</Label>
                 <div className="flex gap-2">
                   <Input
                     id="rpcUrl"
@@ -247,70 +217,31 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                     onChange={(e) => handleConfigChange('rpcUrl', e.target.value)}
                     className="flex-1"
                   />
-                  {isTestnetUrl(config.rpcUrl) && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={tryAlternativeEndpoint}
-                      title="Try alternative testnet endpoint"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={tryAlternativeEndpoint}
+                    title="Try different free endpoint"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {isTestnetUrl(config.rpcUrl) ? (
-                    <span className="text-blue-600">✓ Using testnet (recommended for development)</span>
-                  ) : (
-                    <span>Ethereum RPC endpoint (e.g., Infura, Alchemy, or local node)</span>
-                  )}
+                  Free Sepolia testnet endpoint (no API key required)
                 </p>
-                {connectionStatus === 'error' && connectionError.includes('401') && (
-                  <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>RPC Connection Issue:</strong> Try clicking the refresh button to use an alternative free endpoint, or get your own free Infura key at <a href="https://infura.io" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">infura.io</a>
-                    </AlertDescription>
-                  </Alert>
-                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="contractAddress">Smart Contract Address (Optional)</Label>
                 <Input
                   id="contractAddress"
-                  placeholder="0x742d35Cc6634C0532925a3b8D4b9b4e8d2f7c9a2"
+                  placeholder="0x... (will be set after deployment)"
                   value={config.contractAddress}
                   onChange={(e) => handleConfigChange('contractAddress', e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Leave empty to use local storage as fallback
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="privateKey">Private Key (Optional)</Label>
-                <div className="relative">
-                  <Input
-                    id="privateKey"
-                    type={showPrivateKey ? 'text' : 'password'}
-                    placeholder="0x1234567890abcdef..."
-                    value={config.privateKey}
-                    onChange={(e) => handleConfigChange('privateKey', e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPrivateKey(!showPrivateKey)}
-                  >
-                    {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Required only for writing to blockchain. Keep this secure! For testnet, you can use test keys.
+                  Leave empty to use local storage until contract is deployed
                 </p>
               </div>
             </CardContent>
@@ -323,7 +254,7 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                 Data Encryption
               </CardTitle>
               <CardDescription>
-                Configure encryption settings for patient data security
+                Secure encryption key for protecting patient data
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -376,146 +307,58 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Test & Save Configuration
+                      Save & Test Configuration
                     </>
                   )}
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="statistics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Stored Patients</CardTitle>
-                <Shield className="h-4 w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{stats.totalPatients}</div>
-                <p className="text-xs text-muted-foreground">On blockchain</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Accesses</CardTitle>
-                <Key className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.totalAccesses}</div>
-                <p className="text-xs text-muted-foreground">Read/Write operations</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Network</CardTitle>
-                {stats.networkInfo.isTestnet ? (
-                  <TestTube className="h-4 w-4 text-blue-500" />
-                ) : (
-                  <Link className="h-4 w-4 text-purple-500" />
+                {isEditing && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </Button>
                 )}
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${stats.networkInfo.isTestnet ? 'text-blue-600' : 'text-purple-600'}`}>
-                  {stats.networkInfo.isTestnet ? 'Testnet' : 'Mainnet'}
-                </div>
-                <p className="text-xs text-muted-foreground">{stats.networkInfo.name}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Connection</CardTitle>
-                <CheckCircle className={`h-4 w-4 ${stats.isConnected ? 'text-green-500' : 'text-red-500'}`} />
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${stats.isConnected ? 'text-green-600' : 'text-red-600'}`}>
-                  {stats.isConnected ? 'Active' : 'Inactive'}
-                </div>
-                <p className="text-xs text-muted-foreground">Blockchain status</p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="h-5 w-5" />
-                Security Features
-              </CardTitle>
-              <CardDescription>
-                Learn about the security measures protecting your patient data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold">AES-256 Encryption</h4>
-                    <p className="text-sm text-muted-foreground">
-                      All patient data is encrypted using military-grade AES-256 encryption before storage.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <TestTube className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold">Testnet Development</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Test networks allow safe development and testing without real cryptocurrency costs.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Key className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold">Data Hashing</h4>
-                    <p className="text-sm text-muted-foreground">
-                      SHA-256 hashing ensures data integrity and detects any unauthorized modifications.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Link className="h-5 w-5 text-purple-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold">Blockchain Immutability</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Data stored on blockchain cannot be altered, providing permanent audit trails.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Eye className="h-5 w-5 text-orange-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold">Access Control</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Three-tier access levels: Public, Restricted, and Confidential data access.
-                    </p>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
 
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Testnet Benefits:</strong> Using testnet allows you to test all blockchain features safely without spending real cryptocurrency. 
-              Perfect for development, testing, and learning how the system works.
-            </AlertDescription>
-          </Alert>
-        </TabsContent>
-      </Tabs>
+      {/* Simple Info Card when configured */}
+      {isConfigured && !isEditing && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              Current Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Network:</span>
+              <Badge variant="secondary">Sepolia Testnet</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">RPC Endpoint:</span>
+              <span className="text-sm text-muted-foreground">{config.rpcUrl.split('//')[1]}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Contract:</span>
+              <span className="text-sm text-muted-foreground">
+                {config.contractAddress ? `${config.contractAddress.slice(0, 8)}...` : 'Not deployed yet'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Encryption:</span>
+              <Badge variant="secondary">
+                <Key className="h-3 w-3 mr-1" />
+                Enabled
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

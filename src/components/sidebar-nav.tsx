@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Home as HomeIcon, Users, AlertCircle, Calendar, BarChart3, Settings, Activity, AlertTriangle, MessageSquare, Shield } from "lucide-react";
+import { Home as HomeIcon, Users, AlertCircle, Calendar, BarChart3, Settings, Activity, AlertTriangle, MessageSquare, Shield, Mail } from "lucide-react";
 
 const links = [
   {
@@ -46,6 +46,11 @@ const links = [
     title: "Analytics",
     href: "/analytics",
     icon: BarChart3,
+  },
+  {
+    title: "Contact Support",
+    href: "/dashboard/contact",
+    icon: Mail,
   },
   {
     title: "Settings",

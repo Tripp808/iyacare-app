@@ -14,7 +14,10 @@ import {
   ChevronRight,
   ArrowRight,
   Activity,
-  GitMerge
+  GitMerge,
+  Heart,
+  Users,
+  HandHeart
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -233,6 +236,114 @@ export default function HomePage() {
                     </svg>
                   </div>
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Sponsors & Funding Section */}
+      <section className="w-full py-8 md:py-12 bg-gradient-to-br from-[#e6f3f5]/50 to-[#fef3e8]/50 dark:from-background dark:to-muted/10">
+        <div className="container px-4 md:px-6">
+          <motion.div 
+            className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD]">
+              Access Through Sponsorship
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Free Access</span> for mothers in low-resource settings
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
+                Thanks to our generous sponsors and donation partners, mothers can access IyàCare services at no cost
+              </p>
+            </div>
+          </motion.div>
+
+          <div className="mx-auto max-w-6xl grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-8">
+            {/* How It Works */}
+            <motion.div 
+              className="flex flex-col space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background dark:border-muted"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e6f3f5] dark:bg-[#2D7D89]/20">
+                <Heart className="h-6 w-6 text-[#2D7D89] dark:text-[#4AA0AD]" />
+              </div>
+              <h3 className="text-xl font-bold">Donation-Funded Devices</h3>
+              <p className="text-muted-foreground">
+                Our IoT monitoring devices are provided free to community health centers through donations from international healthcare organizations and philanthropic partners.
+              </p>
+            </motion.div>
+
+            {/* Sponsored Programs */}
+            <motion.div 
+              className="flex flex-col space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background dark:border-muted"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e6f3f5] dark:bg-[#2D7D89]/20">
+                <HandHeart className="h-6 w-6 text-[#2D7D89] dark:text-[#4AA0AD]" />
+              </div>
+              <h3 className="text-xl font-bold">Sponsored Care Programs</h3>
+              <p className="text-muted-foreground">
+                Partner organizations sponsor monthly subscriptions, covering platform access, AI monitoring, and emergency alert services for expectant mothers in rural communities.
+              </p>
+            </motion.div>
+
+            {/* Community Impact */}
+            <motion.div 
+              className="flex flex-col space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background dark:border-muted md:col-span-2 lg:col-span-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e6f3f5] dark:bg-[#2D7D89]/20">
+                <Users className="h-6 w-6 text-[#2D7D89] dark:text-[#4AA0AD]" />
+              </div>
+              <h3 className="text-xl font-bold">Community Health Impact</h3>
+              <p className="text-muted-foreground">
+                Your sponsorship enables life-saving maternal healthcare in underserved communities, providing essential monitoring and emergency response capabilities where they're needed most.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Call to Action for Sponsors/Partners */}
+          <motion.div 
+            className="mx-auto max-w-4xl rounded-2xl bg-white dark:bg-background/80 border p-8 text-center shadow-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <h3 className="text-2xl font-bold mb-4">
+              <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Become a Sponsor</span> and Save Lives
+            </h3>
+            <p className="text-muted-foreground mb-6 text-lg">
+              Join our mission to make maternal healthcare accessible to every mother, regardless of economic circumstances. Your sponsorship directly funds life-saving technology and care.
+            </p>
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground mb-4">
+                Ready to make a difference? Partner with us to bring life-saving healthcare to mothers everywhere.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/contact">
+                  <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white rounded-full">
+                    Become a Sponsor
+                    <Heart className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/sponsors">
+                  <Button variant="outline" className="border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89]/10 rounded-full">
+                    Learn More About Partnerships
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </motion.div>

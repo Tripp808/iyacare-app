@@ -113,7 +113,7 @@ const SMSPage: React.FC = () => {
       }
 
       let highRiskCount = 0;
-      let alertsCount = 0;
+      const alertsCount = 0;
 
       for (const patient of result.patients) {
         const riskAssessment = automatedMessagingService.assessPatientRisk(patient);

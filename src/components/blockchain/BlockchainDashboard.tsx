@@ -1,520 +1,452 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Database, Activity, Users, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { AlertCircle, Shield, Users, Database, Activity, Wallet, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import BlockchainService from '@/services/blockchain.service';
+import { PatientService, Patient } from '@/services/patient.service';
+import Web3BlockchainService from '@/services/web3-blockchain.service';
 
-interface BlockchainDashboardProps {
-  isConfigured: boolean;
-  onConfigureClick: () => void;
-}
-
-interface AccessLog {
-  timestamp: number;
-  action: string;
-  patientId: string;
-  success: boolean;
-}
-
-interface Stats {
+interface BlockchainStats {
   totalPatients: number;
   encryptedRecords: number;
   lastActivity: number | null;
   isConnected: boolean;
-  networkInfo: { 
-    name: string; 
-    isTestnet: boolean; 
-    rpcUrl: string | undefined;
+  networkInfo: {
+    name: string;
+    isTestnet: boolean;
+    rpcUrl: string;
+    chainId: number;
   };
-  syncedPatients: number;
 }
 
-const BlockchainDashboard: React.FC<BlockchainDashboardProps> = ({ isConfigured, onConfigureClick }) => {
-  const [stats, setStats] = useState<Stats>({
+interface AccessLog {
+  accessor: string;
+  timestamp: number;
+  accessType: string;
+  authorized: boolean;
+}
+
+const BlockchainDashboard: React.FC = () => {
+  const [stats, setStats] = useState<BlockchainStats>({
     totalPatients: 0,
     encryptedRecords: 0,
     lastActivity: null,
     isConnected: false,
-    networkInfo: { name: 'Not configured', isTestnet: false, rpcUrl: undefined },
-    syncedPatients: 0
+    networkInfo: {
+      name: 'Disconnected',
+      isTestnet: false,
+      rpcUrl: '',
+      chainId: 0
+    }
   });
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string>('');
+
+  const blockchainService = Web3BlockchainService.getInstance();
 
   useEffect(() => {
-    if (isConfigured) {
-      loadData();
-    }
-  }, [isConfigured]);
+    loadBlockchainData();
+  }, []);
 
-  const loadData = async () => {
+  const loadBlockchainData = async () => {
+    setIsLoading(true);
     try {
-      const blockchainService = BlockchainService.getInstance();
-      const blockchainStats = blockchainService.getBlockchainStats();
+      // Initialize blockchain service
+      const initResult = await blockchainService.initialize();
       
-      setStats({
-        totalPatients: blockchainStats.totalPatients,
-        encryptedRecords: blockchainStats.totalPatients,
-        lastActivity: blockchainStats.lastActivity,
-        isConnected: blockchainStats.isConnected,
-        networkInfo: {
-          ...blockchainStats.networkInfo,
-          rpcUrl: blockchainStats.networkInfo.rpcUrl || undefined
-        },
-        syncedPatients: blockchainStats.totalPatients
-      });
-      
-      const allPatientIds = blockchainService.getStoredPatientIds();
-      const allLogs: AccessLog[] = [];
-      allPatientIds.forEach(patientId => {
-        const logs = blockchainService.getAccessLogs(patientId);
-        logs.forEach(log => {
-          allLogs.push({
-            timestamp: log.timestamp,
-            action: `${log.accessType} access`,
-            patientId: log.patientId,
-            success: log.authorized
-          });
-        });
-      });
-      setAccessLogs(allLogs.slice(-10));
+      if (initResult.success) {
+        // Load blockchain stats
+        const blockchainStats = await blockchainService.getBlockchainStats();
+        setStats(blockchainStats);
+        
+        // Load access logs (for demo, we'll load for first patient if any exist)
+        const patientIds = blockchainService.getStoredPatientIds();
+        if (patientIds.length > 0) {
+          const logs = await blockchainService.getAccessLogs(patientIds[0]);
+          setAccessLogs(logs);
+        }
+      } else {
+        toast.error(`Blockchain initialization failed: ${initResult.error}`);
+      }
     } catch (error) {
-      console.error('Error loading blockchain data:', error);
+      console.error('Failed to load blockchain data:', error);
+      toast.error('Failed to load blockchain data');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const testFirebaseConnection = async () => {
+  const connectWallet = async () => {
+    setIsLoading(true);
     try {
-      console.log('Testing Firebase connection...');
-      console.log('Firebase config check:', { 
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN 
-      });
-
-      // Use a simple query without filters since the patient structure is different
-      const { db } = await import('@/lib/firebase');
-      const { collection, getDocs, query, limit } = await import('firebase/firestore');
+      const result = await blockchainService.connectWallet();
       
-      const patientsQuery = query(
-        collection(db, 'patients'),
-        limit(10)
-      );
-      
-      const querySnapshot = await getDocs(patientsQuery);
-      const patients: any[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        patients.push({
-          id: doc.id,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          dateOfBirth: data.dateOfBirth,
-          gender: data.gender,
-          phone: data.phone,
-          email: data.email,
-          address: data.address,
-          emergencyContact: data.emergencyContact,
-          medicalInfo: data.medicalInfo,
-          assignedHealthcareProvider: data.assignedHealthcareProvider || 'unassigned',
-          createdBy: data.createdBy || 'unknown',
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          isActive: data.isActive !== false, // Default to true if not specified
-        });
-      });
-
-      console.log(`✅ Firebase connected successfully! Found ${patients.length} patients`);
-      toast.success(`Firebase connected! Found ${patients.length} patients`);
-      
-      // Log first few patients for debugging
-      if (patients.length > 0) {
-        console.log('Sample patients:', patients.slice(0, 3).map((p: any) => ({
-          id: p.id,
-          name: `${p.firstName} ${p.lastName}`,
-          provider: p.assignedHealthcareProvider,
-          isActive: p.isActive
-        })));
+      if (result.success && result.address) {
+        setWalletAddress(result.address);
+        toast.success(`Wallet connected: ${result.address.substring(0, 8)}...`);
+        await loadBlockchainData(); // Refresh data after connecting wallet
+      } else {
+        toast.error(result.error || 'Failed to connect wallet');
       }
-
-      // Update the stats
-      setStats(prev => ({
-        ...prev,
-        totalPatients: patients.length,
-        syncedPatients: 0 // Will be updated when sync happens
-      }));
-
     } catch (error) {
-      console.error('Error testing Firebase:', error);
-      toast.error('Firebase connection test failed. Check console for details.');
+      console.error('Wallet connection error:', error);
+      toast.error('Failed to connect wallet');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testBlockchainConnection = async () => {
+    setIsLoading(true);
+    try {
+      console.log('🔗 Testing blockchain connection...');
+      toast.info('Testing blockchain connection...');
+      
+      const initResult = await blockchainService.initialize();
+      
+      if (initResult.success) {
+        const networkInfo = blockchainService.getNetworkInfo();
+        console.log('✅ Blockchain connection successful:', networkInfo);
+        toast.success(`Connected to ${networkInfo.name}`);
+        
+        await loadBlockchainData();
+      } else {
+        console.error('❌ Blockchain connection failed:', initResult.error);
+        toast.error(`Connection failed: ${initResult.error}`);
+      }
+    } catch (error) {
+      console.error('❌ Blockchain test error:', error);
+      toast.error('Blockchain connection test failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const syncPatientToBlockchain = async (patient: Patient) => {
+    try {
+      const result = await blockchainService.storePatientData(patient);
+      
+      if (result.success) {
+        toast.success(`Patient ${patient.firstName} ${patient.lastName} synced to blockchain`);
+        console.log('Transaction hash:', result.txHash);
+        return true;
+      } else {
+        toast.error(`Failed to sync patient: ${result.error}`);
+        return false;
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error('Failed to sync patient to blockchain');
+      return false;
     }
   };
 
   const syncAllPatients = async () => {
     setIsSyncing(true);
     try {
-      console.log('Starting patient sync...');
+      console.log('🔄 Starting patient sync to blockchain...');
+      toast.info('Syncing patients to blockchain...');
+
+      // First check if wallet is connected for write operations
+      if (!walletAddress) {
+        toast.error('Please connect your wallet first to sync patients');
+        return;
+      }
+
+      // Get patients from Firebase
+      const patientsResponse = await PatientService.searchPatients('');
       
-      // Get patients directly from Firestore with the correct structure
-      const { db } = await import('@/lib/firebase');
-      const { collection, getDocs, query, limit } = await import('firebase/firestore');
-      
-      const patientsQuery = query(
-        collection(db, 'patients'),
-        limit(50) // Sync first 50 patients
-      );
-      
-      const querySnapshot = await getDocs(patientsQuery);
-      const patients: any[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        // Convert to the format expected by blockchain service
-        const blockchainPatient = {
-          id: doc.id,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          dateOfBirth: data.dateOfBirth?.toDate ? data.dateOfBirth.toDate() : new Date(data.dateOfBirth),
-          gender: data.gender,
-          phone: data.phone,
-          email: data.email || '',
-          address: data.address || {
-            street: '',
-            city: '',
-            state: '',
-            zipCode: '',
-            country: ''
-          },
-          emergencyContact: data.emergencyContact || {
-            name: '',
-            relationship: '',
-            phone: ''
-          },
-          medicalInfo: data.medicalInfo || {
-            bloodType: '',
-            allergies: [],
-            medications: [],
-            previousComplications: [],
-            chronicConditions: [],
-            gestationalAge: 0,
-            pregnancyNotes: ''
-          },
-          assignedHealthcareProvider: data.assignedHealthcareProvider || 'unassigned',
-          createdBy: data.createdBy || 'system',
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          isActive: data.isActive !== false, // Default to true if not specified
-        };
-        patients.push(blockchainPatient);
-      });
+      if (!patientsResponse.success || !patientsResponse.patients) {
+        toast.error('Failed to fetch patients from database');
+        return;
+      }
+
+      const patients = patientsResponse.patients;
+      console.log(`📋 Found ${patients.length} patients to sync`);
 
       if (patients.length === 0) {
         toast.info('No patients found to sync');
         return;
       }
 
-      console.log(`Found ${patients.length} patients to sync`);
-      
-      // Store each patient in blockchain
-      const blockchainService = BlockchainService.getInstance();
       let successCount = 0;
-      let errorCount = 0;
+      let failureCount = 0;
 
+      // Sync each patient to blockchain
       for (const patient of patients) {
         try {
-          const result = await blockchainService.storePatientData(patient, 'confidential');
-          if (result.success) {
+          console.log(`⏳ Syncing patient: ${patient.firstName} ${patient.lastName}`);
+          
+          const syncResult = await syncPatientToBlockchain(patient);
+          
+          if (syncResult) {
             successCount++;
-            console.log(`✓ Synced patient: ${patient.firstName} ${patient.lastName}`);
           } else {
-            errorCount++;
-            console.error(`✗ Failed to sync patient: ${patient.firstName} ${patient.lastName}`, result.error);
+            failureCount++;
           }
+
+          // Add small delay between transactions to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
         } catch (error) {
-          errorCount++;
-          console.error(`✗ Failed to sync patient: ${patient.firstName} ${patient.lastName}`, error);
+          console.error(`❌ Failed to sync patient ${patient.id}:`, error);
+          failureCount++;
         }
       }
 
-      // Update stats
-      setStats(prev => ({
-        ...prev,
-        totalPatients: patients.length,
-        syncedPatients: successCount,
-        lastActivity: Date.now()
-      }));
-
-      // Show results
+      // Show final results
       if (successCount > 0) {
-        toast.success(`Successfully synced ${successCount} patients to blockchain`);
+        toast.success(`✅ Successfully synced ${successCount} patients to blockchain`);
       }
-      if (errorCount > 0) {
-        toast.error(`Failed to sync ${errorCount} patients`);
+      
+      if (failureCount > 0) {
+        toast.error(`❌ Failed to sync ${failureCount} patients`);
       }
 
-      console.log(`Sync completed: ${successCount} successful, ${errorCount} failed`);
+      console.log(`🏁 Sync complete: ${successCount} success, ${failureCount} failed`);
+
+      // Refresh blockchain data
+      await loadBlockchainData();
 
     } catch (error) {
-      console.error('Error syncing patients:', error);
-      toast.error('Failed to sync patients. Check console for details.');
+      console.error('❌ Bulk sync error:', error);
+      toast.error('Failed to sync patients to blockchain');
     } finally {
       setIsSyncing(false);
     }
   };
 
-  if (!isConfigured) {
-    return (
-      <div className="space-y-6">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Blockchain security is not configured. Please configure your blockchain settings to enable secure patient data storage.
-          </AlertDescription>
-        </Alert>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Blockchain Security Setup
-            </CardTitle>
-            <CardDescription>
-              Configure blockchain security to encrypt and securely store patient data
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={onConfigureClick} className="w-full">
-              Configure Blockchain Security
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const viewOnEtherscan = () => {
+    if (stats.networkInfo.chainId === 11155111) {
+      // Sepolia testnet
+      const contractAddress = process.env.NEXT_PUBLIC_SEPOLIA_CONTRACT_ADDRESS;
+      if (contractAddress) {
+        window.open(`https://sepolia.etherscan.io/address/${contractAddress}`, '_blank');
+      } else {
+        toast.error('Contract address not configured');
+      }
+    } else {
+      toast.error('Etherscan not available for this network');
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Patients</p>
-                <p className="text-2xl font-bold">{stats.totalPatients}</p>
-              </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Blockchain Security Dashboard</h1>
+          <p className="text-muted-foreground">
+            Secure patient data storage on Ethereum blockchain
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {!walletAddress ? (
+            <Button onClick={connectWallet} disabled={isLoading}>
+              <Wallet className="mr-2 h-4 w-4" />
+              Connect Wallet
+            </Button>
+          ) : (
+            <Badge variant="outline" className="px-3 py-1">
+              <Wallet className="mr-2 h-3 w-3" />
+              {walletAddress.substring(0, 8)}...
+            </Badge>
+          )}
+          <Button onClick={testBlockchainConnection} disabled={isLoading} variant="outline">
+            Test Connection
+          </Button>
+        </div>
+      </div>
+
+      {/* Connection Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Network Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${stats.isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="font-medium">
+                {stats.isConnected ? 'Connected' : 'Disconnected'}
+              </span>
             </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Network</p>
+              <p className="font-medium">{stats.networkInfo.name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Chain ID</p>
+              <p className="font-medium">{stats.networkInfo.chainId || 'N/A'}</p>
+            </div>
+            <div>
+              <Button onClick={viewOnEtherscan} variant="outline" size="sm">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                View on Etherscan
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalPatients}</div>
+            <p className="text-xs text-muted-foreground">
+              Stored on blockchain
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Synced to Blockchain</p>
-                <p className="text-2xl font-bold">{stats.syncedPatients}</p>
-              </div>
-              <Shield className="h-8 w-8 text-muted-foreground" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Encrypted Records</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.encryptedRecords}</div>
+            <p className="text-xs text-muted-foreground">
+              AES-256 encrypted
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Encrypted Records</p>
-                <p className="text-2xl font-bold">{stats.encryptedRecords}</p>
-              </div>
-              <Database className="h-8 w-8 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Last Activity</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.lastActivity ? new Date(stats.lastActivity).toLocaleTimeString() : 'N/A'}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Latest blockchain interaction
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Patient Data Synchronization</CardTitle>
+            <CardDescription>
+              Sync patient data from Firebase to blockchain for enhanced security
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={syncAllPatients} 
+              disabled={isSyncing || isLoading || !walletAddress}
+              className="w-full"
+            >
+              {isSyncing ? 'Syncing...' : 'Sync All Patients to Blockchain'}
+            </Button>
+            {!walletAddress && (
+              <p className="text-sm text-muted-foreground text-center">
+                Connect your wallet to enable patient synchronization
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Connection Status</p>
-                <div className="flex items-center gap-2">
-                  {stats.isConnected ? (
-                    <Badge variant="default" className="bg-green-500">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Connected
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive">
-                      <XCircle className="h-3 w-3 mr-1" />
-                      Disconnected
-                    </Badge>
-                  )}
-                </div>
+          <CardHeader>
+            <CardTitle>Security Features</CardTitle>
+            <CardDescription>
+              Active blockchain security measures
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-sm">AES-256 Encryption</span>
               </div>
-              <Activity className="h-8 w-8 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-sm">Immutable Storage</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-sm">Access Logging</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-sm">Data Integrity Verification</span>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Dashboard */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sync">Data Sync</TabsTrigger>
-          <TabsTrigger value="logs">Access Logs</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Network Information</CardTitle>
-                <CardDescription>Current blockchain network details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Network:</span>
-                  <Badge variant={stats.networkInfo.isTestnet ? "secondary" : "default"}>
-                    {stats.networkInfo.name}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Environment:</span>
-                  <Badge variant={stats.networkInfo.isTestnet ? "outline" : "default"}>
-                    {stats.networkInfo.isTestnet ? "Testnet" : "Mainnet"}
-                  </Badge>
-                </div>
-                {stats.networkInfo.rpcUrl && (
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">RPC URL:</span>
-                    <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                      {stats.networkInfo.rpcUrl}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Status</CardTitle>
-                <CardDescription>Encryption and security information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Encryption:</span>
-                  <Badge variant="default" className="bg-green-500">
-                    <Shield className="h-3 w-3 mr-1" />
-                    AES-256
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Storage:</span>
-                  <Badge variant="default">
-                    Immutable
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Last Activity:</span>
-                  <span className="text-sm text-muted-foreground">
-                    {stats.lastActivity ? new Date(stats.lastActivity).toLocaleString() : 'Never'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sync" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Patient Data Synchronization</CardTitle>
-              <CardDescription>
-                Sync patient data from Firebase to blockchain for secure storage
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  onClick={testFirebaseConnection}
-                  variant="outline"
-                  disabled={isLoading}
-                >
-                  <Database className="h-4 w-4 mr-2" />
-                  Test Firebase Connection
-                </Button>
-                
-                <Button 
-                  onClick={syncAllPatients}
-                  disabled={isSyncing}
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  {isSyncing ? 'Syncing...' : 'Sync All Patients'}
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{stats.totalPatients}</div>
-                  <div className="text-sm text-muted-foreground">Total Patients</div>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{stats.syncedPatients}</div>
-                  <div className="text-sm text-muted-foreground">Synced to Blockchain</div>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{stats.encryptedRecords}</div>
-                  <div className="text-sm text-muted-foreground">Encrypted Records</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="logs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Logs</CardTitle>
-              <CardDescription>Recent blockchain access and operations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {accessLogs.length > 0 ? (
-                <div className="space-y-2">
-                  {accessLogs.map((log, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {log.success ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                        <div>
-                          <div className="font-medium">{log.action}</div>
-                          <div className="text-sm text-muted-foreground">Patient ID: {log.patientId}</div>
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(log.timestamp).toLocaleString()}
-                      </div>
+      {/* Access Logs */}
+      {accessLogs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Access Logs</CardTitle>
+            <CardDescription>
+              Blockchain access history for patient data
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {accessLogs.slice(0, 5).map((log, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${log.authorized ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <div>
+                      <p className="text-sm font-medium">{log.accessType}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {log.accessor.substring(0, 10)}...
+                      </p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(log.timestamp * 1000).toLocaleString()}
+                    </p>
+                    <Badge variant={log.authorized ? 'default' : 'destructive'} className="text-xs">
+                      {log.authorized ? 'Authorized' : 'Unauthorized'}
+                    </Badge>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="h-8 w-8 mx-auto mb-2" />
-                  <p>No access logs available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Warning for testnet */}
+      {stats.networkInfo.isTestnet && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="flex items-center gap-3 pt-6">
+            <AlertCircle className="h-5 w-5 text-yellow-600" />
+            <div>
+              <p className="font-medium text-yellow-800">Testnet Environment</p>
+              <p className="text-sm text-yellow-700">
+                This is running on {stats.networkInfo.name}. No real ETH is required.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

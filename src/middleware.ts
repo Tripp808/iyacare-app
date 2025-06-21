@@ -11,6 +11,7 @@ export function middleware(request: NextRequest) {
     '/auth/register', 
     '/auth/forgot-password',
     '/contact',
+    '/sponsors',
     '/about',
     '/privacy',
     '/terms'

@@ -39,19 +39,40 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-primary"
-            >
-              {/* Use a placeholder svg for now - we'll replace with the actual logo */}
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-              <path d="M8 12L11 15L16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Main circle background with clean gradient */}
+              <circle cx="20" cy="20" r="19" fill="url(#mainGradientHeader)"/>
+              
+              {/* Gradient definitions */}
+              <defs>
+                <linearGradient id="mainGradientHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#2D7D89"/>
+                  <stop offset="100%" stopColor="#1F5F68"/>
+                </linearGradient>
+                <linearGradient id="heartGradientHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FF6B7A"/>
+                  <stop offset="100%" stopColor="#E74C3C"/>
+                </linearGradient>
+              </defs>
+              
+              {/* Mother figure - clean and simple */}
+              <circle cx="14" cy="13" r="3.5" fill="#ffffff"/>
+              <ellipse cx="14" cy="20" rx="4" ry="6" fill="#ffffff"/>
+              
+              {/* Child figure - clean and simple */}
+              <circle cx="26" cy="15" r="2.5" fill="#F7913D"/>
+              <ellipse cx="26" cy="21" rx="3" ry="4.5" fill="#F7913D"/>
+              
+              {/* Heart symbol - clean and centered */}
+              <path 
+                d="M20 18c-1.5-1.8-4-1.8-4 1.2c0 2.8 4 6 4 6s4-3.2 4-6c0-3-2.5-3-4-1.2z" 
+                fill="url(#heartGradientHeader)"
+              />
             </svg>
-            <span className="text-xl font-bold text-primary">IyaCare</span>
+            <span className="text-xl font-bold">
+              <span className="text-[#2D7D89]">Iyà</span>
+              <span className="text-[#F7913D]">Care</span>
+            </span>
           </Link>
         </div>
 
