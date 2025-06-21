@@ -37,6 +37,9 @@ export interface Patient {
   age?: number;
   lastVisit?: any;
   nextVisit?: any;
+  // Timestamps
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 // Add a new patient

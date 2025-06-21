@@ -26,7 +26,10 @@ import {
   Activity,
   TrendingUp,
   Users,
-  Heart
+  Heart,
+  FileDown,
+  Clock,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -39,6 +42,8 @@ import {
 import Link from 'next/link';
 import { Patient, getPatients } from '@/lib/firebase/patients';
 import { toast } from 'react-hot-toast';
+import { getVitalSignsByPatientId, VitalSigns } from '@/lib/firebase/vitals';
+import { aiPredictionService } from '@/services/ai-prediction.service';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -51,6 +56,7 @@ export default function PatientsPage() {
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [viewType, setViewType] = useState<'table' | 'cards'>('table');
   const itemsPerPage = 12;
+  const [riskPredictions, setRiskPredictions] = useState<Record<string, { loading: boolean; prediction?: any; error?: string }>>({});
 
   useEffect(() => {
     fetchPatients();
@@ -62,6 +68,8 @@ export default function PatientsPage() {
       const result = await getPatients();
       if (result.success && result.patients) {
         setPatients(result.patients);
+        // Start fetching risk predictions for all patients
+        fetchRiskPredictionsForPatients(result.patients);
       } else {
         toast.error(result.error || 'Failed to load patients');
       }
@@ -73,6 +81,78 @@ export default function PatientsPage() {
     }
   };
 
+  const fetchRiskPredictionsForPatients = async (patientList: Patient[]) => {
+    // Initialize loading states
+    const initialStates: Record<string, { loading: boolean; prediction?: any; error?: string }> = {};
+    patientList.forEach(patient => {
+      if (patient.id) {
+        initialStates[patient.id] = { loading: true };
+      }
+    });
+    setRiskPredictions(initialStates);
+
+    // Fetch predictions for each patient
+    for (const patient of patientList) {
+      if (!patient.id) continue;
+      
+      try {
+        // Get latest vital signs for the patient
+        const vitalsResult = await getVitalSignsByPatientId(patient.id, 1);
+        
+        if (vitalsResult.success && vitalsResult.vitals.length > 0) {
+          const latestVitals = vitalsResult.vitals[0];
+          
+          // Extract prediction request data
+          const predictionData = aiPredictionService.extractVitalSigns(patient, {
+            systolic_bp: latestVitals.systolicBP,
+            diastolic_bp: latestVitals.diastolicBP,
+            blood_sugar: latestVitals.bloodSugar,
+            body_temp: latestVitals.temperature,
+            heart_rate: latestVitals.heartRate,
+          });
+
+          if (predictionData) {
+            // Make AI prediction
+            const prediction = await aiPredictionService.predictRisk(predictionData);
+            
+            setRiskPredictions(prev => ({
+              ...prev,
+              [patient.id!]: { loading: false, prediction }
+            }));
+          } else {
+            setRiskPredictions(prev => ({
+              ...prev,
+              [patient.id!]: { loading: false, error: 'Unable to extract vital signs' }
+            }));
+          }
+        } else {
+          // No vital signs available, use default values
+          const defaultPredictionData = aiPredictionService.extractVitalSigns(patient);
+          
+          if (defaultPredictionData) {
+            const prediction = await aiPredictionService.predictRisk(defaultPredictionData);
+            
+            setRiskPredictions(prev => ({
+              ...prev,
+              [patient.id!]: { loading: false, prediction }
+            }));
+          } else {
+            setRiskPredictions(prev => ({
+              ...prev,
+              [patient.id!]: { loading: false, error: 'No vital signs available' }
+            }));
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching prediction for patient ${patient.id}:`, error);
+        setRiskPredictions(prev => ({
+          ...prev,
+          [patient.id!]: { loading: false, error: 'Prediction failed' }
+        }));
+      }
+    }
+  };
+
   // Enhanced filtering and sorting
   const filteredAndSortedPatients = useMemo(() => {
     return patients
@@ -80,7 +160,10 @@ export default function PatientsPage() {
         const matchesSearch = `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              (patient.phone || '').includes(searchTerm) ||
                              (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRisk = riskFilter === 'all' || patient.riskLevel === riskFilter;
+        const matchesRisk = riskFilter === 'all' || 
+          (riskFilter === 'high' && getRiskLevelFromPrediction(patient.id).toLowerCase().includes('high')) ||
+          (riskFilter === 'medium' && getRiskLevelFromPrediction(patient.id).toLowerCase().includes('mid')) ||
+          (riskFilter === 'low' && getRiskLevelFromPrediction(patient.id).toLowerCase().includes('low'));
         const matchesPregnancy = pregnancyFilter === 'all' || 
                                (pregnancyFilter === 'pregnant' && patient.isPregnant) ||
                                (pregnancyFilter === 'not-pregnant' && !patient.isPregnant);
@@ -102,30 +185,41 @@ export default function PatientsPage() {
           case 'risk-low':
             const riskOrderLow = { 'high': 3, 'medium': 2, 'low': 1 };
             return (riskOrderLow[a.riskLevel as keyof typeof riskOrderLow] || 0) - (riskOrderLow[b.riskLevel as keyof typeof riskOrderLow] || 0);
+          case 'risk':
+            const getRiskPriority = (patientId?: string) => {
+              const risk = getRiskLevelFromPrediction(patientId).toLowerCase();
+              if (risk.includes('high')) return 3;
+              if (risk.includes('mid') || risk.includes('medium')) return 2;
+              if (risk.includes('low')) return 1;
+              return 0;
+            };
+            const aValue = getRiskPriority(a.id);
+            const bValue = getRiskPriority(b.id);
+            return aValue - bValue;
           default:
             return 0;
         }
     });
   }, [patients, searchTerm, riskFilter, pregnancyFilter, sortBy]);
 
-  // Statistics calculations
+  // Calculate statistics with enhanced metrics
   const stats = useMemo(() => {
     const totalPatients = patients.length;
     const pregnantPatients = patients.filter(p => p.isPregnant).length;
-    const highRiskPatients = patients.filter(p => p.riskLevel === 'high').length;
+    const highRiskPatients = patients.filter(p => getRiskLevelFromPrediction(p.id).toLowerCase().includes('high')).length;
     const recentPatients = patients.filter(p => {
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      return p.lastVisit && new Date(p.lastVisit) > oneWeekAgo;
+      return p.createdAt && new Date(p.createdAt.toDate()).getTime() > oneWeekAgo.getTime();
     }).length;
 
     return {
       total: totalPatients,
       pregnant: pregnantPatients,
       highRisk: highRiskPatients,
-      recentVisits: recentPatients
+      recent: recentPatients
     };
-  }, [patients]);
+  }, [patients, riskPredictions]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedPatients.length / itemsPerPage);
@@ -134,24 +228,64 @@ export default function PatientsPage() {
     currentPage * itemsPerPage
   );
 
-  const getRiskBadgeColor = (riskLevel: string | undefined) => {
-    switch (riskLevel) {
-      case 'high':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 border-green-200 dark:border-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+  const getRiskLevelFromPrediction = (patientId?: string) => {
+    if (!patientId || !riskPredictions[patientId]) {
+      return 'Unknown';
     }
+    
+    const predictionState = riskPredictions[patientId];
+    if (predictionState.loading) {
+      return 'Loading...';
+    }
+    
+    if (predictionState.error) {
+      return 'Error';
+    }
+    
+    return predictionState.prediction?.predicted_risk || 'Unknown';
   };
 
-  const getRiskLevelDisplay = (riskLevel: string | undefined) => {
-    if (!riskLevel) {
-      return 'Not Assessed';
+  const getRiskBadgeColor = (patientId?: string) => {
+    if (!patientId) {
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
     }
-    return riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) + ' Risk';
+
+    const predictionState = riskPredictions[patientId];
+    if (!predictionState) {
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+    }
+
+    if (predictionState.loading) {
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+    }
+
+    if (predictionState.error) {
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+    }
+
+    const riskLevel = predictionState.prediction?.predicted_risk?.toLowerCase() || '';
+    
+    if (riskLevel.includes('high')) {
+      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-800';
+    } else if (riskLevel.includes('mid') || riskLevel.includes('medium')) {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
+    } else if (riskLevel.includes('low')) {
+      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 border-green-200 dark:border-green-800';
+    }
+    
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+  };
+
+  const getRiskLevelDisplay = (patientId?: string) => {
+    if (!patientId) return 'Unknown';
+    
+    const predictionState = riskPredictions[patientId];
+    if (!predictionState) return 'Unknown';
+    
+    if (predictionState.loading) return 'Loading...';
+    if (predictionState.error) return 'Error';
+    
+    return predictionState.prediction?.predicted_risk || 'Unknown';
   };
 
   const getAgeFromBirthDate = (birthDate: string) => {
@@ -290,7 +424,7 @@ export default function PatientsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 dark:text-green-400 text-sm font-medium">Recent Visits</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{stats.recentVisits}</p>
+                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{stats.recent}</p>
               </div>
               <Activity className="w-8 h-8 text-green-500" />
             </div>
@@ -463,9 +597,10 @@ export default function PatientsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getRiskBadgeColor(patient.riskLevel)}>
-                            {patient.riskLevel === 'high' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                            {getRiskLevelDisplay(patient.riskLevel)}
+                          <Badge className={getRiskBadgeColor(patient.id)}>
+                            {getRiskLevelFromPrediction(patient.id).toLowerCase().includes('high') && <AlertTriangle className="w-3 h-3 mr-1" />}
+                            {riskPredictions[patient.id!]?.loading && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+                            {getRiskLevelDisplay(patient.id)}
                           </Badge>
                         </TableCell>
                         <TableCell>
