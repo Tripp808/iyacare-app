@@ -25,6 +25,9 @@ class PredictionResponse(BaseModel):
     confidence: float
     probability_distribution: dict  # Added to match expected format
 
+# AI Risk Prediction API for IyaCare
+# Updated: 2024-12-19 - Force fresh deployment
+
 # Improved rule-based prediction model for better balance
 def predict_health_risk(data: PredictionRequest) -> PredictionResponse:
     """
