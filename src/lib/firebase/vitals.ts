@@ -82,7 +82,6 @@ export async function getVitalSignsByPatientId(patientId: string, limitCount = 1
     const q = query(
       collection(db, COLLECTION_NAME),
       where('patientId', '==', patientId),
-      orderBy('recordedAt', 'desc'),
       limit(limitCount)
     );
 
@@ -92,6 +91,9 @@ export async function getVitalSignsByPatientId(patientId: string, limitCount = 1
     querySnapshot.forEach((doc) => {
       vitals.push({ id: doc.id, ...doc.data() } as VitalSigns);
     });
+
+    // Sort by recordedAt in memory to avoid Firebase index requirement
+    vitals.sort((a, b) => b.recordedAt.toMillis() - a.recordedAt.toMillis());
 
     return {
       success: true,

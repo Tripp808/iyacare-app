@@ -28,10 +28,32 @@ class AIPredictionService {
 
   constructor() {
     this.baseUrl = process.env.NEXT_PUBLIC_AI_API_URL || 'http://localhost:8000';
+    console.log('AI Prediction Service initialized with URL:', this.baseUrl);
+    
+    // Test the health endpoint on initialization
+    this.testConnection();
+  }
+
+  private async testConnection() {
+    try {
+      console.log('Testing AI API connection...');
+      const response = await fetch(`${this.baseUrl}/health`);
+      if (response.ok) {
+        const health = await response.json();
+        console.log('AI API health check:', health);
+      } else {
+        console.warn('AI API health check failed:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('AI API connection test failed:', error);
+    }
   }
 
   async predictRisk(data: PredictionRequest): Promise<PredictionResponse> {
     try {
+      console.log('Making prediction request to:', `${this.baseUrl}/predict`);
+      console.log('Request data:', data);
+      
       const response = await fetch(`${this.baseUrl}/predict`, {
         method: 'POST',
         headers: {
@@ -40,15 +62,31 @@ class AIPredictionService {
         body: JSON.stringify(data),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        throw new Error(`Prediction failed: ${errorData.detail || response.statusText}`);
+        const errorText = await response.text();
+        console.error('Error response text:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { detail: errorText || 'Unknown error' };
+        }
+        
+        const errorMessage = typeof errorData === 'object' 
+          ? (errorData.detail || errorData.message || JSON.stringify(errorData))
+          : errorData;
+        throw new Error(`Prediction failed: ${errorMessage}`);
       }
 
       const result: PredictionResponse = await response.json();
+      console.log('Prediction result:', result);
       return result;
     } catch (error) {
-      console.error('AI Prediction Error:', error);
+      console.error('Prediction error:', error);
       throw error;
     }
   }
@@ -94,10 +132,27 @@ class AIPredictionService {
   // Helper method to extract vital signs from patient data
   extractVitalSigns(patient: any, latestVitals?: any): PredictionRequest | null {
     try {
+      console.log('Extracting vital signs for patient:', patient);
+      console.log('Latest vitals:', latestVitals);
+      
       // Calculate age from date of birth
-      const age = patient.dateOfBirth ? 
-        new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : 
-        patient.age || 25; // Default age if not available
+      let age = 25; // Default age
+      if (patient.dateOfBirth) {
+        const birthDate = new Date(patient.dateOfBirth);
+        const today = new Date();
+        age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+      } else if (patient.age && typeof patient.age === 'number') {
+        age = patient.age;
+      }
+
+      // Ensure age is a valid number
+      if (!age || age < 0 || age > 150) {
+        age = 25;
+      }
 
       // Use latest vitals or default values
       const vitals = latestVitals || {};
@@ -117,14 +172,27 @@ class AIPredictionService {
         diastolic_bp = vitals.diastolic_bp || vitals.diastolicBP || 80;
       }
 
-      return {
-        age: age,
-        systolic_bp: systolic_bp,
-        diastolic_bp: diastolic_bp,
-        blood_sugar: vitals.blood_sugar || vitals.bloodSugar || vitals.BS || 6.0,
-        body_temp: vitals.body_temp || vitals.bodyTemp || vitals.temperature || 98.6,
-        heart_rate: vitals.heart_rate || vitals.heartRate || 70,
+      // Ensure all values are valid numbers
+      const predictionData = {
+        age: Number(age),
+        systolic_bp: Number(systolic_bp) || 120,
+        diastolic_bp: Number(diastolic_bp) || 80,
+        blood_sugar: Number(vitals.blood_sugar || vitals.bloodSugar || vitals.BS || 6.0),
+        body_temp: Number(vitals.body_temp || vitals.bodyTemp || vitals.temperature || 98.6),
+        heart_rate: Number(vitals.heart_rate || vitals.heartRate || 70),
       };
+
+      console.log('Extracted prediction data:', predictionData);
+
+      // Validate all fields are numbers
+      for (const [key, value] of Object.entries(predictionData)) {
+        if (typeof value !== 'number' || isNaN(value)) {
+          console.error(`Invalid ${key} value:`, value);
+          return null;
+        }
+      }
+
+      return predictionData;
     } catch (error) {
       console.error('Error extracting vital signs:', error);
       return null;

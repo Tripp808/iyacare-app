@@ -230,14 +230,14 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="space-y-4">
-            <Button 
-              variant="ghost" 
+          <Button 
+            variant="ghost" 
               className="pl-0 -ml-4 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800" 
-              onClick={() => router.push('/patients')}
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to Patients
-            </Button>
+            onClick={() => router.push('/patients')}
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Back to Patients
+          </Button>
             
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2D7D89] to-[#4AA0AD] flex items-center justify-center">
@@ -248,18 +248,18 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                   {patient.firstName} {patient.lastName}
-                </h1>
+          </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge className={getRiskBadgeColor(patient.riskLevel)}>
-                    {patient.riskLevel || 'Unknown'} Risk
-                  </Badge>
-                  {patient.isPregnant && (
+            <Badge className={getRiskBadgeColor(patient.riskLevel)}>
+              {patient.riskLevel || 'Unknown'} Risk
+            </Badge>
+            {patient.isPregnant && (
                     <Badge className="bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-300 border-pink-200 dark:border-pink-800">
                       {calculatePregnancyWeeks(patient.dueDate || '')} weeks pregnant
-                    </Badge>
-                  )}
-                </div>
-              </div>
+              </Badge>
+            )}
+          </div>
+        </div>
             </div>
           </div>
           
@@ -272,15 +272,15 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               <Share className="w-4 h-4 mr-2" />
               Share
             </Button>
-            <Button 
-              className="bg-[#2D7D89] hover:bg-[#245A62] text-white"
-              onClick={() => router.push(`/patients/${resolvedParams.id}/edit`)}
-            >
+          <Button 
+            className="bg-[#2D7D89] hover:bg-[#245A62] text-white"
+            onClick={() => router.push(`/patients/${resolvedParams.id}/edit`)}
+          >
               <Edit className="w-4 h-4 mr-2" />
-              Edit Patient
-            </Button>
-          </div>
+            Edit Patient
+          </Button>
         </div>
+      </div>
 
         {/* Quick Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -339,9 +339,9 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        <Tabs defaultValue="overview">
+      <Tabs defaultValue="overview">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             <TabsTrigger value="overview" className="data-[state=active]:bg-[#2D7D89] data-[state=active]:text-white">
               Overview
@@ -356,15 +356,15 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               Appointments
             </TabsTrigger>
             <TabsTrigger value="alerts" className="data-[state=active]:bg-[#2D7D89] data-[state=active]:text-white">
-              Alerts
-              {alerts.filter(a => !a.read).length > 0 && (
+            Alerts
+            {alerts.filter(a => !a.read).length > 0 && (
                 <Badge className="ml-2 bg-red-500 text-white text-xs">
-                  {alerts.filter(a => !a.read).length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          
+                {alerts.filter(a => !a.read).length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {/* Personal Information */}
@@ -374,55 +374,55 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                     <UserCheck className="w-5 h-5 text-[#2D7D89]" />
                     Personal Information
                   </CardTitle>
-                </CardHeader>
+              </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <div>
+                  <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Full Name</p>
                       <p className="text-gray-900 dark:text-white">{patient.firstName} {patient.lastName}</p>
-                    </div>
-                    <div>
+                  </div>
+                  <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Date of Birth</p>
                       <div className="flex items-center gap-2">
                         <CalendarIcon className="w-4 h-4 text-gray-400" />
                         <p className="text-gray-900 dark:text-white">
-                          {patient.dateOfBirth ? formatDate(patient.dateOfBirth, {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          }) : 'Not provided'}
+                      {patient.dateOfBirth ? formatDate(patient.dateOfBirth, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : 'Not provided'}
                         </p>
                       </div>
-                    </div>
-                    <div>
+                  </div>
+                  <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Contact</p>
                       <div className="space-y-1">
-                        {patient.phone && (
+                      {patient.phone && (
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-gray-400" />
                             <p className="text-gray-900 dark:text-white">{patient.phone}</p>
-                          </div>
-                        )}
-                        {patient.email && (
+                        </div>
+                      )}
+                      {patient.email && (
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 text-gray-400" />
                             <p className="text-gray-900 dark:text-white">{patient.email}</p>
-                          </div>
-                        )}
+                        </div>
+                      )}
                       </div>
-                    </div>
-                    {patient.address && (
-                      <div>
+                  </div>
+                  {patient.address && (
+                    <div>
                         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Address</p>
                         <div className="flex items-start gap-2">
                           <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
                           <p className="text-gray-900 dark:text-white">{patient.address}</p>
                         </div>
-                      </div>
-                    )}
+                    </div>
+                  )}
                   </div>
-                </CardContent>
-              </Card>
+              </CardContent>
+            </Card>
 
               {/* Medical Summary */}
               <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -431,40 +431,40 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                     <Stethoscope className="w-5 h-5 text-[#2D7D89]" />
                     Medical Summary
                   </CardTitle>
-                </CardHeader>
+              </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <div>
+                  <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Blood Type</p>
                       <div className="flex items-center gap-2">
                         <Droplets className="w-4 h-4 text-red-500" />
                         <p className="text-gray-900 dark:text-white">{patient.bloodType || 'Not recorded'}</p>
                       </div>
-                    </div>
-                    <div>
+                  </div>
+                  <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Risk Level</p>
                       <Badge className={getRiskBadgeColor(patient.riskLevel)}>
                         {patient.riskLevel || 'Unknown'} Risk
                       </Badge>
-                    </div>
-                    {patient.isPregnant && (
-                      <div>
+                  </div>
+                  {patient.isPregnant && (
+                    <div>
                         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pregnancy Status</p>
                         <div className="space-y-2">
                           <Badge className="bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-300">
-                            Pregnant
-                          </Badge>
-                          {patient.dueDate && (
+                          Pregnant
+                        </Badge>
+                        {patient.dueDate && (
                             <div>
                               <p className="text-sm text-gray-600 dark:text-gray-400">Due Date:</p>
                               <div className="flex items-center gap-2">
                                 <CalendarIcon className="w-4 h-4 text-gray-400" />
                                 <p className="text-gray-900 dark:text-white">
-                                  {formatDate(patient.dueDate, {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
+                            {formatDate(patient.dueDate, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
                                 </p>
                               </div>
                               <div className="mt-2">
@@ -479,14 +479,14 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                                   </span>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                          </div>
+                        )}
                         </div>
-                      </div>
-                    )}
+                    </div>
+                  )}
                   </div>
-                </CardContent>
-              </Card>
+              </CardContent>
+            </Card>
 
               {/* AI Risk Assessment */}
               <RiskAssessment 
@@ -507,22 +507,22 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                     <FileText className="w-5 h-5 text-[#2D7D89]" />
                     Medical History
                   </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {patient.medicalHistory ? (
+              </CardHeader>
+              <CardContent>
+                {patient.medicalHistory ? (
                     <div className="text-sm text-gray-900 dark:text-white whitespace-pre-line">
-                      {patient.medicalHistory}
-                    </div>
-                  ) : (
+                    {patient.medicalHistory}
+                  </div>
+                ) : (
                     <div className="text-center py-4">
                       <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         No medical history recorded
                       </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
               <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <CardHeader>
@@ -530,12 +530,12 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                     <FileText className="w-5 h-5 text-[#2D7D89]" />
                     Notes
                   </CardTitle>
-                </CardHeader>
-                <CardContent>
+              </CardHeader>
+              <CardContent>
                   {patient.notes ? (
                     <div className="text-sm text-gray-900 dark:text-white whitespace-pre-line">
-                      {patient.notes}
-                    </div>
+                  {patient.notes}
+                </div>
                   ) : (
                     <div className="text-center py-4">
                       <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -544,24 +544,24 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                       </p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="medical">
-            <Card>
-              <CardHeader>
-                <CardTitle>Medical Records</CardTitle>
-                <CardDescription>
-                  Detailed medical information for this patient
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Medical records tab content will go here.</p>
               </CardContent>
             </Card>
-          </TabsContent>
+            </div>
+        </TabsContent>
+        
+        <TabsContent value="medical">
+          <Card>
+            <CardHeader>
+              <CardTitle>Medical Records</CardTitle>
+              <CardDescription>
+                Detailed medical information for this patient
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Medical records tab content will go here.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
           
           <TabsContent value="vitals">
             <Card>
@@ -573,91 +573,91 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               </CardHeader>
               <CardContent>
                 <p>Vital signs tab content will go here.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="appointments">
-            <Card>
-              <CardHeader>
-                <CardTitle>Appointments</CardTitle>
-                <CardDescription>
-                  Appointment history and upcoming appointments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Appointments tab content will go here.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="appointments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Appointments</CardTitle>
+              <CardDescription>
+                Appointment history and upcoming appointments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>Appointments tab content will go here.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="alerts">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                  <CardTitle>Patient Alerts</CardTitle>
-                  <CardDescription>
-                    View all alerts related to this patient
-                  </CardDescription>
+        <TabsContent value="alerts">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle>Patient Alerts</CardTitle>
+                <CardDescription>
+                  View all alerts related to this patient
+                </CardDescription>
+              </div>
+              <Button onClick={() => router.push(`/alerts/create?patientId=${resolvedParams.id}`)}>
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Create Alert
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {alerts.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium mb-2">No Alerts Found</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    There are no alerts for this patient.
+                  </p>
                 </div>
-                <Button onClick={() => router.push(`/alerts/create?patientId=${resolvedParams.id}`)}>
-                  <AlertCircle className="mr-2 h-4 w-4" />
-                  Create Alert
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {alerts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium mb-2">No Alerts Found</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      There are no alerts for this patient.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {alerts.map((alert) => (
-                      <Card key={alert.id} className={alert.read ? 'bg-gray-50' : 'bg-white'}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between">
-                            <div className="flex items-center">
-                              {getAlertIcon(alert.type)}
-                              <span className="ml-2 text-xs uppercase font-semibold">
-                                {alert.type}
-                              </span>
-                              <Badge className={`ml-2 ${getAlertBadgeColor(alert.priority)}`}>
-                                {alert.priority}
-                              </Badge>
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {formatDate(alert.createdAt)}
-                            </div>
+              ) : (
+                <div className="space-y-4">
+                  {alerts.map((alert) => (
+                    <Card key={alert.id} className={alert.read ? 'bg-gray-50' : 'bg-white'}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            {getAlertIcon(alert.type)}
+                            <span className="ml-2 text-xs uppercase font-semibold">
+                              {alert.type}
+                            </span>
+                            <Badge className={`ml-2 ${getAlertBadgeColor(alert.priority)}`}>
+                              {alert.priority}
+                            </Badge>
                           </div>
-                          <div className="mt-2">
-                            {alert.message}
+                          <div className="text-xs text-gray-500">
+                            {formatDate(alert.createdAt)}
                           </div>
-                          {!alert.read && (
-                            <div className="mt-3 flex justify-end">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="text-blue-500 hover:text-blue-700"
-                                onClick={() => alert.id && handleMarkAsRead(alert.id)}
-                              >
-                                <Check className="h-4 w-4" />
-                                <span className="ml-1">Mark Read</span>
-                              </Button>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                        </div>
+                        <div className="mt-2">
+                          {alert.message}
+                        </div>
+                        {!alert.read && (
+                          <div className="mt-3 flex justify-end">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-blue-500 hover:text-blue-700"
+                              onClick={() => alert.id && handleMarkAsRead(alert.id)}
+                            >
+                              <Check className="h-4 w-4" />
+                              <span className="ml-1">Mark Read</span>
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       </div>
     </div>
   );
