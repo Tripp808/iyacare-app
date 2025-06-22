@@ -1,14 +1,20 @@
 // Script to add diverse vital signs to existing patients
-const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, addDoc, getDocs, Timestamp } = require('firebase/firestore');
+const { initializeApp, getApps, getApp } = require('firebase/app');
+const { getFirestore, collection, addDoc, getDocs, Timestamp, doc, setDoc } = require('firebase/firestore');
 
-// Firebase config - replace with your actual config
+// Firebase configuration
 const firebaseConfig = {
-  // Add your Firebase config here
-  // You can find this in your Firebase console
+  apiKey: "AIzaSyCvlfGLVtfvAWIONgalq1Nv7rNbAvP_TDE",
+  authDomain: "iyacare.firebaseapp.com",
+  projectId: "iyacare",
+  storageBucket: "iyacare.firebasestorage.app",
+  messagingSenderId: "1093409071155",
+  appId: "1:1093409071155:web:bb070eb164529e61b8c346",
+  measurementId: "G-6YBNE3TQW6"
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
 // Diverse vital signs data for different risk levels

@@ -8,15 +8,20 @@ export interface PredictionRequest {
 }
 
 export interface PredictionResponse {
-  predicted_risk: string;
+  risk_level: string;
   confidence: number;
-  probability_distribution: {
-    'low risk': number;
-    'mid risk': number;
-    'high risk': number;
+  details: {
+    risk_score: number;
+    risk_factors: string[];
+    vital_signs: {
+      age: number;
+      systolic_bp: number;
+      diastolic_bp: number;
+      blood_sugar: number;
+      body_temp: number;
+      heart_rate: number;
+    }
   };
-  risk_factors: string[];
-  recommendations: string[];
 }
 
 export interface BatchPredictionResponse {
