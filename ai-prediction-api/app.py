@@ -21,113 +21,124 @@ class PredictionRequest(BaseModel):
     heart_rate: float
 
 class PredictionResponse(BaseModel):
-    risk_level: str
+    predicted_risk: str  # Changed from risk_level to match frontend expectation
     confidence: float
-    details: dict
+    probability_distribution: dict  # Added to match expected format
 
-# Simple rule-based prediction model for better balance
+# Improved rule-based prediction model for better balance
 def predict_health_risk(data: PredictionRequest) -> PredictionResponse:
     """
     Rule-based health risk prediction with more balanced results
     """
     try:
         # Initialize risk factors
-        risk_factors = []
         risk_score = 0
         
-        # Age factor (0-40 points)
-        if data.age >= 65:
-            risk_score += 40
-            risk_factors.append("Advanced age (65+)")
-        elif data.age >= 50:
-            risk_score += 25
-            risk_factors.append("Middle age (50-64)")
-        elif data.age >= 35:
-            risk_score += 10
-            risk_factors.append("Mature age (35-49)")
-        
-        # Blood pressure factor (0-30 points)
-        if data.systolic_bp >= 180 or data.diastolic_bp >= 110:
+        # Age factor (0-30 points)
+        if data.age >= 75:
             risk_score += 30
-            risk_factors.append("Severe hypertension")
-        elif data.systolic_bp >= 160 or data.diastolic_bp >= 100:
+        elif data.age >= 65:
+            risk_score += 20
+        elif data.age >= 50:
+            risk_score += 10
+        elif data.age >= 35:
+            risk_score += 5
+        
+        # Blood pressure factor (0-25 points)
+        if data.systolic_bp >= 180 or data.diastolic_bp >= 110:
             risk_score += 25
-            risk_factors.append("Stage 2 hypertension")
+        elif data.systolic_bp >= 160 or data.diastolic_bp >= 100:
+            risk_score += 20
         elif data.systolic_bp >= 140 or data.diastolic_bp >= 90:
             risk_score += 15
-            risk_factors.append("Stage 1 hypertension")
         elif data.systolic_bp >= 130 or data.diastolic_bp >= 80:
-            risk_score += 5
-            risk_factors.append("Elevated blood pressure")
+            risk_score += 8
+        elif data.systolic_bp <= 90 or data.diastolic_bp <= 60:
+            risk_score += 10  # Hypotension
         
-        # Blood sugar factor (0-25 points)
-        if data.blood_sugar >= 11.1:  # mmol/L
-            risk_score += 25
-            risk_factors.append("Severe diabetes")
-        elif data.blood_sugar >= 7.0:
+        # Blood sugar factor (0-20 points) - assuming mg/dL values
+        if data.blood_sugar >= 250:
+            risk_score += 20
+        elif data.blood_sugar >= 180:
             risk_score += 15
-            risk_factors.append("Diabetes")
-        elif data.blood_sugar >= 6.1:
+        elif data.blood_sugar >= 140:
             risk_score += 10
-            risk_factors.append("Impaired glucose")
-        elif data.blood_sugar >= 5.6:
+        elif data.blood_sugar >= 100:
             risk_score += 5
-            risk_factors.append("Prediabetes")
+        elif data.blood_sugar <= 70:
+            risk_score += 8  # Hypoglycemia
         
         # Heart rate factor (0-15 points)
-        if data.heart_rate >= 100:
+        if data.heart_rate >= 120:
             risk_score += 15
-            risk_factors.append("Tachycardia")
+        elif data.heart_rate >= 100:
+            risk_score += 10
         elif data.heart_rate <= 50:
-            risk_score += 10
-            risk_factors.append("Bradycardia")
-        elif data.heart_rate >= 90:
+            risk_score += 12
+        elif data.heart_rate <= 60:
             risk_score += 5
-            risk_factors.append("Elevated heart rate")
         
-        # Body temperature factor (0-10 points)
-        if data.body_temp >= 101.0:  # Fahrenheit
+        # Body temperature factor (0-10 points) - assuming Celsius
+        if data.body_temp >= 39.0:  # High fever
             risk_score += 10
-            risk_factors.append("Fever")
-        elif data.body_temp >= 99.5:
-            risk_score += 5
-            risk_factors.append("Low-grade fever")
-        elif data.body_temp <= 96.0:
+        elif data.body_temp >= 37.5:  # Fever
+            risk_score += 6
+        elif data.body_temp <= 35.0:  # Hypothermia
             risk_score += 8
-            risk_factors.append("Hypothermia")
+        elif data.body_temp <= 36.0:
+            risk_score += 3
         
-        # Determine risk level based on score
-        if risk_score >= 70:
-            risk_level = "High"
-            confidence = min(0.95, 0.7 + (risk_score - 70) * 0.005)
-        elif risk_score >= 40:
-            risk_level = "Medium"
-            confidence = min(0.85, 0.6 + (risk_score - 40) * 0.008)
+        # Determine risk level and probabilities based on score
+        # Total possible score: 100 points
+        
+        if risk_score <= 15:
+            # Low risk scenario
+            risk_level = "low risk"
+            base_confidence = 0.70 + (15 - risk_score) * 0.015
+            low_prob = base_confidence
+            mid_prob = (1 - base_confidence) * 0.7
+            high_prob = (1 - base_confidence) * 0.3
+            
+        elif risk_score <= 40:
+            # Medium risk scenario
+            risk_level = "mid risk"
+            base_confidence = 0.60 + (risk_score - 15) * 0.008
+            mid_prob = base_confidence
+            low_prob = (1 - base_confidence) * 0.6
+            high_prob = (1 - base_confidence) * 0.4
+            
         else:
-            risk_level = "Low"
-            confidence = min(0.80, 0.5 + (40 - risk_score) * 0.005)
+            # High risk scenario
+            risk_level = "high risk"
+            base_confidence = 0.65 + min(0.25, (risk_score - 40) * 0.005)
+            high_prob = base_confidence
+            mid_prob = (1 - base_confidence) * 0.6
+            low_prob = (1 - base_confidence) * 0.4
         
-        # If no risk factors found, it's definitely low risk
-        if not risk_factors:
-            risk_factors.append("No significant risk factors detected")
-            confidence = max(confidence, 0.75)
+        # Normalize probabilities to ensure they sum to 1
+        total_prob = low_prob + mid_prob + high_prob
+        low_prob /= total_prob
+        mid_prob /= total_prob
+        high_prob /= total_prob
         
-        logger.info(f"Prediction: {risk_level} risk with {confidence:.2f} confidence, Score: {risk_score}")
+        # Determine final confidence based on the predicted class
+        if risk_level == "low risk":
+            confidence = low_prob
+        elif risk_level == "mid risk":
+            confidence = mid_prob
+        else:
+            confidence = high_prob
+        
+        logger.info(f"Prediction: {risk_level} with {confidence:.3f} confidence, Score: {risk_score}")
+        logger.info(f"Probabilities - Low: {low_prob:.3f}, Mid: {mid_prob:.3f}, High: {high_prob:.3f}")
         
         return PredictionResponse(
-            risk_level=risk_level,
-            confidence=round(confidence, 2),
-            details={
-                "risk_score": risk_score,
-                "risk_factors": risk_factors,
-                "vital_signs": {
-                    "age": data.age,
-                    "systolic_bp": data.systolic_bp,
-                    "diastolic_bp": data.diastolic_bp,
-                    "blood_sugar": data.blood_sugar,
-                    "body_temp": data.body_temp,
-                    "heart_rate": data.heart_rate
-                }
+            predicted_risk=risk_level,
+            confidence=round(confidence, 4),
+            probability_distribution={
+                "low risk": round(low_prob, 4),
+                "mid risk": round(mid_prob, 4),
+                "high risk": round(high_prob, 4)
             }
         )
         
@@ -137,11 +148,11 @@ def predict_health_risk(data: PredictionRequest) -> PredictionResponse:
 
 @app.get("/")
 async def root():
-    return {"message": "IYAcare AI Prediction API is running"}
+    return {"message": "Welcome to the IyaCare AI Risk Prediction API!", "status": "running", "version": "1.0.0"}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "message": "AI Prediction API is operational"}
+    return {"status": "healthy", "message": "Welcome to the IyaCare AI Risk Prediction API!", "version": "1.0.0"}
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
@@ -158,15 +169,15 @@ async def predict(request: PredictionRequest):
             raise HTTPException(status_code=400, detail="Systolic BP must be between 50 and 300")
         if not (30 <= request.diastolic_bp <= 200):
             raise HTTPException(status_code=400, detail="Diastolic BP must be between 30 and 200")
-        if not (2.0 <= request.blood_sugar <= 40.0):
-            raise HTTPException(status_code=400, detail="Blood sugar must be between 2.0 and 40.0 mmol/L")
-        if not (90.0 <= request.body_temp <= 115.0):
-            raise HTTPException(status_code=400, detail="Body temperature must be between 90 and 115°F")
+        if not (50.0 <= request.blood_sugar <= 500.0):
+            raise HTTPException(status_code=400, detail="Blood sugar must be between 50 and 500 mg/dL")
+        if not (30.0 <= request.body_temp <= 45.0):
+            raise HTTPException(status_code=400, detail="Body temperature must be between 30 and 45°C")
         if not (20 <= request.heart_rate <= 250):
             raise HTTPException(status_code=400, detail="Heart rate must be between 20 and 250 bpm")
         
         prediction = predict_health_risk(request)
-        logger.info(f"Prediction result: {prediction.risk_level} risk")
+        logger.info(f"Prediction result: {prediction.predicted_risk}")
         
         return prediction
         
