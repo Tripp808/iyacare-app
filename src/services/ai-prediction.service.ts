@@ -135,22 +135,51 @@ class AIPredictionService {
       console.log('Extracting vital signs for patient:', patient);
       console.log('Latest vitals:', latestVitals);
       
-      // Calculate age from date of birth
+      // Calculate age from date of birth with better error handling
       let age = 25; // Default age
+      
       if (patient.dateOfBirth) {
-        const birthDate = new Date(patient.dateOfBirth);
-        const today = new Date();
-        age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
+        try {
+          // Handle different date formats
+          let birthDate;
+          if (typeof patient.dateOfBirth === 'string') {
+            birthDate = new Date(patient.dateOfBirth);
+          } else if (patient.dateOfBirth.toDate) {
+            // Firebase Timestamp
+            birthDate = patient.dateOfBirth.toDate();
+          } else {
+            birthDate = new Date(patient.dateOfBirth);
+          }
+          
+          // Validate the date
+          if (!isNaN(birthDate.getTime())) {
+            const today = new Date();
+            age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+            }
+            
+            // Validate calculated age
+            if (age < 0 || age > 120) {
+              console.warn(`Invalid calculated age: ${age} for patient ${patient.firstName} ${patient.lastName}, using default`);
+              age = 25;
+            }
+          } else {
+            console.warn(`Invalid birth date for patient ${patient.firstName} ${patient.lastName}, using default age`);
+            age = 25;
+          }
+        } catch (error) {
+          console.warn(`Error parsing birth date for patient ${patient.firstName} ${patient.lastName}:`, error);
+          age = 25;
         }
-      } else if (patient.age && typeof patient.age === 'number') {
+      } else if (patient.age && typeof patient.age === 'number' && !isNaN(patient.age)) {
         age = patient.age;
       }
 
-      // Ensure age is a valid number
-      if (!age || age < 0 || age > 150) {
+      // Final validation for age
+      if (!age || isNaN(age) || age < 1 || age > 120) {
+        console.warn(`Final age validation failed for patient ${patient.firstName} ${patient.lastName}, using default age 25`);
         age = 25;
       }
 
@@ -164,30 +193,46 @@ class AIPredictionService {
       if (vitals.bloodPressure && typeof vitals.bloodPressure === 'string') {
         const bpParts = vitals.bloodPressure.split('/');
         if (bpParts.length === 2) {
-          systolic_bp = parseFloat(bpParts[0]) || 120;
-          diastolic_bp = parseFloat(bpParts[1]) || 80;
+          const systolicParsed = parseFloat(bpParts[0]);
+          const diastolicParsed = parseFloat(bpParts[1]);
+          if (!isNaN(systolicParsed) && !isNaN(diastolicParsed)) {
+            systolic_bp = systolicParsed;
+            diastolic_bp = diastolicParsed;
+          }
         }
       } else {
-        systolic_bp = vitals.systolic_bp || vitals.systolicBP || 120;
-        diastolic_bp = vitals.diastolic_bp || vitals.diastolicBP || 80;
+        const systolicFromVitals = vitals.systolic_bp || vitals.systolicBP;
+        const diastolicFromVitals = vitals.diastolic_bp || vitals.diastolicBP;
+        
+        if (systolicFromVitals && !isNaN(parseFloat(systolicFromVitals))) {
+          systolic_bp = parseFloat(systolicFromVitals);
+        }
+        if (diastolicFromVitals && !isNaN(parseFloat(diastolicFromVitals))) {
+          diastolic_bp = parseFloat(diastolicFromVitals);
+        }
       }
 
-      // Ensure all values are valid numbers
+      // Extract other vital signs with validation
+      const bloodSugar = vitals.blood_sugar || vitals.bloodSugar || vitals.BS || 6.0;
+      const temperature = vitals.body_temp || vitals.bodyTemp || vitals.temperature || 98.6;
+      const heartRate = vitals.heart_rate || vitals.heartRate || 70;
+
+      // Ensure all values are valid numbers with proper ranges
       const predictionData = {
-        age: Number(age),
-        systolic_bp: Number(systolic_bp) || 120,
-        diastolic_bp: Number(diastolic_bp) || 80,
-        blood_sugar: Number(vitals.blood_sugar || vitals.bloodSugar || vitals.BS || 6.0),
-        body_temp: Number(vitals.body_temp || vitals.bodyTemp || vitals.temperature || 98.6),
-        heart_rate: Number(vitals.heart_rate || vitals.heartRate || 70),
+        age: Math.max(1, Math.min(120, Number(age))),
+        systolic_bp: Math.max(70, Math.min(250, Number(systolic_bp))),
+        diastolic_bp: Math.max(40, Math.min(150, Number(diastolic_bp))),
+        blood_sugar: Math.max(3.0, Math.min(30.0, Number(bloodSugar))),
+        body_temp: Math.max(95.0, Math.min(110.0, Number(temperature))),
+        heart_rate: Math.max(30, Math.min(200, Number(heartRate))),
       };
 
       console.log('Extracted prediction data:', predictionData);
 
-      // Validate all fields are numbers
+      // Final validation - ensure all fields are valid numbers
       for (const [key, value] of Object.entries(predictionData)) {
         if (typeof value !== 'number' || isNaN(value)) {
-          console.error(`Invalid ${key} value:`, value);
+          console.error(`Invalid ${key} value after processing:`, value);
           return null;
         }
       }
