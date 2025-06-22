@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="IyaCare Risk Prediction API", version="1.0.0")
 
+
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -54,6 +56,10 @@ def load_model():
     except Exception as e:
         logger.error(f"Failed to load model: {str(e)}")
         raise e
+        
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the IyaCare AI Risk Prediction API!", "status": "running", "version": "1.0.0"}
 
 @app.on_event("startup")
 async def startup_event():
@@ -85,23 +91,32 @@ async def predict_risk(request: PredictionRequest):
         # Make prediction using YOUR XGBoost model
         prediction = model.predict(features)[0]
         
+        # Map numeric prediction to risk level
+        # Assuming: 0 = low risk, 1 = mid risk, 2 = high risk
+        risk_mapping = {
+            0: "low risk",
+            1: "mid risk", 
+            2: "high risk"
+        }
+        
+        predicted_risk_text = risk_mapping.get(int(prediction), "unknown risk")
+        
         # Get probabilities if your model supports it
         try:
             probabilities = model.predict_proba(features)[0]
             confidence = float(max(probabilities))
             
-            # Update these class names to match your model's actual output
-            # Common maternal risk classifications
+            # Map probabilities to risk level names
             class_names = ["low risk", "mid risk", "high risk"]
             prob_dist = {class_names[i]: float(probabilities[i]) for i in range(len(class_names))}
             
         except AttributeError:
             # If your model doesn't have predict_proba, use a default confidence
             confidence = 0.8
-            prob_dist = {str(prediction): 1.0}
+            prob_dist = {predicted_risk_text: 1.0}
         
         return PredictionResponse(
-            predicted_risk=str(prediction),
+            predicted_risk=predicted_risk_text,
             confidence=confidence,
             probability_distribution=prob_dist
         )
