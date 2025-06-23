@@ -3,6 +3,7 @@ import logging
 import joblib
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,105 +14,12 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 import xgboost as xgb
 from imblearn.over_sampling import SMOTE
 
+# Import the MaternalRiskPredictor class from separate module
+from maternal_risk_predictor import MaternalRiskPredictor
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-class MaternalRiskPredictor:
-    """
-    Maternal Health Risk Prediction Model using XGBoost
-    This class needs to be defined for joblib to load the complete model
-    """
-    
-    def __init__(self):
-        self.model = None
-        self.scaler = StandardScaler()
-        self.smote = SMOTE(random_state=42)
-        self.features = ['Age', 'SystolicBP', 'DiastolicBP', 'BS', 'BodyTemp', 'HeartRate']
-        self.feature_descriptions = {
-            'Age': 'Maternal Age (years)',
-            'SystolicBP': 'Systolic Blood Pressure (mmHg)',
-            'DiastolicBP': 'Diastolic Blood Pressure (mmHg)',
-            'BS': 'Blood Glucose Level (mmol/L)',
-            'BodyTemp': 'Body Temperature (°F)',
-            'HeartRate': 'Resting Heart Rate (bpm)'
-        }
-        self.risk_levels = ['low risk', 'mid risk', 'high risk']
-        self.target_encoding = {'low risk': 0, 'mid risk': 1, 'high risk': 2}
-        self.reverse_encoding = {0: 'low risk', 1: 'mid risk', 2: 'high risk'}
-        self.training_history = {}
-        self.is_fitted = False
-    
-    def predict_risk(self, patient_data):
-        """
-        Predict maternal health risk for a single patient
-        """
-        if not self.is_fitted:
-            raise ValueError("Model has not been fitted yet. Please train the model first.")
-        
-        # Convert to DataFrame if it's a dictionary
-        if isinstance(patient_data, dict):
-            df = pd.DataFrame([patient_data])
-        else:
-            df = patient_data.copy()
-        
-        # Ensure all required features are present
-        missing_features = set(self.features) - set(df.columns)
-        if missing_features:
-            raise ValueError(f"Missing required features: {missing_features}")
-        
-        # Select and reorder features
-        X = df[self.features]
-        
-        # Scale features
-        X_scaled = self.scaler.transform(X)
-        
-        # Make prediction
-        prediction = self.model.predict(X_scaled)[0]
-        probabilities = self.model.predict_proba(X_scaled)[0]
-        
-        # Get risk level
-        risk_level = self.reverse_encoding[prediction]
-        
-        # Get confidence (max probability)
-        confidence = float(max(probabilities))
-        
-        # Create probability distribution
-        prob_dist = {
-            self.risk_levels[i]: float(probabilities[i]) 
-            for i in range(len(self.risk_levels))
-        }
-        
-        return {
-            'risk_level': risk_level,
-            'confidence': confidence,
-            'probabilities': prob_dist
-        }
-    
-    def predict(self, X):
-        """Predict method for compatibility"""
-        if not self.is_fitted:
-            raise ValueError("Model has not been fitted yet.")
-        
-        if isinstance(X, pd.DataFrame):
-            X_scaled = self.scaler.transform(X[self.features])
-        else:
-            X_scaled = self.scaler.transform(X)
-        
-        predictions = self.model.predict(X_scaled)
-        return [self.reverse_encoding[pred] for pred in predictions]
-    
-    def predict_proba(self, X):
-        """Predict probabilities method for compatibility"""
-        if not self.is_fitted:
-            raise ValueError("Model has not been fitted yet.")
-        
-        if isinstance(X, pd.DataFrame):
-            X_scaled = self.scaler.transform(X[self.features])
-        else:
-            X_scaled = self.scaler.transform(X)
-        
-        return self.model.predict_proba(X_scaled)
 
 app = FastAPI(title="Maternal Health Risk Prediction API", version="2.0.0")
 
@@ -134,9 +42,11 @@ class PredictionRequest(BaseModel):
     heart_rate: float
 
 class PredictionResponse(BaseModel):
-    predicted_risk: str
+    risk_level: str  # Changed from predicted_risk
     confidence: float
-    probability_distribution: dict
+    probabilities: dict  # Changed from probability_distribution
+    score: int = 0  # Added score field that frontend expects
+    timestamp: str = ""  # Added timestamp field
 
 # Global variable to store the loaded model
 predictor = None
@@ -213,6 +123,15 @@ async def health_check():
         "model_type": "complete" if hasattr(predictor, 'predict_risk') else "legacy"
     }
 
+def get_risk_score(risk_level: str) -> int:
+    """Convert risk level to numerical score"""
+    score_mapping = {
+        "low risk": 0,
+        "mid risk": 50, 
+        "high risk": 100
+    }
+    return score_mapping.get(risk_level, 0)
+
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_risk(request: PredictionRequest):
     """Make risk prediction using your new complete XGBoost model"""
@@ -267,10 +186,16 @@ async def predict_risk(request: PredictionRequest):
             class_names = ["low risk", "mid risk", "high risk"]
             prob_dist = {class_names[i]: float(probabilities[i]) for i in range(len(class_names))}
         
+        # Calculate score and timestamp
+        score = get_risk_score(predicted_risk_text)
+        timestamp = datetime.now().isoformat()
+        
         return PredictionResponse(
-            predicted_risk=predicted_risk_text,
+            risk_level=predicted_risk_text,
             confidence=confidence,
-            probability_distribution=prob_dist
+            probabilities=prob_dist,
+            score=score,
+            timestamp=timestamp
         )
         
     except Exception as e:
