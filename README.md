@@ -93,13 +93,15 @@ npm run dev
 
 ### 🔧 Technical Stack
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Backend**: Firebase (Authentication, Firestore, Cloud Functions)
-- **UI Components**: Tailwind CSS, Radix UI, Lucide Icons
-- **Charts**: Recharts for data visualization
-- **Animations**: Framer Motion
-- **Notifications**: Sonner for toast notifications
-- **Form Handling**: React Hook Form with validation
+- **Frontend**: Next.js 15.3.2, React 19.0.0, TypeScript 5.8.3
+- **Backend**: Firebase 11.8.1 (Authentication, Firestore, Cloud Functions)
+- **UI Components**: Tailwind CSS 4.0, Radix UI, Lucide Icons
+- **Charts**: Recharts 2.15.3 for data visualization
+- **Animations**: Framer Motion 12.12.1
+- **Notifications**: Sonner 2.0.3 for toast notifications
+- **Form Handling**: React Hook Form 7.56.4 with Zod validation
+- **Blockchain**: Ethers.js 6.13.0 for Web3 integration
+- **SMS**: Twilio 5.7.1 for SMS notifications
 
 ### 📱 Pages & Navigation
 
@@ -256,11 +258,23 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions includ
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+We welcome contributions from the community! Here's how to get started:
+
+1. **Fork the repository** on GitHub
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Make your changes** and ensure they follow the project's coding standards
+4. **Add tests** if applicable
+5. **Commit your changes** (`git commit -m 'Add some amazing feature'`)
+6. **Push to the branch** (`git push origin feature/amazing-feature`)
+7. **Submit a pull request**
+
+### Development Guidelines
+
+- Follow the existing code style and conventions
+- Write clear, concise commit messages
+- Test your changes thoroughly
+- Update documentation as needed
+- Ensure all tests pass before submitting a PR
 
 ## 📱 Screenshots
 
@@ -276,15 +290,31 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions includ
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+**Note**: This project is provided "as is" without warranty of any kind.
 
 ## 🆘 Support
 
-For support and questions:
-- Check the [DEPLOYMENT.md](./DEPLOYMENT.md) guide
-- Review Firebase documentation
-- Create an issue in the repository
-- Contact the development team
+Need help with IyàCare? Here are your options:
+
+### 📖 Documentation
+- **[Deployment Guide](./DEPLOYMENT.md)** - Complete setup and deployment instructions
+- **[Blockchain Integration Guide](./BLOCKCHAIN_INTEGRATION_GUIDE.md)** - Blockchain features setup
+- **[SMS Integration Guide](./SMS_INTEGRATION_GUIDE.md)** - SMS notifications setup
+
+### 🐛 Issues & Questions
+- **[Create an issue](../../issues)** - Report bugs or request features
+- **[Browse existing issues](../../issues)** - Check if your question has been answered
+
+### 🔧 Technical Support
+- **Firebase Documentation** - [Firebase Docs](https://firebase.google.com/docs)
+- **Next.js Documentation** - [Next.js Docs](https://nextjs.org/docs)
+- **React Documentation** - [React Docs](https://react.dev/)
+
+### 💬 Community
+- Contact the development team through GitHub issues
+- Join the discussion in pull requests and issues
 
 ## 🏥 About IyàCare
 
