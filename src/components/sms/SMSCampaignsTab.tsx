@@ -238,7 +238,7 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
     const matchesSearch = 
       campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       campaign.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      campaign.templateName.toLowerCase().includes(searchTerm.toLowerCase());
+      (campaign.templateName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
     
     const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
 
@@ -714,7 +714,12 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
                       <div>Age: {selectedCampaign.targetCriteria.ageRange.min} - {selectedCampaign.targetCriteria.ageRange.max} years</div>
                     )}
                     {selectedCampaign.targetCriteria.lastVisit && (
-                      <div>Last visit within: {selectedCampaign.targetCriteria.lastVisit} days</div>
+                      <div>Last visit within: 
+                        {selectedCampaign.targetCriteria.lastVisit.after && selectedCampaign.targetCriteria.lastVisit.before
+                          ? `${Math.round((selectedCampaign.targetCriteria.lastVisit.before.getTime() - selectedCampaign.targetCriteria.lastVisit.after.getTime()) / (1000 * 60 * 60 * 24))} days`
+                          : 'specified period'
+                        }
+                      </div>
                     )}
                     {(!selectedCampaign.targetCriteria.ageRange?.min && !selectedCampaign.targetCriteria.lastVisit) && (
                       <div className="text-muted-foreground">All patients</div>
