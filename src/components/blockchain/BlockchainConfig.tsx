@@ -152,10 +152,10 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-            <TestTube className="h-4 w-4 mr-2" />
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+              <TestTube className="h-4 w-4 mr-2" />
             Sepolia Testnet
-          </Badge>
+            </Badge>
           <Badge className={getStatusColor()}>
             {getStatusIcon()}
             <span className="ml-2 capitalize">{connectionStatus}</span>
@@ -217,15 +217,15 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                     onChange={(e) => handleConfigChange('rpcUrl', e.target.value)}
                     className="flex-1"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={tryAlternativeEndpoint}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={tryAlternativeEndpoint}
                     title="Try different free endpoint"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Free Sepolia testnet endpoint (no API key required)
@@ -327,37 +327,37 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
 
       {/* Simple Info Card when configured */}
       {isConfigured && !isEditing && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
               Current Configuration
-            </CardTitle>
-          </CardHeader>
+              </CardTitle>
+            </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Network:</span>
               <Badge variant="secondary">Sepolia Testnet</Badge>
-            </div>
+                  </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">RPC Endpoint:</span>
               <span className="text-sm text-muted-foreground">{config.rpcUrl.split('//')[1]}</span>
-            </div>
+                </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Contract:</span>
               <span className="text-sm text-muted-foreground">
                 {config.contractAddress ? `${config.contractAddress.slice(0, 8)}...` : 'Not deployed yet'}
               </span>
-            </div>
+                  </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Encryption:</span>
               <Badge variant="secondary">
                 <Key className="h-3 w-3 mr-1" />
                 Enabled
               </Badge>
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
       )}
     </div>
   );
