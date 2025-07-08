@@ -133,15 +133,24 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
         description: campaignForm.description.trim(),
         templateId: campaignForm.templateId,
         templateName: template.name,
-        targetCriteria: campaignForm.targetCriteria,
-        scheduledDate: new Date(campaignForm.scheduledDate),
-        endDate: campaignForm.endDate ? new Date(campaignForm.endDate) : undefined,
+        targetCriteria: {
+          ageRange: campaignForm.targetCriteria.ageRange.min || campaignForm.targetCriteria.ageRange.max ? {
+            min: campaignForm.targetCriteria.ageRange.min ? parseInt(campaignForm.targetCriteria.ageRange.min) : 0,
+            max: campaignForm.targetCriteria.ageRange.max ? parseInt(campaignForm.targetCriteria.ageRange.max) : 100,
+          } : undefined,
+          conditions: campaignForm.targetCriteria.conditions.length > 0 ? campaignForm.targetCriteria.conditions : undefined,
+          lastVisit: campaignForm.targetCriteria.lastVisit ? {
+            after: new Date(Date.now() - parseInt(campaignForm.targetCriteria.lastVisit) * 24 * 60 * 60 * 1000),
+            before: new Date()
+          } : undefined
+        },
         frequency: campaignForm.frequency,
-        maxRecipients: campaignForm.maxRecipients ? parseInt(campaignForm.maxRecipients) : undefined,
         status: 'draft' as const,
-        isActive: true,
-        createdBy: 'current-user-id',
-        totalRecipients: 0
+        scheduledDate: campaignForm.scheduledDate ? new Date(campaignForm.scheduledDate) : undefined,
+        sentCount: 0,
+        deliveredCount: 0,
+        readCount: 0,
+        createdBy: 'current-user-id'
       };
 
       const result = await SMSService.createCampaign(campaignData);
@@ -219,7 +228,7 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
   };
 
   const calculateProgress = (campaign: SMSCampaign) => {
-    const total = campaign.sentCount + campaign.deliveredCount + campaign.failedCount;
+    const total = campaign.sentCount;
     if (total === 0) return 0;
     return Math.round((campaign.deliveredCount / total) * 100);
   };
@@ -532,20 +541,17 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
                             <CheckCircle className="h-3 w-3 text-green-600" />
                             <span>{campaign.deliveredCount} delivered</span>
                           </div>
-                          {campaign.failedCount > 0 && (
+                          {campaign.sentCount > campaign.deliveredCount && (
                             <div className="flex items-center gap-2 text-sm">
                               <XCircle className="h-3 w-3 text-red-600" />
-                              <span>{campaign.failedCount} failed</span>
+                              <span>{campaign.sentCount - campaign.deliveredCount} failed</span>
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         <div>
-                          <div>Start: {format(new Date(campaign.scheduledDate), 'MMM d, yyyy HH:mm')}</div>
-                          {campaign.endDate && (
-                            <div>End: {format(new Date(campaign.endDate), 'MMM d, yyyy HH:mm')}</div>
-                          )}
+                          <div>Start: {campaign.scheduledDate ? format(new Date(campaign.scheduledDate), 'MMM d, yyyy HH:mm') : 'Not scheduled'}</div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -646,14 +652,8 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Scheduled Start</Label>
-                  <div className="text-sm">{format(new Date(selectedCampaign.scheduledDate), 'MMM d, yyyy HH:mm')}</div>
+                  <div className="text-sm">{selectedCampaign.scheduledDate ? format(new Date(selectedCampaign.scheduledDate), 'MMM d, yyyy HH:mm') : 'Not scheduled'}</div>
                 </div>
-                {selectedCampaign.endDate && (
-                  <div>
-                    <Label className="text-sm font-medium">Scheduled End</Label>
-                    <div className="text-sm">{format(new Date(selectedCampaign.endDate), 'MMM d, yyyy HH:mm')}</div>
-                  </div>
-                )}
               </div>
 
               <div>
@@ -686,7 +686,7 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
                       <div className="flex items-center gap-2">
                         <XCircle className="h-4 w-4 text-red-600" />
                         <div>
-                          <div className="text-lg font-semibold">{selectedCampaign.failedCount}</div>
+                          <div className="text-lg font-semibold">{selectedCampaign.sentCount - selectedCampaign.deliveredCount}</div>
                           <div className="text-xs text-muted-foreground">Failed</div>
                         </div>
                       </div>
@@ -728,12 +728,10 @@ const SMSCampaignsTab: React.FC<SMSCampaignsTabProps> = ({
                   <Label className="text-sm font-medium">Created</Label>
                   <div>{format(new Date(selectedCampaign.createdAt), 'MMM d, yyyy')}</div>
                 </div>
-                {selectedCampaign.lastRunAt && (
-                  <div>
-                    <Label className="text-sm font-medium">Last Run</Label>
-                    <div>{format(new Date(selectedCampaign.lastRunAt), 'MMM d, yyyy HH:mm')}</div>
-                  </div>
-                )}
+                <div>
+                  <Label className="text-sm font-medium">Last Updated</Label>
+                  <div>{format(new Date(selectedCampaign.updatedAt), 'MMM d, yyyy HH:mm')}</div>
+                </div>
               </div>
             </div>
             <DialogFooter>
