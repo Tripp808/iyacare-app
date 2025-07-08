@@ -2,7 +2,6 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { getAlerts, markAlertAsRead, Alert } from '@/lib/firebase/alerts';
-import { useAuth } from './useAuth';
 
 interface NotificationContextType {
   notifications: Alert[];
@@ -17,15 +16,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   const fetchNotifications = async () => {
-    if (!user) {
-      setNotifications([]);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       
@@ -61,16 +53,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  // Initial fetch and refresh when user changes
+  // Initial fetch
   useEffect(() => {
     fetchNotifications();
-  }, [user]);
+  }, []);
 
   // Auto-refresh notifications every 30 seconds
   useEffect(() => {
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, []);
 
   const unreadCount = notifications.length;
 

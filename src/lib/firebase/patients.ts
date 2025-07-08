@@ -107,19 +107,35 @@ export const getPatient = async (id: string) => {
 // Get all patients
 export const getPatients = async () => {
   try {
-    const patientsQuery = query(
-      collection(db, 'patients'),
-      orderBy('updatedAt', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(patientsQuery);
-    const patients: Patient[] = [];
-    
-    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-      patients.push({ id: doc.id, ...doc.data() } as Patient);
-    });
-    
-    return { success: true, patients };
+    // First try with ordering
+    try {
+      const patientsQuery = query(
+        collection(db, 'patients'),
+        orderBy('updatedAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(patientsQuery);
+      const patients: Patient[] = [];
+      
+      querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        patients.push({ id: doc.id, ...doc.data() } as Patient);
+      });
+      
+      return { success: true, patients };
+    } catch (orderError) {
+      // If ordering fails, fall back to simple query without ordering
+      console.log('OrderBy failed, using simple query:', orderError);
+      
+      const patientsCollection = collection(db, 'patients');
+      const querySnapshot = await getDocs(patientsCollection);
+      const patients: Patient[] = [];
+      
+      querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        patients.push({ id: doc.id, ...doc.data() } as Patient);
+      });
+      
+      return { success: true, patients };
+    }
   } catch (error: any) {
     return { 
       success: false, 

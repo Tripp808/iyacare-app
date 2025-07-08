@@ -1,89 +1,19 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only access their own user document
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Healthcare providers can access patient data
-    match /patients/{patientId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider' ||
-         request.auth.token.role == 'healthcare_worker');
-      
-      // Patients can only read their own data
-      allow read: if request.auth != null && request.auth.uid == patientId;
-    }
-    
-    // Vital signs access control
-    match /vitalsigns/{vitalId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider' ||
-         request.auth.token.role == 'healthcare_worker');
-      
-      // Patients can read their own vital signs
-      allow read: if request.auth != null && 
-        resource.data.patientId == request.auth.uid;
-      
-      // Healthcare providers can create vital signs for any patient
-      allow create: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider' ||
-         request.auth.token.role == 'healthcare_worker') &&
-        request.resource.data.keys().hasAll(['patientId', 'timestamp', 'recordedBy']);
-    }
-    
-    // Alerts access control
-    match /alerts/{alertId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider' ||
-         request.auth.token.role == 'healthcare_worker');
-      
-      // Patients can read alerts related to them
-      allow read: if request.auth != null && 
-        resource.data.patientId == request.auth.uid;
-    }
-    
-    // Appointments access control
-    match /appointments/{appointmentId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider' ||
-         request.auth.token.role == 'healthcare_worker');
-      
-      // Patients can read their own appointments
-      allow read: if request.auth != null && 
-        resource.data.patientId == request.auth.uid;
-    }
-    
-    // Referrals access control
-    match /referrals/{referralId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider' ||
-         request.auth.token.role == 'healthcare_worker');
-      
-      // Patients can read referrals related to them
-      allow read: if request.auth != null && 
-        (resource.data.patientId == request.auth.uid ||
-         resource.data.referredBy == request.auth.uid);
-    }
-    
-    // Analytics data - admin and healthcare providers only
-    match /analytics/{document=**} {
-      allow read, write: if request.auth != null && 
-        (request.auth.token.role == 'admin' || 
-         request.auth.token.role == 'healthcare_provider');
-    }
-    
-    // System logs - admin only
-    match /logs/{document=**} {
-      allow read, write: if request.auth != null && 
-        request.auth.token.role == 'admin';
+
+    // This rule allows anyone with your Firestore database reference to view, edit,
+    // and delete all data in your Firestore database. It is useful for getting
+    // started, but it is configured to expire after 30 days because it
+    // leaves your app open to attackers. At that time, all client
+    // requests to your Firestore database will be denied.
+    //
+    // Make sure to write security rules for your app before that time, or else
+    // all client requests to your Firestore database will be denied until you Update
+    // your rules
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2025, 12, 31);
     }
   }
 } 
