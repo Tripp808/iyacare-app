@@ -345,7 +345,9 @@ export default function SMSAnalyticsTab({ analytics, messages, templates, campai
                 </TableHeader>
                 <TableBody>
                   {campaignPerformance.map((campaign) => {
-                    const total = campaign.sentCount + campaign.deliveredCount + campaign.failedCount;
+                    // Calculate failed count as the difference between sent and delivered
+                    const failedCount = Math.max(0, campaign.sentCount - campaign.deliveredCount);
+                    const total = campaign.sentCount;
                     const successRate = total > 0 ? ((campaign.deliveredCount / total) * 100) : 0;
                     
                     return (
@@ -384,7 +386,7 @@ export default function SMSAnalyticsTab({ analytics, messages, templates, campai
                         </TableCell>
                         <TableCell>
                           <div className="text-sm font-medium text-red-600">
-                            {campaign.failedCount}
+                            {failedCount}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -396,8 +398,8 @@ export default function SMSAnalyticsTab({ analytics, messages, templates, campai
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {campaign.lastRunAt 
-                            ? format(new Date(campaign.lastRunAt), 'MMM d, yyyy')
+                          {campaign.updatedAt 
+                            ? format(new Date(campaign.updatedAt), 'MMM d, yyyy')
                             : 'Never'
                           }
                         </TableCell>
