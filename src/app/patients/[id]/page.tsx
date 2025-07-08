@@ -255,7 +255,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
             </Badge>
             {patient.isPregnant && (
                     <Badge className="bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-300 border-pink-200 dark:border-pink-800">
-                      {calculatePregnancyWeeks(patient.dueDate || '')} weeks pregnant
+                      {patient.dueDate ? calculatePregnancyWeeks(patient.dueDate) || 0 : 0} weeks pregnant
               </Badge>
             )}
           </div>
@@ -471,11 +471,11 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Progress:</p>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Progress 
-                                    value={(calculatePregnancyWeeks(patient.dueDate) / 40) * 100} 
+                                    value={patient.dueDate ? (calculatePregnancyWeeks(patient.dueDate) || 0) / 40 * 100 : 0} 
                                     className="flex-1"
                                   />
                                   <span className="text-sm font-medium">
-                                    {calculatePregnancyWeeks(patient.dueDate)}/40 weeks
+                                    {patient.dueDate ? calculatePregnancyWeeks(patient.dueDate) || 0 : 0}/40 weeks
                                   </span>
                                 </div>
                               </div>
@@ -491,7 +491,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               {/* AI Risk Assessment */}
               <RiskAssessment 
                 patient={patient} 
-                latestVitals={mockVitalSigns[0]} 
+                latestVitals={undefined} 
                 onRiskUpdate={(risk, confidence) => {
                   console.log('AI Risk Update:', risk, confidence);
                   // You can update patient risk level here if needed
