@@ -244,13 +244,24 @@ export class SMSService {
         const data = doc.data();
         campaigns.push({
           id: doc.id,
-          ...data,
-          scheduledDate: data.scheduledDate?.toDate() || new Date(),
-          endDate: data.endDate?.toDate(),
+          name: data.name || 'Untitled Campaign',
+          description: data.description || '',
+          templateId: data.templateId || '',
+          templateName: data.templateName,
+          targetCriteria: data.targetCriteria || {},
+          frequency: data.frequency || 'once',
+          status: data.status || 'draft',
+          scheduledDate: data.scheduledDate?.toDate(),
+          sentCount: data.sentCount || 0,
+          deliveredCount: data.deliveredCount || 0,
+          readCount: data.readCount || 0,
+          createdBy: data.createdBy || 'system',
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
-          lastRunAt: data.lastRunAt?.toDate(),
-          nextRunAt: data.nextRunAt?.toDate()
+          // Remove the problematic properties
+          ...(data.endDate && { endDate: data.endDate?.toDate() }),
+          ...(data.lastRunAt && { lastRunAt: data.lastRunAt?.toDate() }),
+          ...(data.nextRunAt && { nextRunAt: data.nextRunAt?.toDate() })
         } as SMSCampaign);
       });
 
