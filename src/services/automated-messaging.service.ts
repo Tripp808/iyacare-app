@@ -242,11 +242,11 @@ class AutomatedMessagingService {
         return;
       }
 
-      const riskAssessment = this.assessPatientRisk(patient, vitals);
+      const riskAssessment = this.assessPatientRisk(patient as any, vitals);
 
       // Trigger alert for high-risk or critical patients
       if (riskAssessment.riskLevel === 'high' || riskAssessment.riskLevel === 'critical') {
-        await this.sendHighRiskAlert(patient, riskAssessment);
+        await this.sendHighRiskAlert(patient as any, riskAssessment);
       }
 
       // Store risk assessment in patient record
@@ -273,11 +273,11 @@ class AutomatedMessagingService {
       const result = await PatientService.searchPatients('');
       if (!result.success || !result.patients) return;
 
-      const patient = result.patients.find((p: any) => p.id === patientId);
+      const patient = result.patients.find((p: any) => p.id === patientId) as any;
       if (!patient || !patient.phone) return;
 
       const reminderMessage = twilioService.getAppointmentReminderMessage(
-        patient.name,
+        patient.name || 'Patient',
         appointmentDate,
         clinicName
       );
@@ -289,9 +289,9 @@ class AutomatedMessagingService {
 
       if (smsResult.success) {
         await SMSService.sendMessage({
-          patientId: patient.id,
-          patientName: patient.name,
-          patientPhone: patient.phone,
+          patientId: patient.id || '',
+          patientName: patient.name || 'Patient',
+          patientPhone: patient.phone || '',
           phoneNumber: patient.phone,
           message: reminderMessage,
           content: reminderMessage,
@@ -319,11 +319,11 @@ class AutomatedMessagingService {
       const result = await PatientService.searchPatients('');
       if (!result.success || !result.patients) return;
 
-      const patient = result.patients.find((p: any) => p.id === patientId);
+      const patient = result.patients.find((p: any) => p.id === patientId) as any;
       if (!patient || !patient.phone) return;
 
       const reminderMessage = twilioService.getMedicationReminderMessage(
-        patient.name,
+        patient.name || 'Patient',
         medicationName,
         dosage
       );
@@ -335,9 +335,9 @@ class AutomatedMessagingService {
 
       if (smsResult.success) {
         await SMSService.sendMessage({
-          patientId: patient.id,
-          patientName: patient.name,
-          patientPhone: patient.phone,
+          patientId: patient.id || '',
+          patientName: patient.name || 'Patient',
+          patientPhone: patient.phone || '',
           phoneNumber: patient.phone,
           message: reminderMessage,
           content: reminderMessage,
@@ -365,10 +365,10 @@ class AutomatedMessagingService {
       const result = await PatientService.searchPatients('');
       if (!result.success || !result.patients) return;
 
-      const patient = result.patients.find((p: any) => p.id === patientId);
+      const patient = result.patients.find((p: any) => p.id === patientId) as any;
       if (!patient || !patient.phone) return;
 
-      const tipMessage = twilioService.getHealthTipMessage(patient.name, tip);
+      const tipMessage = twilioService.getHealthTipMessage(patient.name || 'Patient', tip);
 
       const smsResult = await twilioService.sendSMS({
         to: patient.phone,
@@ -377,9 +377,9 @@ class AutomatedMessagingService {
 
       if (smsResult.success) {
         await SMSService.sendMessage({
-          patientId: patient.id,
-          patientName: patient.name,
-          patientPhone: patient.phone,
+          patientId: patient.id || '',
+          patientName: patient.name || 'Patient',
+          patientPhone: patient.phone || '',
           phoneNumber: patient.phone,
           message: tipMessage,
           content: tipMessage,
