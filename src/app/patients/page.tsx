@@ -226,7 +226,7 @@ export default function PatientsPage() {
         default:
           return 0;
       }
-    });
+  });
   }, [patients, searchTerm, riskFilter, pregnancyFilter, sortBy, riskPredictions]);
 
   // Calculate statistics with enhanced metrics
