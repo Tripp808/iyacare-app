@@ -116,7 +116,7 @@ const SMSPage: React.FC = () => {
       const alertsCount = 0;
 
       for (const patient of result.patients) {
-        const riskAssessment = automatedMessagingService.assessPatientRisk(patient);
+        const riskAssessment = automatedMessagingService.assessPatientRisk(patient as any);
         if (riskAssessment.riskLevel === 'high' || riskAssessment.riskLevel === 'critical') {
           highRiskCount++;
         }
@@ -176,10 +176,10 @@ const SMSPage: React.FC = () => {
           bloodSugar: Math.random() > 0.9 ? 180 : 110 // 10% chance of high sugar
         };
 
-        const riskAssessment = automatedMessagingService.assessPatientRisk(patient, mockVitals);
+        const riskAssessment = automatedMessagingService.assessPatientRisk(patient as any, mockVitals);
         
         if (riskAssessment.riskLevel === 'high' || riskAssessment.riskLevel === 'critical') {
-          await automatedMessagingService.sendHighRiskAlert(patient, riskAssessment);
+          await automatedMessagingService.sendHighRiskAlert(patient as any, riskAssessment);
           alertsSent++;
         }
       }
