@@ -84,10 +84,7 @@ const BlockchainPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-6">
-          <BlockchainDashboard 
-            isConfigured={isConfigured}
-            onConfigureClick={handleConfigureClick}
-          />
+          <BlockchainDashboard />
         </TabsContent>
 
         <TabsContent value="config" className="space-y-6">
