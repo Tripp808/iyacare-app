@@ -6,25 +6,16 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, firebaseUser } = useAuth();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setIsLoading(false);
-    });
-
     // Simulate having unread notifications
     setUnreadNotifications(3);
-
-    return () => unsubscribe();
   }, []);
 
   // Check if we're on the auth pages
@@ -135,10 +126,13 @@ export function Header() {
           <div className="flex items-center gap-4">
             {user ? (
               <Link href="/profile">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt={user.displayName || "User"} />
-                  <AvatarFallback className="bg-primary text-white">
-                    {user.email?.charAt(0).toUpperCase() || "U"}
+                <Avatar className="h-8 w-8 hover:ring-2 hover:ring-[#2D7D89]/20 transition-all">
+                  <AvatarImage 
+                    src={user.profilePicture || ""} 
+                    alt={user.name || "User"} 
+                  />
+                  <AvatarFallback className="bg-[#2D7D89] text-white">
+                    {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
               </Link>

@@ -183,13 +183,51 @@ export default function SettingsPage() {
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
     const file = event.target.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size too large. Please select an image under 5MB.');
+      return;
+    }
+    
     setUploadingImage(true);
+    
     try {
-      const storageRef = ref(storage, `profilePictures/${user?.id}/${file.name}`);
+      const timestamp = Date.now();
+      const fileName = `profile_${user?.id}_${timestamp}.${file.name.split('.').pop()}`;
+      const storageRef = ref(storage, `profiles/${fileName}`);
+      
+      console.log('Uploading to Firebase Storage...', fileName);
       await uploadBytes(storageRef, file);
+      
       const downloadURL = await getDownloadURL(storageRef);
+      console.log('Upload successful, URL:', downloadURL);
+      
+      // Update local state
       handleProfileChange('profilePicture', downloadURL);
-      toast.success('Profile picture uploaded successfully!');
+      
+      // Immediately save to database
+      if (user && firebaseUser) {
+        try {
+          await UserService.updateUser(user.id, {
+            profilePicture: downloadURL
+          });
+          await refreshUserData(); // Refresh user data
+          toast.success('Profile picture updated successfully!');
+        } catch (dbError) {
+          console.error('Failed to save to database:', dbError);
+          toast.error('Picture uploaded but failed to save to database. Please try saving manually.');
+        }
+      } else {
+        toast.success('Profile picture uploaded successfully! Click Save to update your profile.');
+      }
+      
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload profile picture. Please try again.');

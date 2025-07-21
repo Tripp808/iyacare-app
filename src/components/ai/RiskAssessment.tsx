@@ -133,14 +133,16 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({
     }
   };
 
-  const getRiskDescription = (riskLevel: string) => {
+  const getRiskDescription = (riskLevel: string, confidence: number) => {
+    const confidenceText = `AI confidence: ${aiPredictionService.formatConfidence(confidence)}`;
+    
     switch (riskLevel.toLowerCase()) {
       case 'low risk':
-        return 'Patient shows normal vital signs and low risk indicators. Continue routine monitoring.';
+        return `Patient shows normal vital signs and low risk indicators. Continue routine monitoring. ${confidenceText}`;
       case 'mid risk':
-        return 'Patient shows some concerning indicators. Increased monitoring recommended.';
+        return `Patient shows some concerning indicators. Increased monitoring recommended. ${confidenceText}`;
       case 'high risk':
-        return 'Patient shows high-risk indicators. Immediate medical attention may be required.';
+        return `Patient shows high-risk indicators. Immediate medical attention may be required. ${confidenceText}`;
       default:
         return 'Risk assessment unavailable.';
     }
@@ -176,7 +178,7 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="p-6 space-y-4">
         {loading && (
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="w-6 h-6 animate-spin text-[#2D7D89]" />
@@ -203,7 +205,7 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({
           </div>
         )}
 
-        {prediction && !loading && (
+        {prediction && !loading && !error && (
           <>
             {/* Risk Level Display */}
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
@@ -220,7 +222,7 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({
               </div>
               
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                {getRiskDescription(prediction.risk_level)}
+                {getRiskDescription(prediction.risk_level, prediction.confidence)}
               </p>
               
               <div className="flex items-center justify-between text-sm">
@@ -300,7 +302,7 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({
             )}
 
             {/* Assessment Metadata */}
-            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+            <div className="border-t pt-4">
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>Assessment Score: {prediction.score}/100</span>
                 <span>Generated: {new Date(prediction.timestamp).toLocaleTimeString()}</span>

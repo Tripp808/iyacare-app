@@ -85,41 +85,76 @@ const mockLabResults = [
 
 export default function PatientDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const resolvedParams = use(params);
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [latestVitals, setLatestVitals] = useState<any>(null);
 
   useEffect(() => {
-    async function fetchPatientData() {
-      try {
-        setLoading(true);
-        if (!resolvedParams.id) return;
+    const resolveParams = async () => {
+      const resolved = await params;
+      setResolvedParams(resolved);
+    };
+    resolveParams();
+  }, [params]);
 
-        // Fetch patient data
-        const patientResult = await getPatient(resolvedParams.id);
-        if (patientResult.success) {
-          setPatient(patientResult.patient || null);
-        } else {
-          console.error('Failed to fetch patient:', patientResult.error);
-        }
-
-        // Fetch patient alerts
-        const alertsResult = await getPatientAlerts(resolvedParams.id);
-        if (alertsResult.success) {
-          setAlerts(alertsResult.alerts || []);
-        } else {
-          console.error('Failed to fetch alerts:', alertsResult.error);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
+  useEffect(() => {
+    if (resolvedParams?.id) {
+      fetchPatientData();
+      fetchLatestVitals();
     }
+  }, [resolvedParams]);
 
-    fetchPatientData();
-  }, [resolvedParams.id]);
+  const fetchLatestVitals = async () => {
+    if (!resolvedParams?.id) return;
+    
+    try {
+      // Import dynamically to avoid potential import issues
+      const { getVitalSignsByPatientId } = await import('@/lib/firebase/vitals');
+      const vitalsResult = await getVitalSignsByPatientId(resolvedParams.id, 1);
+      
+      if (vitalsResult.success && vitalsResult.vitals.length > 0) {
+        const vitals = vitalsResult.vitals[0];
+        setLatestVitals({
+          systolicBP: vitals.systolicBP,
+          diastolicBP: vitals.diastolicBP,
+          bloodSugar: vitals.bloodSugar,
+          temperature: vitals.temperature,
+          heartRate: vitals.heartRate
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching latest vitals:', error);
+    }
+  };
+
+  const fetchPatientData = async () => {
+    try {
+      setLoading(true);
+      if (!resolvedParams?.id) return;
+
+      // Fetch patient data
+      const patientResult = await getPatient(resolvedParams.id);
+      if (patientResult.success) {
+        setPatient(patientResult.patient || null);
+      } else {
+        console.error('Failed to fetch patient:', patientResult.error);
+      }
+
+      // Fetch patient alerts
+      const alertsResult = await getPatientAlerts(resolvedParams.id);
+      if (alertsResult.success) {
+        setAlerts(alertsResult.alerts || []);
+      } else {
+        console.error('Failed to fetch alerts:', alertsResult.error);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mark an alert as read
   const handleMarkAsRead = async (alertId: string) => {
@@ -274,7 +309,8 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
             </Button>
           <Button 
             className="bg-[#2D7D89] hover:bg-[#245A62] text-white"
-            onClick={() => router.push(`/patients/${resolvedParams.id}/edit`)}
+            onClick={() => router.push(`/patients/${resolvedParams?.id}/edit`)}
+            disabled={!resolvedParams?.id}
           >
               <Edit className="w-4 h-4 mr-2" />
             Edit Patient
@@ -491,7 +527,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
               {/* AI Risk Assessment */}
               <RiskAssessment 
                 patient={patient} 
-                latestVitals={undefined} 
+                latestVitals={latestVitals} 
                 onRiskUpdate={(risk, confidence) => {
                   console.log('AI Risk Update:', risk, confidence);
                   // You can update patient risk level here if needed
@@ -564,18 +600,243 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
         </TabsContent>
           
           <TabsContent value="vitals">
-            <Card>
-              <CardHeader>
-                <CardTitle>Vital Signs</CardTitle>
-                <CardDescription>
-                  Latest vital signs for this patient
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Vital signs tab content will go here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <div className="space-y-6">
+              {/* AI Features Section */}
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                    <Activity className="w-5 h-5 text-blue-600" />
+                    AI Risk Assessment Features
+                  </CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400">
+                    Current vital signs and patient data used by our AI model to calculate maternal health risk levels.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Patient Age */}
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      Patient Demographics
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Age *
+                        </label>
+                        <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border">
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {calculateAge(patient.dateOfBirth)} years
+                            </span>
+                            <Calendar className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Based on Date of Birth: {patient.dateOfBirth ? formatDate(patient.dateOfBirth, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            }) : 'Not provided'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                          <Activity className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                          <p className="text-sm font-medium text-blue-900 dark:text-blue-300">Core AI Feature</p>
+                          <p className="text-xs text-blue-700 dark:text-blue-400">Age is critical for risk assessment</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Current Vital Signs */}
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Stethoscope className="w-4 h-4 text-blue-600" />
+                      Current Vital Signs
+                    </h4>
+                    
+                    {latestVitals ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Blood Pressure *
+                          </label>
+                          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {latestVitals.systolicBP || '---'}/{latestVitals.diastolicBP || '---'}
+                              </span>
+                              <span className="text-xs text-gray-500">mmHg</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Normal: 90-140 / 60-90 mmHg</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Heart Rate *
+                          </label>
+                          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {latestVitals.heartRate || '---'}
+                              </span>
+                              <span className="text-xs text-gray-500">bpm</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Normal: 60-100 bpm</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Blood Sugar *
+                          </label>
+                          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {latestVitals.bloodSugar || '---'}
+                              </span>
+                              <span className="text-xs text-gray-500">mg/dL</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Normal: 70-140 mg/dL</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Body Temperature *
+                          </label>
+                          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border">
+                            <div className="flex items-center justify-between">
+                              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {latestVitals.temperature || '---'}
+                              </span>
+                              <span className="text-xs text-gray-500">°C</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Normal: 36-37.5°C</p>
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-2 lg:col-span-2">
+                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <h5 className="font-medium text-green-900 dark:text-green-300">Data Complete</h5>
+                            </div>
+                            <p className="text-sm text-green-800 dark:text-green-400">
+                              All vital signs are available for AI risk assessment. The AI model can provide accurate risk predictions based on this data.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="w-5 h-5 text-amber-600" />
+                          <h5 className="font-medium text-amber-900 dark:text-amber-300">No Vital Signs Recorded</h5>
+                        </div>
+                        <p className="text-sm text-amber-800 dark:text-amber-400 mb-3">
+                          No vital signs have been recorded for this patient. AI risk assessment requires the following data:
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-amber-700 dark:text-amber-500">
+                          <div>• Blood Pressure</div>
+                          <div>• Heart Rate</div>
+                          <div>• Blood Sugar</div>
+                          <div>• Body Temperature</div>
+                          <div>• Patient Age</div>
+                        </div>
+                        <div className="mt-4">
+                          <Button 
+                            size="sm" 
+                            onClick={() => router.push(`/patients/${resolvedParams?.id}/edit`)}
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Add Vital Signs
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Model Information */}
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Activity className="w-5 h-5 text-indigo-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-indigo-900 dark:text-indigo-300 mb-2">AI Risk Assessment Model</h4>
+                        <p className="text-sm text-indigo-800 dark:text-indigo-400 mb-3">
+                          Our AI model analyzes <strong>6 key features</strong> to predict maternal health risks:
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-indigo-700 dark:text-indigo-500">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            Patient Age
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            Systolic Blood Pressure
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            Diastolic Blood Pressure
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            Blood Sugar Level
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            Body Temperature
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            Heart Rate
+                          </div>
+                        </div>
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-3">
+                          Complete and accurate data for all features ensures the most reliable risk predictions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Vital Signs History */}
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                    <TrendingUp className="w-5 h-5 text-[#2D7D89]" />
+                    Vital Signs History
+                  </CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400">
+                    Historical vital signs data and trends over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      Vital Signs History
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Historical vital signs tracking will be displayed here.
+                    </p>
+                    <Button 
+                      onClick={() => router.push(`/patients/${resolvedParams?.id}/edit`)}
+                      className="bg-[#2D7D89] hover:bg-[#245A62] text-white"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Record New Vitals
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         
         <TabsContent value="appointments">
           <Card>
@@ -600,7 +861,7 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                   View all alerts related to this patient
                 </CardDescription>
               </div>
-              <Button onClick={() => router.push(`/alerts/create?patientId=${resolvedParams.id}`)}>
+              <Button onClick={() => router.push(`/alerts/create?patientId=${resolvedParams?.id}`)} disabled={!resolvedParams?.id}>
                 <AlertCircle className="mr-2 h-4 w-4" />
                 Create Alert
               </Button>

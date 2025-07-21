@@ -286,7 +286,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-full border-0">
-                        <User className="h-5 w-5" />
+                        {user?.profilePicture ? (
+                          <div className="h-8 w-8 rounded-full overflow-hidden">
+                            <img 
+                              src={user.profilePicture} 
+                              alt={user.name || "User"} 
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-[#2D7D89] flex items-center justify-center">
+                            <span className="text-white text-sm font-medium">
+                              {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
+                            </span>
+                          </div>
+                        )}
                         <span className="sr-only">User menu</span>
                       </Button>
                     </DropdownMenuTrigger>

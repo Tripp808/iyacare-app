@@ -19,11 +19,13 @@ import {
   Bell,
   TrendingUp,
   FileText,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/lib/firebase/alerts';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 async function getUnreadAlerts() {
   // Only show unread alerts on dashboard (includeRead = false)
@@ -44,27 +46,45 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [recentVitalSigns, setRecentVitalSigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Set up auto-refresh every 5 minutes
+    const refreshInterval = setInterval(() => {
+      fetchDashboardData(true); // Silent refresh
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
   }, []);
 
-    async function fetchDashboardData() {
-      try {
+  const refreshDashboard = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+    setRefreshing(false);
+    toast.success('Dashboard data refreshed successfully!');
+  };
+
+  async function fetchDashboardData(silentRefresh = false) {
+    try {
+      if (!silentRefresh) {
         setLoading(true);
-        
-        // Fetch unread alerts
-        const alertsResult = await getAlerts(false);
-        const unreadAlerts = alertsResult.success ? alertsResult.alerts || [] : [];
-        
-        // Fetch patients to count stats
-        const patientsResult = await getPatients();
-        const patients = patientsResult.success ? patientsResult.patients || [] : [];
-        
-        // Debug logging to verify patient data
-        console.log('Dashboard - Total patients found:', patients.length);
-        console.log('Dashboard - Patient risk levels:', patients.map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, riskLevel: p.riskLevel })));
-        
+      }
+      
+      // Fetch unread alerts
+      const alertsResult = await getAlerts(false);
+      const unreadAlerts = alertsResult.success ? alertsResult.alerts || [] : [];
+      
+      // Fetch patients to count stats
+      const patientsResult = await getPatients();
+      const patients = patientsResult.success ? patientsResult.patients || [] : [];
+      
+      // Debug logging to verify patient data
+      console.log('Dashboard - Total patients found:', patients.length);
+      console.log('Dashboard - Patient risk levels:', patients.map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, riskLevel: p.riskLevel })));
+      
       // Fetch recent vital signs for analytics
       const vitalSignsResult = await VitalSignsService.getAllVitalSigns();
       const allVitalSigns = vitalSignsResult.success ? vitalSignsResult.vitalSigns || [] : [];
@@ -113,36 +133,60 @@ export default function DashboardPage() {
         })
         .slice(0, 10);
         
-        // Use real patient data for statistics
-        const finalStats = {
-          totalPatients: patients.length,
-          highRiskPatients: patientRiskCounts.high || 0,
-          mediumRiskPatients: patientRiskCounts.medium || 0,
-          lowRiskPatients: patientRiskCounts.low || 0,
-          totalVitalSigns: allVitalSigns.length,
-          unreadAlerts: unreadAlerts.length
-        };
-        
-        console.log('Dashboard - Final stats:', finalStats);
-        setStats(finalStats);
-        
-        setAlerts(unreadAlerts);
+      // Use real patient data for statistics
+      const finalStats = {
+        totalPatients: patients.length,
+        highRiskPatients: patientRiskCounts.high || 0,
+        mediumRiskPatients: patientRiskCounts.medium || 0,
+        lowRiskPatients: patientRiskCounts.low || 0,
+        totalVitalSigns: allVitalSigns.length,
+        unreadAlerts: unreadAlerts.length
+      };
+      
+      console.log('Dashboard - Final stats:', finalStats);
+      
+      // Check for significant changes in high-risk patients (only for non-silent refreshes)
+      if (!silentRefresh && stats.highRiskPatients !== finalStats.highRiskPatients) {
+        const difference = finalStats.highRiskPatients - stats.highRiskPatients;
+        if (difference > 0) {
+          toast.error(`⚠️ ${difference} new high-risk patient${difference > 1 ? 's' : ''} detected! Please review immediately.`);
+        } else if (difference < 0) {
+          toast.success(`✅ ${Math.abs(difference)} patient${Math.abs(difference) > 1 ? 's' : ''} moved from high-risk status.`);
+        }
+      }
+      
+      setStats(finalStats);
+      
+      setAlerts(unreadAlerts);
       setRecentVitalSigns(recentVitals);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        // Set empty stats if there's an error
-        setStats({
-          totalPatients: 0,
-          highRiskPatients: 0,
-          mediumRiskPatients: 0,
-          lowRiskPatients: 0,
-          totalVitalSigns: 0,
-          unreadAlerts: 0
-        });
-      } finally {
+      setLastUpdated(new Date());
+
+      // Show summary info for manual refreshes
+      if (!silentRefresh && finalStats.totalPatients > 0) {
+        const totalAssignedRisk = finalStats.highRiskPatients + finalStats.mediumRiskPatients + finalStats.lowRiskPatients;
+        const unassignedPatients = finalStats.totalPatients - totalAssignedRisk;
+        
+        if (unassignedPatients > 0) {
+          console.log(`📊 Dashboard: ${unassignedPatients} patients need risk assessment. Visit Patient Management to update.`);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // Set empty stats if there's an error
+      setStats({
+        totalPatients: 0,
+        highRiskPatients: 0,
+        mediumRiskPatients: 0,
+        lowRiskPatients: 0,
+        totalVitalSigns: 0,
+        unreadAlerts: 0
+      });
+    } finally {
+      if (!silentRefresh) {
         setLoading(false);
       }
     }
+  }
 
   if (loading) {
     return (
@@ -158,18 +202,46 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       {user?.name && (
         <div className="bg-gradient-to-r from-[#2D7D89]/10 to-[#F7913D]/10 rounded-lg border border-[#2D7D89]/20 p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-[#2D7D89] flex items-center justify-center">
-              <User className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-[#2D7D89]/20 shadow-sm">
+                {user.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt={user.name} 
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-[#2D7D89] flex items-center justify-center">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">
+                  Welcome back, {user.name.split(' ')[0]}!
+                </h1>
+                <p className="text-muted-foreground">
+                  Here's your dashboard overview for today
+                </p>
+                {lastUpdated && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">
-                Welcome back, {user.name.split(' ')[0]}!
-              </h1>
-              <p className="text-muted-foreground">
-                Here's your dashboard overview for today
-              </p>
-            </div>
+            
+            {/* Refresh Button */}
+            <Button
+              onClick={refreshDashboard}
+              disabled={refreshing}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
           </div>
         </div>
       )}
@@ -221,6 +293,9 @@ export default function DashboardPage() {
                 ? 'No high-risk cases'
                 : `${stats.highRiskPatients} require immediate attention`
               }
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 opacity-75">
+              From saved AI risk assessments
             </p>
           </CardContent>
         </Card>

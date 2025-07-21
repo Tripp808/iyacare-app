@@ -259,9 +259,22 @@ class AutomatedMessagingService {
   // Update patient risk level in database
   private async updatePatientRiskLevel(patientId: string, riskAssessment: RiskAssessment): Promise<void> {
     try {
-      // Note: These fields may not exist in the Patient interface yet
-      // This is a placeholder for future implementation
-      console.log(`Patient ${patientId} risk level updated to ${riskAssessment.riskLevel}`);
+      // Import PatientService dynamically to avoid circular dependencies
+      const { PatientService } = await import('./patient.service');
+      
+      // Update the patient's risk level in the database
+      const result = await PatientService.updatePatientRiskLevel(
+        patientId,
+        riskAssessment.riskLevel,
+        undefined, // confidence not available in this context
+        'AUTOMATED_ASSESSMENT'
+      );
+      
+      if (result.success) {
+        console.log(`✅ Patient ${patientId} risk level successfully updated to ${riskAssessment.riskLevel}`);
+      } else {
+        console.error(`❌ Failed to update patient ${patientId} risk level:`, result.error);
+      }
     } catch (error) {
       console.error('Error updating patient risk level:', error);
     }

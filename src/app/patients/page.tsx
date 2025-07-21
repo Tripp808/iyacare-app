@@ -29,7 +29,8 @@ import {
   Heart,
   FileDown,
   Clock,
-  Loader2
+  Loader2,
+  Database
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,6 +45,7 @@ import { Patient, getPatients } from '@/lib/firebase/patients';
 import { toast } from 'react-hot-toast';
 import { getVitalSignsByPatientId, VitalSigns } from '@/lib/firebase/vitals';
 import { aiPredictionService } from '@/services/ai-prediction.service';
+import { PatientService } from '@/services/patient.service';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -100,14 +102,18 @@ export default function PatientsPage() {
   };
 
   const fetchRiskPredictionsForPatients = async (patientList: Patient[]) => {
-    // Initialize loading states
-    const initialStates: Record<string, { loading: boolean; prediction?: any; error?: string }> = {};
-    patientList.forEach(patient => {
+    // Set loading state for all patients
+    const loadingStates = patientList.reduce((acc, patient) => {
       if (patient.id) {
-        initialStates[patient.id] = { loading: true };
+        acc[patient.id] = { loading: true };
       }
-    });
-    setRiskPredictions(initialStates);
+      return acc;
+    }, {} as Record<string, { loading: boolean; prediction?: any; error?: string }>);
+    
+    setRiskPredictions(loadingStates);
+
+    // Collect predictions to update in database
+    const predictionsToUpdate: Array<{ patientId: string; riskLevel: string; confidence?: number }> = [];
 
     // Fetch predictions for each patient
     for (const patient of patientList) {
@@ -140,6 +146,15 @@ export default function PatientsPage() {
               ...prev,
               [patient.id!]: { loading: false, prediction }
             }));
+
+            // Add to bulk update list
+            if (prediction.predicted_risk) {
+              predictionsToUpdate.push({
+                patientId: patient.id,
+                riskLevel: prediction.predicted_risk,
+                confidence: prediction.confidence
+              });
+            }
           } else {
             console.warn(`Failed to extract vital signs for patient ${patient.id}`);
             setRiskPredictions(prev => ({
@@ -161,6 +176,15 @@ export default function PatientsPage() {
               ...prev,
               [patient.id!]: { loading: false, prediction }
             }));
+
+            // Add to bulk update list
+            if (prediction.predicted_risk) {
+              predictionsToUpdate.push({
+                patientId: patient.id,
+                riskLevel: prediction.predicted_risk,
+                confidence: prediction.confidence
+              });
+            }
           } else {
             console.warn(`Failed to extract default vital signs for patient ${patient.id}`);
             setRiskPredictions(prev => ({
@@ -169,12 +193,27 @@ export default function PatientsPage() {
             }));
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error fetching prediction for patient ${patient.id}:`, error);
         setRiskPredictions(prev => ({
           ...prev,
           [patient.id!]: { loading: false, error: 'Prediction failed' }
         }));
+      }
+    }
+
+    // Bulk update patient risk levels in database
+    if (predictionsToUpdate.length > 0) {
+      console.log(`🔄 Updating risk levels for ${predictionsToUpdate.length} patients in database...`);
+      try {
+        const result = await PatientService.bulkUpdatePatientRiskLevels(predictionsToUpdate);
+        console.log(`✅ Database update completed: ${result.updated} updated, ${result.errors} errors`);
+        
+        // Show success message
+        toast.success(`✅ Updated risk levels for ${result.updated} patients. Dashboard will reflect changes on refresh.`);
+      } catch (error) {
+        console.error('❌ Failed to update patient risk levels in database:', error);
+        toast.error('Failed to save risk assessments to database');
       }
     }
   };
@@ -237,14 +276,11 @@ export default function PatientsPage() {
       const riskLevel = getRiskLevelFromPrediction(p.id);
       return riskLevel.toLowerCase().includes('high');
     }).length;
-    // For recent patients, we'll use a simple count since createdAt is not available
-    const recentPatients = Math.floor(totalPatients * 0.1); // Assume 10% are recent
 
     return {
       total: totalPatients,
       pregnant: pregnantPatients,
-      highRisk: highRiskPatients,
-      recent: recentPatients
+      highRisk: highRiskPatients
     };
   }, [patients, riskPredictions]);
 
@@ -298,16 +334,53 @@ export default function PatientsPage() {
     return predictionState.prediction?.predicted_risk || 'Unknown';
   };
 
+  const getRiskTooltip = (patientId?: string): string => {
+    if (!patientId) return 'No patient ID available';
+    
+    const predictionState = riskPredictions[patientId];
+    if (!predictionState) return 'No prediction data available';
+    
+    if (predictionState.loading) return 'Calculating risk assessment...';
+    
+    if (predictionState.error) {
+      return `⚠️ ${predictionState.error}\n\nTo enable AI risk assessment:\n• Record vital signs (BP, heart rate, temperature, blood sugar)\n• Verify patient date of birth\n• Ensure all values are within normal ranges`;
+    }
+    
+    if (predictionState.prediction) {
+      const confidence = Math.round((predictionState.prediction.confidence || 0) * 100);
+      return `Risk Level: ${predictionState.prediction.predicted_risk}\nConfidence: ${confidence}%\n\nBased on AI analysis of patient vital signs and demographics.`;
+    }
+    
+    return 'Risk assessment pending';
+  };
+
   const getAgeFromBirthDate = (birthDate: string) => {
     if (!birthDate) return 'Unknown';
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+    
+    try {
+      const birth = new Date(birthDate);
+      // Check if the date is valid
+      if (isNaN(birth.getTime())) {
+        return 'Invalid Date';
+      }
+      
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      
+      // Check for reasonable age range
+      if (age < 0 || age > 120) {
+        return 'Invalid Age';
+      }
+      
+      return age;
+    } catch (error) {
+      console.error('Error calculating age:', error, 'for birthDate:', birthDate);
+      return 'Error';
     }
-    return age;
   };
 
   const handleSelectPatient = (patientId: string) => {
@@ -376,6 +449,51 @@ export default function PatientsPage() {
         <div className="flex gap-2">
           <Button 
             variant="outline" 
+            onClick={fetchPatients}
+            disabled={loading}
+            className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+          >
+            <Activity className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              try {
+                toast.loading('Fixing patient ages...');
+                const result = await PatientService.fixPatientAges();
+                toast.dismiss();
+                if (result.fixed > 0) {
+                  toast.success(`✅ Fixed ${result.fixed} patient records with invalid ages`);
+                  fetchPatients(); // Refresh the list
+                } else {
+                  toast.success('✅ All patient ages are valid');
+                }
+                if (result.errors > 0) {
+                  toast.error(`⚠️ ${result.errors} errors occurred during age fix`);
+                }
+              } catch (error) {
+                toast.dismiss();
+                toast.error('Failed to fix patient ages');
+                console.error('Age fix error:', error);
+              }
+            }}
+            className="text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Fix Ages
+          </Button>
+          <Link href="/admin/populate-vitals">
+            <Button 
+              variant="outline" 
+              className="text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Populate Vitals
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
             onClick={exportToCSV}
             className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
           >
@@ -392,7 +510,7 @@ export default function PatientsPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -425,18 +543,6 @@ export default function PatientsPage() {
                 <p className="text-3xl font-bold text-red-900 dark:text-red-100">{stats.highRisk}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 dark:text-green-400 text-sm font-medium">Recent Visits</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{stats.recent}</p>
-              </div>
-              <Activity className="w-8 h-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
@@ -575,7 +681,7 @@ export default function PatientsPage() {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white">
-                            {patient.firstName} {patient.lastName}
+                                {patient.firstName} {patient.lastName}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
                                 ID: {patient.id?.slice(0, 8) || 'Unknown'}...
@@ -586,7 +692,7 @@ export default function PatientsPage() {
                         <TableCell className="text-gray-900 dark:text-white">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
-                          {getAgeFromBirthDate(patient.dateOfBirth)} years
+                            {getAgeFromBirthDate(patient.dateOfBirth)} years
                           </div>
                         </TableCell>
                         <TableCell>

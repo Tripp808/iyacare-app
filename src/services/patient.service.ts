@@ -14,6 +14,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getPatients } from '@/lib/firebase/patients';
 
 export interface Patient {
   id?: string;
@@ -277,6 +278,90 @@ export class PatientService {
   }
 
   /**
+   * Update patient risk level from AI prediction
+   */
+  static async updatePatientRiskLevel(
+    patientId: string,
+    riskLevel: string,
+    confidence?: number,
+    source = 'AI_PREDICTION'
+  ): Promise<PatientResponse> {
+    try {
+      console.log(`🔄 Updating patient ${patientId} risk level to: ${riskLevel} (confidence: ${confidence || 'N/A'})`);
+      
+      // Normalize risk level to match dashboard expectations
+      let normalizedRiskLevel = riskLevel.toLowerCase();
+      if (normalizedRiskLevel.includes('mid') || normalizedRiskLevel.includes('medium')) {
+        normalizedRiskLevel = 'medium';
+      } else if (normalizedRiskLevel.includes('high')) {
+        normalizedRiskLevel = 'high';
+      } else if (normalizedRiskLevel.includes('low')) {
+        normalizedRiskLevel = 'low';
+      }
+
+      const updateData = {
+        riskLevel: normalizedRiskLevel,
+        riskAssessment: {
+          level: normalizedRiskLevel,
+          confidence: confidence || 0,
+          source,
+          lastUpdated: new Date(),
+          timestamp: serverTimestamp(),
+        },
+        updatedAt: serverTimestamp(),
+      };
+
+      await updateDoc(doc(db, 'patients', patientId), updateData);
+
+      console.log(`✅ Successfully updated patient ${patientId} risk level to: ${normalizedRiskLevel}`);
+
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Error updating patient risk level:', error);
+      return {
+        success: false,
+        error: 'Failed to update patient risk level'
+      };
+    }
+  }
+
+  /**
+   * Bulk update patient risk levels from AI predictions
+   */
+  static async bulkUpdatePatientRiskLevels(
+    predictions: Array<{ patientId: string; riskLevel: string; confidence?: number }>
+  ): Promise<{ success: boolean; updated: number; errors: number }> {
+    let updated = 0;
+    let errors = 0;
+
+    console.log(`🔄 Starting bulk update of ${predictions.length} patient risk levels...`);
+
+    for (const prediction of predictions) {
+      const result = await this.updatePatientRiskLevel(
+        prediction.patientId,
+        prediction.riskLevel,
+        prediction.confidence
+      );
+      
+      if (result.success) {
+        updated++;
+      } else {
+        errors++;
+      }
+    }
+
+    console.log(`✅ Bulk update completed: ${updated} updated, ${errors} errors`);
+
+    return {
+      success: true,
+      updated,
+      errors
+    };
+  }
+
+  /**
    * Soft delete a patient (mark as inactive)
    */
   static async deactivatePatient(patientId: string): Promise<PatientResponse> {
@@ -524,6 +609,91 @@ export class PatientService {
     } catch (error: any) {
       console.error('Get patient health records error:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Fix patients with invalid ages by updating their records
+   */
+  static async fixPatientAges(): Promise<{ fixed: number; errors: number; details: string[] }> {
+    try {
+      console.log('🔧 Starting patient age fix process...');
+      const result = await getPatients();
+      
+      if (!result.success || !result.patients) {
+        return { fixed: 0, errors: 1, details: ['Failed to fetch patients'] };
+      }
+
+      const patients = result.patients;
+      const details: string[] = [];
+      let fixed = 0;
+      let errors = 0;
+
+      for (const patient of patients) {
+        try {
+          let needsUpdate = false;
+          const updates: any = {};
+
+          // Check if dateOfBirth is valid
+          if (patient.dateOfBirth) {
+            const birthDate = new Date(patient.dateOfBirth);
+            
+            if (isNaN(birthDate.getTime())) {
+              // Invalid date - set to null and use default age
+              updates.dateOfBirth = null;
+              updates.age = 25; // Default age
+              needsUpdate = true;
+              details.push(`❌ ${patient.firstName} ${patient.lastName}: Invalid date of birth, set to default age 25`);
+            } else {
+              // Valid date - recalculate age
+              const today = new Date();
+              let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                calculatedAge--;
+              }
+
+              // Check if age is reasonable
+              if (calculatedAge < 12 || calculatedAge > 80 || isNaN(calculatedAge)) {
+                updates.age = 25; // Default age
+                needsUpdate = true;
+                details.push(`⚠️ ${patient.firstName} ${patient.lastName}: Unreasonable age (${calculatedAge}), set to default age 25`);
+              } else if (patient.age !== calculatedAge) {
+                updates.age = calculatedAge;
+                needsUpdate = true;
+                details.push(`✅ ${patient.firstName} ${patient.lastName}: Updated age from ${patient.age} to ${calculatedAge}`);
+              }
+            }
+          } else {
+            // No date of birth - ensure we have a default age
+            if (!patient.age || isNaN(patient.age) || patient.age < 12 || patient.age > 80) {
+              updates.age = 25;
+              needsUpdate = true;
+              details.push(`📅 ${patient.firstName} ${patient.lastName}: No valid date of birth, set default age 25`);
+            }
+          }
+
+          // Update the patient if needed
+          if (needsUpdate && patient.id) {
+            const updateResult = await PatientService.updatePatient(patient.id, updates);
+            if (updateResult.success) {
+              fixed++;
+            } else {
+              errors++;
+              details.push(`❌ Failed to update ${patient.firstName} ${patient.lastName}: ${updateResult.error}`);
+            }
+          }
+        } catch (error) {
+          errors++;
+          details.push(`❌ Error processing ${patient.firstName} ${patient.lastName}: ${error}`);
+        }
+      }
+
+      console.log(`🔧 Age fix completed: ${fixed} fixed, ${errors} errors`);
+      return { fixed, errors, details };
+    } catch (error: any) {
+      console.error('❌ Error in fixPatientAges:', error);
+      return { fixed: 0, errors: 1, details: [`Error: ${error.message}`] };
     }
   }
 } 

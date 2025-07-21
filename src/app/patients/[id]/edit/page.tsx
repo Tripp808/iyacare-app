@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Calendar, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Save, Loader2, Activity, Stethoscope, AlertTriangle } from 'lucide-react';
 import { getPatient, updatePatient } from '@/lib/firebase/patients';
 import { toast } from 'sonner';
 
@@ -486,6 +486,154 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* AI Features Section - Vital Signs for Risk Assessment */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+              <Activity className="w-5 h-5 text-blue-600" />
+              AI Risk Assessment Features
+            </CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              These vital signs are used by our AI model to calculate maternal health risk levels. Accurate data enables better risk predictions.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <Stethoscope className="w-4 h-4 text-blue-600" />
+                Current Vital Signs
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Systolic Blood Pressure *
+                  </label>
+                  <div className="relative">
+                    <Input
+                      name="systolicBP"
+                      type="number"
+                      min="60"
+                      max="250"
+                      placeholder="120"
+                      value={formData.systolicBP}
+                      onChange={handleChange}
+                      className="pr-12"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">mmHg</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Normal: 90-140 mmHg</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Diastolic Blood Pressure *
+                  </label>
+                  <div className="relative">
+                    <Input
+                      name="diastolicBP"
+                      type="number"
+                      min="40"
+                      max="150"
+                      placeholder="80"
+                      value={formData.diastolicBP}
+                      onChange={handleChange}
+                      className="pr-12"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">mmHg</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Normal: 60-90 mmHg</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Heart Rate *
+                  </label>
+                  <div className="relative">
+                    <Input
+                      name="heartRate"
+                      type="number"
+                      min="30"
+                      max="200"
+                      placeholder="70"
+                      value={formData.heartRate}
+                      onChange={handleChange}
+                      className="pr-12"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">bpm</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Normal: 60-100 bpm</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Blood Sugar Level *
+                  </label>
+                  <div className="relative">
+                    <Input
+                      name="bloodSugar"
+                      type="number"
+                      min="50"
+                      max="500"
+                      step="0.1"
+                      placeholder="90"
+                      value={formData.bloodSugar}
+                      onChange={handleChange}
+                      className="pr-16"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">mg/dL</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Normal: 70-140 mg/dL</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Body Temperature *
+                  </label>
+                  <div className="relative">
+                    <Input
+                      name="temperature"
+                      type="number"
+                      min="32"
+                      max="45"
+                      step="0.1"
+                      placeholder="36.5"
+                      value={formData.temperature}
+                      onChange={handleChange}
+                      className="pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">°C</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Normal: 36-37.5°C</p>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <Activity className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-300">AI Assessment</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-400">Data enables risk prediction</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-amber-900 dark:text-amber-300 mb-1">AI Model Information</h4>
+                  <p className="text-sm text-amber-800 dark:text-amber-400">
+                    These 5 vital signs plus the patient's age are the core features our AI model uses to predict maternal health risks. 
+                    Complete and accurate data leads to more reliable risk assessments.
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-500 mt-2">
+                    * Required for AI risk prediction
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

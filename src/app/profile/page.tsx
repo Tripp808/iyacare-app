@@ -118,64 +118,141 @@ export default function ProfilePage() {
     if (!event.target.files || event.target.files.length === 0) return;
     let file = event.target.files[0];
     
-    // Validate file type
+    // Enhanced validation with detailed logging
+    console.log('🚀 Starting image upload process...', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      userId: user?.id,
+      userAuth: !!firebaseUser
+    });
+    
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('Please select an image file (JPG, PNG, GIF)');
       return;
     }
     
-    // Validate file size (5MB max for original, compress if larger)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size too large. Compressing...');
+      console.log('File too large, attempting compression...');
+      toast.info('File size too large. Compressing...');
       try {
         file = await compressImage(file);
         toast.success('Image compressed successfully');
+        console.log('✅ Compression successful, new size:', file.size);
       } catch (error) {
+        console.error('❌ Compression failed:', error);
         toast.error('Failed to compress image');
         return;
       }
     }
     
+    // Check authentication before starting
+    if (!user || !firebaseUser) {
+      toast.error('Please log in again and try uploading');
+      console.error('❌ User not authenticated:', { user: !!user, firebaseUser: !!firebaseUser });
+      return;
+    }
+    
+    // Check storage initialization
+    if (!storage) {
+      toast.error('Storage not available. Please refresh and try again.');
+      console.error('❌ Firebase Storage not initialized');
+      return;
+    }
+    
     setUploadingImage(true);
     
     try {
-      // Try Firebase Storage first
       const timestamp = Date.now();
-      const fileName = `profile_${user?.id}_${timestamp}.${file.name.split('.').pop()}`;
+      const fileName = `profile_${user.id}_${timestamp}.${file.name.split('.').pop()}`;
       const storageRef = ref(storage, `profiles/${fileName}`);
       
-      console.log('Starting upload to Firebase Storage...', fileName);
+      console.log('📤 Uploading to Firebase Storage...', {
+        path: `profiles/${fileName}`,
+        storageRef: storageRef,
+        timestamp
+      });
       
-      // Set a timeout for the upload
+      // Upload with timeout and progress tracking
       const uploadPromise = uploadBytes(storageRef, file);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Upload timeout')), 30000) // 30 second timeout
+        setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000)
       );
       
+      console.log('⏳ Starting upload race (30s timeout)...');
       await Promise.race([uploadPromise, timeoutPromise]);
-      console.log('Upload completed, getting download URL...');
+      console.log('✅ Upload completed successfully');
       
       const downloadURL = await getDownloadURL(storageRef);
-      console.log('Download URL obtained:', downloadURL);
+      console.log('✅ Download URL obtained:', downloadURL);
       
+      // Update local state first
       setProfileData(prev => ({ ...prev, profilePicture: downloadURL }));
-      toast.success('Profile picture uploaded successfully!');
+      
+      // Immediately save to database
+      console.log('💾 Saving to database...');
+      await UserService.updateUser(user.id, {
+        profilePicture: downloadURL
+      });
+      
+      console.log('🔄 Refreshing user data...');
+      await refreshUserData();
+      
+      toast.success('Profile picture updated successfully!');
+      console.log('🎉 Profile picture update complete');
       
     } catch (error: any) {
-      console.error('Firebase Storage upload failed:', error);
+      console.error('❌ Upload failed with error:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
       
-      // Fallback to base64 storage
+      // Specific error handling
+      let errorMessage = 'Upload failed. ';
+      
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = 'Upload unauthorized. Please check Firebase Storage rules.';
+        console.error('🔒 Storage unauthorized - check Firebase rules');
+      } else if (error.code === 'storage/canceled') {
+        errorMessage = 'Upload was canceled.';
+      } else if (error.code === 'storage/unknown') {
+        errorMessage = 'Unknown storage error occurred.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Upload timed out. Please check your internet connection.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'Network error. Please check your connection.';
+      } else {
+        errorMessage = `Upload error: ${error.message || 'Unknown error'}`;
+      }
+      
+      toast.error(errorMessage);
+      
+      // Enhanced fallback with better error handling
       try {
-        console.log('Falling back to base64 storage...');
+        console.log('🔄 Attempting base64 fallback...');
         const base64 = await fileToBase64(file);
+        console.log('✅ Base64 conversion successful, length:', base64.length);
+        
         setProfileData(prev => ({ ...prev, profilePicture: base64 }));
-        toast.success('Profile picture saved locally (fallback mode)');
+        
+        await UserService.updateUser(user.id, {
+          profilePicture: base64
+        });
+        
+        await refreshUserData();
+        toast.success('Profile picture saved (offline mode)!');
+        console.log('✅ Fallback save successful');
+        
       } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
-        toast.error('Failed to save profile picture. Please try a smaller image.');
+        console.error('❌ Fallback also failed:', fallbackError);
+        toast.error('Failed to save profile picture. Please try again later.');
       }
     } finally {
       setUploadingImage(false);
+      console.log('🏁 Upload process completed');
     }
   };
 
