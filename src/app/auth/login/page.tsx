@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [showSignUpAlert, setShowSignUpAlert] = useState(false);
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
   const [formData, setFormData] = useState({
-    email: 'ocheankeli99@gmail.com',
+    email: '',
     password: '',
   });
 
