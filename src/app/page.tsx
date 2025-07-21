@@ -20,7 +20,7 @@ import {
   HandHeart
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -28,18 +28,8 @@ import { toast } from "sonner";
 export default function HomePage() {
   const { firebaseUser } = useAuth();
   const router = useRouter();
-  const [activeImage, setActiveImage] = useState(0);
   const [imageError, setImageError] = useState<{[key: string]: boolean}>({});
   
-  // Move this useEffect before any conditional returns
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveImage((prev) => (prev === 0 ? 1 : 0));
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
   const handleImageError = (imagePath: string) => {
     console.error(`Failed to load image: ${imagePath}`);
     setImageError(prev => ({...prev, [imagePath]: true}));
@@ -113,44 +103,19 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#2D7D89]/20 to-[#F7913D]/20 rounded-3xl blur-xl" />
                 <div className="relative w-full h-full p-4">
                   <div className="relative h-full w-full rounded-2xl overflow-hidden">
-                    {/* Image of healthcare provider with child */}
-                    <div 
-                      className="absolute inset-0 transition-opacity duration-1000"
-                      style={{ opacity: activeImage === 0 ? 1 : 0 }}
-                    >
+                    {/* Hero image - Healthcare provider taking patient vitals */}
+                    <div className="relative w-full h-full">
                       <Image
-                        src="/images/doctor-with-child.jpg"
-                        alt="Doctor with child"
+                        src="/images/healthcare-provider.jpg"
+                        alt="Healthcare provider taking patient vitals"
                         fill
                         sizes="(max-width: 768px) 100vw, 500px"
                         priority
                         className="object-cover object-center rounded-2xl"
-                        onError={() => handleImageError("/images/doctor-with-child.jpg")}
-                        style={{display: imageError["/images/doctor-with-child.jpg"] ? "none" : "block"}}
+                        onError={() => handleImageError("/images/healthcare-provider.jpg")}
+                        style={{display: imageError["/images/healthcare-provider.jpg"] ? "none" : "block"}}
                       />
-                      {imageError["/images/doctor-with-child.jpg"] && (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-2xl">
-                          <p className="text-gray-500">Image not available</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Image of maternal healthcare */}
-                    <div 
-                      className="absolute inset-0 transition-opacity duration-1000"
-                      style={{ opacity: activeImage === 1 ? 1 : 0 }}
-                    >
-                      <Image
-                        src="/images/maternal-care.jpg"
-                        alt="Maternal care"
-                        fill
-                        sizes="(max-width: 768px) 100vw, 500px"
-                        priority
-                        className="object-cover object-center rounded-2xl"
-                        onError={() => handleImageError("/images/maternal-care.jpg")}
-                        style={{display: imageError["/images/maternal-care.jpg"] ? "none" : "block"}}
-                      />
-                      {imageError["/images/maternal-care.jpg"] && (
+                      {imageError["/images/healthcare-provider.jpg"] && (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-2xl">
                           <p className="text-gray-500">Image not available</p>
                         </div>
@@ -165,43 +130,92 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="w-full py-8 md:py-12 bg-white dark:bg-background">
-        <div className="container px-4 md:px-6">
+      <section id="features" className="w-full py-12 md:py-16 relative overflow-hidden">
+        {/* Background gradient effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f8fdfe] via-white to-[#fef9f6] dark:from-gray-900 dark:via-background dark:to-gray-800"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2D7D89]/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#F7913D]/5 rounded-full blur-3xl"></div>
+        
+        <div className="container px-4 md:px-6 relative z-10">
           <motion.div 
-            className="flex flex-col items-center justify-center space-y-4 text-center mb-8"
+            className="flex flex-col items-center justify-center space-y-4 text-center mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-[#e9f2f3] text-[#2D7D89] dark:bg-muted dark:text-[#4AA0AD]">
+            <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-gradient-to-r from-[#e6f3f5] to-[#fef3e8] text-[#2D7D89] dark:bg-gradient-to-r dark:from-[#2D7D89]/20 dark:to-[#F7913D]/20 dark:text-[#4AA0AD] shadow-sm backdrop-blur-sm">
               Our Platform
             </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-                <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Features</span> designed for maternal care
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight lg:text-5xl/tight">
+                <span className="text-[#2D7D89] dark:text-[#4AA0AD]">Features</span> designed for 
+                <span className="block text-transparent bg-gradient-to-r from-[#2D7D89] to-[#F7913D] bg-clip-text">maternal care</span>
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-lg/relaxed">
                 Our platform offers comprehensive tools to support mothers and healthcare providers
               </p>
             </div>
           </motion.div>
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <motion.div 
                 key={index} 
-                className="flex flex-col h-full space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md bg-white dark:bg-background dark:border-muted dark:hover:border-[#2D7D89]/50"
+                className="group relative flex flex-col h-full space-y-4 rounded-2xl border border-gray-200/50 p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#2D7D89]/10 dark:border-gray-700/50 dark:hover:shadow-[#2D7D89]/20 overflow-hidden"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 * index }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e6f3f5] dark:bg-[#2D7D89]/20">
-                  {feature.icon}
+                {/* Gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white via-[#f8fdfe]/50 to-[#fef9f6]/30 dark:from-gray-800 dark:via-gray-800/80 dark:to-gray-700/50"></div>
+                
+                {/* Hover gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2D7D89]/5 via-transparent to-[#F7913D]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Border gradient on hover */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#2D7D89]/20 via-transparent to-[#F7913D]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#e6f3f5] to-[#d1eef2] dark:from-[#2D7D89]/20 dark:to-[#2D7D89]/10 group-hover:from-[#2D7D89]/10 group-hover:to-[#F7913D]/10 transition-all duration-300 shadow-sm group-hover:shadow-md">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-[#2D7D89] dark:group-hover:text-[#4AA0AD] transition-colors duration-300">
+                    {feature.name}
+                  </h3>
+                  <p className="text-muted-foreground flex-grow leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold">{feature.name}</h3>
-                <p className="text-muted-foreground flex-grow">{feature.description}</p>
+                
+                {/* Decorative elements */}
+                <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gradient-to-br from-[#2D7D89]/10 to-[#F7913D]/10 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                <div className="absolute bottom-4 left-4 w-6 h-6 rounded-full bg-gradient-to-br from-[#F7913D]/10 to-[#2D7D89]/10 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100"></div>
               </motion.div>
             ))}
           </div>
+          
+          {/* Call to action */}
+          <motion.div 
+            className="flex flex-col items-center justify-center space-y-6 text-center mt-16"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#2D7D89]/20 to-[#F7913D]/20 rounded-full blur-lg"></div>
+              <Button 
+                size="lg" 
+                className="relative bg-gradient-to-r from-[#2D7D89] to-[#236570] hover:from-[#236570] hover:to-[#1e5761] text-white rounded-full h-12 px-8 font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => handleProtectedRoute('/dashboard')}
+              >
+                Explore All Features
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Join thousands of healthcare providers transforming maternal care
+            </p>
+          </motion.div>
         </div>
       </section>
 

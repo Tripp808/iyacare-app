@@ -1,0 +1,34 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .bg-circle { fill: #2D7D89; }
+    .mother-figure { fill: white; opacity: 0.95; }
+    .child-figure { fill: #F7913D; opacity: 0.95; }
+    .heart { fill: white; }
+    
+    @media (prefers-color-scheme: dark) {
+      .bg-circle { fill: #4AA0AD; }
+      .mother-figure { fill: white; opacity: 1; }
+      .child-figure { fill: #F7913D; opacity: 1; }
+      .heart { fill: white; }
+    }
+  </style>
+  
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" class="bg-circle"/>
+  
+  <!-- Mother and child silhouettes -->
+  <g transform="translate(6, 6)">
+    <!-- Mother figure -->
+    <circle cx="8" cy="4.5" r="2.5" class="mother-figure"/>
+    <rect x="4" y="8" width="8" height="11" rx="1" class="mother-figure"/>
+    <rect x="2" y="11" width="2" height="7" rx="1" class="mother-figure"/>
+    <rect x="12" y="11" width="2" height="7" rx="1" class="mother-figure"/>
+    
+    <!-- Child figure -->
+    <circle cx="15" cy="7.5" r="1.5" class="child-figure"/>
+    <rect x="13" y="10" width="4" height="8" rx="0.5" class="child-figure"/>
+    
+    <!-- Small heart connecting them -->
+    <path d="M11.5 12c0.2-0.2 0.5-0.2 0.7 0c0.2-0.2 0.5-0.2 0.7 0c0.2 0.2 0.2 0.5 0 0.7l-0.7 0.8l-0.7-0.8c-0.2-0.2-0.2-0.5 0-0.7z" class="heart"/>
+  </g>
+</svg> 
