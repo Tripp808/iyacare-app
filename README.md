@@ -8,7 +8,7 @@
 
 ## 🔗 Quick Access Links
 
-- **🌐 Live Deployed Application:** [https://iyacare-app.vercel.app](https://iyacare-app.vercel.app)
+- **🌐 Live Deployed Application:** [https://www.iyacare.site/](https://www.iyacare.site/)
 - **💻 Source Code Repository:** [https://github.com/Tripp808/iyacare-app](https://github.com/Tripp808/iyacare-app)
 
 ---
