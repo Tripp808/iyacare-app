@@ -95,16 +95,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verified: false
       });
       
-      // Step 4: Send email verification (simplified settings)
+      // Step 4: Send email verification (with production domain support)
       try {
+        // Use environment-specific URL
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+        const verificationUrl = `${baseUrl}/auth/login`;
+        
         await sendEmailVerification(firebaseUser, {
-          url: `${window.location.origin}/auth/login`,
+          url: verificationUrl,
           handleCodeInApp: false
         });
-      } catch (emailError) {
-        // Log email error but don't fail the entire registration
-        console.warn('Email verification failed to send:', emailError);
-        // You can add a toast notification here to inform user
+        
+        console.log('Verification email sent successfully to:', userData.email);
+      } catch (emailError: any) {
+        // Log detailed error for debugging
+        console.error('Email verification failed:', emailError);
+        console.error('Error code:', emailError.code);
+        console.error('Error message:', emailError.message);
+        
+        // Check for specific Firebase errors
+        if (emailError.code === 'auth/unauthorized-domain') {
+          console.error('Domain not authorized in Firebase Console. Please add your domain to authorized domains.');
+        }
+        
+        // Don't fail the entire registration
+        console.warn('Email verification failed to send, but user account was created successfully');
       }
       
       // Success - reset loading state
@@ -122,17 +137,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
+      // Use environment-specific URL
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const verificationUrl = `${baseUrl}/auth/login`;
+      
       await sendEmailVerification(firebaseUser, {
-        url: `${window.location.origin}/auth/login`,
+        url: verificationUrl,
         handleCodeInApp: false
       });
+      
+      console.log('Verification email resent successfully');
     } catch (error: any) {
       console.error('Email verification error:', error);
+      
       // Throw a more user-friendly error
       if (error.code === 'auth/too-many-requests') {
         throw new Error('Too many verification emails sent. Please wait before requesting another.');
       } else if (error.code === 'auth/invalid-email') {
         throw new Error('Invalid email address.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        throw new Error('Domain not authorized. Please contact support.');
       } else {
         throw new Error('Failed to send verification email. Please try again later.');
       }

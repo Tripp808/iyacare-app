@@ -1,5 +1,58 @@
 # 📧 Firebase Email Verification Setup Guide
 
+## 🚨 PRODUCTION EMAIL VERIFICATION FIX
+
+**Issue**: Email verification works on localhost but NOT on production (www.iyacare.site)
+
+### ✅ IMMEDIATE FIX REQUIRED
+
+1. **Go to Firebase Console**: [https://console.firebase.google.com/](https://console.firebase.google.com/)
+2. **Select your project**: `iyacare`
+3. **Navigate to Authentication** → **Settings** → **Authorized domains**
+4. **Add these domains** (if not already present):
+   ```
+   localhost (for development)
+   iyacare.site
+   www.iyacare.site
+   ```
+
+### 🔧 Step-by-Step Fix:
+
+#### 1. Firebase Console - Authorized Domains
+1. In Firebase Console, go to **Authentication**
+2. Click **Settings** tab
+3. Scroll to **Authorized domains** section
+4. Click **Add domain**
+5. Add: `iyacare.site`
+6. Click **Add domain** again
+7. Add: `www.iyacare.site`
+8. **Save changes**
+
+#### 2. Email Template Configuration
+1. Go to **Authentication** → **Templates**
+2. Click **Email address verification**
+3. Ensure the action URL uses your production domain
+4. Set custom email template:
+   ```
+   Subject: Verify your email for IyàCare
+   
+   Hello,
+   
+   Please verify your email address for IyàCare by clicking the link below:
+   %LINK%
+   
+   If you didn't create an account, you can safely ignore this email.
+   
+   Thanks,
+   The IyàCare Team
+   ```
+
+#### 3. Environment Variables Check
+Ensure your production environment has:
+```env
+NEXT_PUBLIC_SITE_URL=https://www.iyacare.site
+```
+
 ## 🚨 Current Issue Resolution
 
 If users are being created in Firebase Auth but not receiving verification emails, follow these steps:
@@ -44,7 +97,8 @@ If users are being created in Firebase Auth but not receiving verification email
 1. **Loading State**: Added proper `setLoading(false)` after successful registration
 2. **Email Verification**: Moved email verification after user creation in Firestore
 3. **Error Handling**: Improved error handling to not fail registration if email fails
-4. **URL Configuration**: Changed verification URL to `/auth/login` instead of `/dashboard`
+4. **URL Configuration**: Changed verification URL to use environment-specific domains
+5. **Production Support**: Added NEXT_PUBLIC_SITE_URL environment variable support
 
 ### Updated Functions:
 - `signUp()` in `src/hooks/useAuth.tsx`
@@ -58,7 +112,13 @@ If users are being created in Firebase Auth but not receiving verification email
 2. Fill out the registration form
 3. Submit the form
 4. Should see: "Account created successfully!" message
-5. Check your email for verification link
+5. Check your email for verification link (including spam folder)
+
+### Debug Production Issues:
+1. Open browser developer tools
+2. Check console for error messages
+3. Look for "auth/unauthorized-domain" errors
+4. Verify the authorized domains in Firebase Console
 
 ### If Email Still Doesn't Arrive:
 1. Check spam/junk folder
