@@ -381,29 +381,8 @@ Application available at `http://localhost:3000`
 ## 📞 Contact Information
 
 - **Student:** Oche David Ankeli
-- **Email:** [your.email@university.edu]
+- **Email:** [o.ankeli@alustudent.com]
 - **GitHub:** [https://github.com/Tripp808](https://github.com/Tripp808)
-
----
-
-## 📋 Submission Requirements Met
-
-### ✅ Testing Results (5/5 points)
-- **Multiple Testing Strategies:** AI model testing with 28 real patients, IoT integration testing, cross-platform testing
-- **Different Data Values:** Comprehensive testing with real database of 28 patients (21 pregnant, 11 high-risk)
-- **Hardware/Software Performance:** Testing across different devices, browsers, and IoT hardware with real patient data
-
-### ✅ Analysis (2/2 points)
-- **Detailed Analysis:** Comprehensive evaluation of AI model accuracy and real patient database management
-- **Objective Assessment:** Clear metrics from actual implementation (28 patients, 89% AI accuracy, 98% IoT sync rate)
-- **Technical Metrics:** Quantified performance results from live system deployment
-
-### ✅ Discussion & Recommendations (3/3 points)
-- **Real-World Implementation:** Actual deployment managing 28 patients with measurable results
-- **Healthcare Application:** Proven system handling 21 pregnant patients and 11 high-risk cases
-- **Future Development:** Practical roadmap based on current system performance and user feedback
-
-**Total Score Target: 10/10 points**
 
 ---
 
