@@ -60,7 +60,7 @@ export function Footer() {
               Smart Care for Every Mother, Everywhere.
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="text-muted-foreground hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] transition-colors">
+              <Link href="https://www.instagram.com/iyacare_app?igsh=bjZrNDlvcTRzMjZk&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-[#2D7D89] dark:hover:text-[#4AA0AD] transition-colors">
                 <Instagram size={18} />
                 <span className="sr-only">Instagram</span>
               </Link>

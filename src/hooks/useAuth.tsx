@@ -80,25 +80,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setLoading(true);
     try {
+      // Step 1: Create user with email and password
       const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update the user's display name
+      // Step 2: Update the user's display name
       await updateProfile(firebaseUser, {
         displayName: userData.name
       });
       
-      // Send email verification
-      await sendEmailVerification(firebaseUser, {
-        url: `${window.location.origin}/dashboard`,
-        handleCodeInApp: false
-      });
-      
-      // Create user document in Firestore
+      // Step 3: Create user document in Firestore first (before email verification)
       await UserService.createUser(firebaseUser.uid, {
         ...userData,
         email: firebaseUser.email!,
         verified: false
       });
+      
+      // Step 4: Send email verification (simplified settings)
+      try {
+        await sendEmailVerification(firebaseUser, {
+          url: `${window.location.origin}/auth/login`,
+          handleCodeInApp: false
+        });
+      } catch (emailError) {
+        // Log email error but don't fail the entire registration
+        console.warn('Email verification failed to send:', emailError);
+        // You can add a toast notification here to inform user
+      }
+      
+      // Success - reset loading state
+      setLoading(false);
+      
     } catch (error) {
       setLoading(false);
       throw error;
@@ -110,10 +121,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No user is currently signed in');
     }
     
-    await sendEmailVerification(firebaseUser, {
-      url: `${window.location.origin}/dashboard`,
-      handleCodeInApp: false
-    });
+    try {
+      await sendEmailVerification(firebaseUser, {
+        url: `${window.location.origin}/auth/login`,
+        handleCodeInApp: false
+      });
+    } catch (error: any) {
+      console.error('Email verification error:', error);
+      // Throw a more user-friendly error
+      if (error.code === 'auth/too-many-requests') {
+        throw new Error('Too many verification emails sent. Please wait before requesting another.');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Invalid email address.');
+      } else {
+        throw new Error('Failed to send verification email. Please try again later.');
+      }
+    }
   };
 
   const refreshUserData = async () => {

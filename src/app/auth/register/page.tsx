@@ -88,6 +88,15 @@ export default function RegisterPage() {
         errorMessage = 'Invalid email address.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'Password is too weak. Please choose a stronger password.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+      } else if (error.message && error.message.includes('verification')) {
+        // Handle email verification issues gracefully
+        setUserEmail(formData.email);
+        setShowVerificationInfo(true);
+        toast.warning('Account created but email verification failed to send. You can try resending it.');
+        setIsLoading(false);
+        return;
       }
       
       toast.error(errorMessage);

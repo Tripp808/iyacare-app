@@ -11,6 +11,23 @@
 - **🌐 Live Deployed Application:** [https://www.iyacare.site/](https://www.iyacare.site/)
 - **💻 Source Code Repository:** [https://github.com/Tripp808/iyacare-app](https://github.com/Tripp808/iyacare-app)
 
+## 🧪 Test the Platform
+
+**Want to test IyàCare without creating an account?** Use these pre-configured test credentials:
+
+```
+📧 Email: testuser@iyacare.demo
+🔑 Password: IyaCare2024!
+```
+
+**Quick Access:** [https://www.iyacare.site/auth/login](https://www.iyacare.site/auth/login)
+
+✅ **Pre-verified account** - no email verification needed  
+🎯 **Full platform access** - test all features immediately  
+📊 **Real sample data** - 28+ patient records, analytics, and more  
+
+*Perfect for demos, testing, and showcasing the platform capabilities!*
+
 ---
 
 ## 🚀 Installation & Setup Instructions
