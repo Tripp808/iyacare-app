@@ -16,7 +16,7 @@
 **Want to test IyàCare without creating an account?** Use these pre-configured test credentials:
 
 ```
-📧 Email: testuser@iyacare.demo
+📧 Email: testiyacare@gmail.com
 🔑 Password: IyaCare2024!
 ```
 
