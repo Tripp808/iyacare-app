@@ -488,40 +488,57 @@ function PatientsPageContent() {
   return (
     <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Patient Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Monitor and manage all patient records with advanced filtering and insights
-          </p>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Patient Management</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Monitor and manage all patient records with advanced filtering and insights
+            </p>
+          </div>
+          
+          {/* Primary Action Button - Always visible */}
+          <Link href="/patients/add" className="w-full sm:w-auto">
+            <Button className="bg-[#2D7D89] hover:bg-[#245A62] text-white w-full sm:w-auto">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Patient
+            </Button>
+          </Link>
         </div>
-        <div className="flex gap-2">
+        
+        {/* Secondary Action Buttons - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
           <Button 
             variant="outline" 
             onClick={fetchPatients}
             disabled={loading}
-            className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+            className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 w-full"
           >
             <Activity className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Refreshing...' : 'Refresh'}
+            <span className="hidden sm:inline">{loading ? 'Refreshing...' : 'Refresh'}</span>
+            <span className="sm:hidden">Refresh</span>
           </Button>
-          <Link href="/admin/populate-vitals">
+          
+          <Link href="/admin/populate-vitals" className="w-full">
             <Button 
               variant="outline" 
-              className="text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+              className="text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30 w-full"
             >
               <Database className="w-4 h-4 mr-2" />
-              Populate Vitals
+              <span className="hidden sm:inline">Populate Vitals</span>
+              <span className="sm:hidden">Vitals</span>
             </Button>
           </Link>
+          
           <Button 
             variant="outline" 
             onClick={exportToCSV}
-            className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+            className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 w-full"
           >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
+          
           <Button 
             variant="outline" 
             onClick={async () => {
@@ -545,54 +562,57 @@ function PatientsPageContent() {
                 console.error('Notification creation error:', error);
               }
             }}
-            className="text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
+            className="text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 w-full"
           >
             <AlertTriangle className="w-4 h-4 mr-2" />
-            Create Risk Alerts
+            <span className="hidden lg:inline">Create Risk Alerts</span>
+            <span className="lg:hidden">Risk Alerts</span>
           </Button>
-        <Link href="/patients/add">
-          <Button className="bg-[#2D7D89] hover:bg-[#245A62] text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Patient
-          </Button>
-        </Link>
+          
+          {/* Duplicate Add Patient button for mobile - hidden on larger screens */}
+          <Link href="/patients/add" className="lg:hidden w-full">
+            <Button className="bg-[#2D7D89] hover:bg-[#245A62] text-white w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Patient
+            </Button>
+          </Link>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Patients</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+                <p className="text-blue-600 dark:text-blue-400 text-xs md:text-sm font-medium">Total Patients</p>
+                <p className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-500" />
+              <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 border-pink-200 dark:border-pink-800">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-pink-600 dark:text-pink-400 text-sm font-medium">Pregnant Patients</p>
-                <p className="text-3xl font-bold text-pink-900 dark:text-pink-100">{stats.pregnant}</p>
+                <p className="text-pink-600 dark:text-pink-400 text-xs md:text-sm font-medium">Pregnant Patients</p>
+                <p className="text-2xl md:text-3xl font-bold text-pink-900 dark:text-pink-100">{stats.pregnant}</p>
               </div>
-              <Heart className="w-8 h-8 text-pink-500" />
+              <Heart className="w-6 h-6 md:w-8 md:h-8 text-pink-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-600 dark:text-red-400 text-sm font-medium">High Risk</p>
-                <p className="text-3xl font-bold text-red-900 dark:text-red-100">{stats.highRisk}</p>
+                <p className="text-red-600 dark:text-red-400 text-xs md:text-sm font-medium">High Risk</p>
+                <p className="text-2xl md:text-3xl font-bold text-red-900 dark:text-red-100">{stats.highRisk}</p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-red-500" />
+              <AlertTriangle className="w-6 h-6 md:w-8 md:h-8 text-red-500" />
             </div>
           </CardContent>
         </Card>
@@ -637,17 +657,17 @@ function PatientsPageContent() {
                           {patient.description}
                         </p>
                       </div>
-                      <div className="flex gap-1 ml-2">
-                        <Link href={`/patients/${patient.id}`}>
-                          <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
-                            <Eye className="h-3 w-3 mr-1" />
-                            View
+                      <div className="flex flex-col sm:flex-row gap-1 ml-2">
+                        <Link href={`/patients/${patient.id}`} className="w-full sm:w-auto">
+                          <Button size="sm" variant="outline" className="h-7 px-2 text-xs w-full sm:w-auto">
+                            <Eye className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">View</span>
                           </Button>
                         </Link>
-                        <Link href={`/appointments?patient=${patient.id}&priority=urgent`}>
-                          <Button size="sm" className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700 text-white">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Book
+                        <Link href={`/appointments?patient=${patient.id}&priority=urgent`} className="w-full sm:w-auto">
+                          <Button size="sm" className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto">
+                            <Calendar className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Book</span>
                           </Button>
                         </Link>
                       </div>
@@ -656,19 +676,20 @@ function PatientsPageContent() {
                 ))}
               </div>
               <div className="pt-2 border-t border-red-200 dark:border-red-800">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     size="sm"
                     onClick={() => setRiskFilter('high')}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
                   >
                     <Filter className="h-3 w-3 mr-1" />
                     Filter High-Risk Only
                   </Button>
-                  <Link href="/appointments?type=urgent">
-                    <Button size="sm" variant="outline" className="text-red-700 dark:text-red-300 border-red-300">
+                  <Link href="/appointments?type=urgent" className="w-full sm:w-auto">
+                    <Button size="sm" variant="outline" className="text-red-700 dark:text-red-300 border-red-300 w-full">
                       <Calendar className="h-3 w-3 mr-1" />
-                      Schedule All Urgent Appointments
+                      <span className="hidden sm:inline">Schedule All Urgent Appointments</span>
+                      <span className="sm:hidden">Schedule All</span>
                     </Button>
                   </Link>
                 </div>
@@ -679,9 +700,9 @@ function PatientsPageContent() {
       )}
 
       {/* Advanced Search and Filter Bar */}
-      <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+      <Card className="mb-4 md:mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
@@ -692,9 +713,9 @@ function PatientsPageContent() {
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Select value={riskFilter} onValueChange={(value: any) => setRiskFilter(value)}>
-              <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+              <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                 <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Risk Level" />
               </SelectTrigger>
@@ -707,7 +728,7 @@ function PatientsPageContent() {
             </Select>
 
               <Select value={pregnancyFilter} onValueChange={(value: any) => setPregnancyFilter(value)}>
-                <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <SelectValue placeholder="Pregnancy Status" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
@@ -718,7 +739,7 @@ function PatientsPageContent() {
               </Select>
 
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+              <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <TrendingUp className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -734,19 +755,19 @@ function PatientsPageContent() {
             </div>
           </div>
 
-          {/* Bulk Actions */}
+          {/* Responsive Bulk Actions */}
           {selectedPatients.length > 0 && (
             <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
                   {selectedPatients.length} patient{selectedPatients.length > 1 ? 's' : ''} selected
                 </p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300 hover:bg-blue-100">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-300 hover:bg-blue-100 w-full sm:w-auto">
                     <Download className="w-4 h-4 mr-2" />
                     Export Selected
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-100">
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-100 w-full sm:w-auto">
                     <Trash2 className="w-4 h-4 mr-2" />
                     Archive Selected
                   </Button>
@@ -920,52 +941,82 @@ function PatientsPageContent() {
                 </Table>
               </div>
 
-              {/* Enhanced Pagination */}
+              {/* Enhanced Responsive Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex flex-col gap-4 mt-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
                     Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedPatients.length)} of {filteredAndSortedPatients.length} patients
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                      className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-                    >
-                      First
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 px-4">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-                    >
-                      Next
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                      className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-                    >
-                      Last
-                    </Button>
+                  
+                  {/* Mobile-first pagination */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3">
+                    {/* Previous/Next for mobile */}
+                    <div className="flex items-center gap-2 sm:hidden w-full">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 flex-1"
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 px-3 whitespace-nowrap">
+                        {currentPage} / {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 flex-1"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                    
+                    {/* Full pagination for larger screens */}
+                    <div className="hidden sm:flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 px-4 whitespace-nowrap">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                      >
+                        Next
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                      >
+                        Last
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

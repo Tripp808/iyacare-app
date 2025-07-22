@@ -107,13 +107,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <div className="md:hidden mr-4">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full border-0">
-                        <Menu className="h-5 w-5" />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="hover:bg-muted"
+                      >
+                        <Menu className="h-5 w-5 text-foreground" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="pr-0">
-                      <div className="px-7 py-4">
+                    <SheetContent side="left" className="w-80 bg-background/95 backdrop-blur-md border-r shadow-lg">
+                      <div className="px-6 py-4 border-b border-border/50">
                         <Link href="/" className="flex items-center">
                           <div>
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -156,13 +160,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                               />
                             </svg>
                           </div>
-                          <span className="text-xl font-bold">
+                          <span className="ml-2 text-xl font-bold">
                             <span className="text-[#2D7D89]">Iyà</span>
                             <span className="text-[#F7913D]">Care</span>
                           </span>
                         </Link>
                       </div>
-                      <SidebarNav className="px-2 py-6" />
+                      <div className="py-6 px-2">
+                        <SidebarNav className="px-2" />
+                      </div>
                     </SheetContent>
                   </Sheet>
                 </div>

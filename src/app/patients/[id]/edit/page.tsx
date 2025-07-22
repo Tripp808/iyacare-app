@@ -226,16 +226,22 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl bg-white dark:bg-gray-900 min-h-screen">
-      <div className="flex items-center mb-6">
+      {/* Responsive Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Button 
           variant="ghost" 
           onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
-          className="mr-4 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 w-fit"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Patient
         </Button>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Patient</h1>
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Edit Patient</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Update patient information and medical records
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -254,7 +260,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   First Name *
@@ -287,7 +293,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Date of Birth *
@@ -319,7 +325,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email Address
@@ -400,7 +406,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Is Pregnant
@@ -435,6 +441,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
                       placeholder="e.g., '2nd Trimester' or '24 weeks'"
                       value={formData.pregnancyStage}
                       onChange={handleChange}
+                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     />
                   </div>
                   <div>
@@ -448,7 +455,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
                         type="date"
                         value={formData.edd}
                         onChange={handleChange}
-                        className="pl-10"
+                        className="pl-10 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                       />
                     </div>
                   </div>
@@ -457,7 +464,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
             </div>
             
             {formData.isPregnant && (
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Gravida (Total Pregnancies)
@@ -625,7 +632,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
                 <div>
                   <h4 className="font-medium text-amber-900 dark:text-amber-300 mb-1">AI Model Information</h4>
                   <p className="text-sm text-amber-800 dark:text-amber-400">
-                    These 5 vital signs plus the patient's age are the core features our AI model uses to predict maternal health risks. 
+                    These 5 vital signs plus the patient&apos;s age are the core features our AI model uses to predict maternal health risks. 
                     Complete and accurate data leads to more reliable risk assessments.
                   </p>
                   <p className="text-xs text-amber-700 dark:text-amber-500 mt-2">
@@ -642,7 +649,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
           <CardHeader>
             <CardTitle className="text-gray-900 dark:text-white">Medical Information</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              Update the patient's medical history and notes
+              Update the patient&apos;s medical history and notes
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -678,7 +685,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
           <CardHeader>
             <CardTitle className="text-gray-900 dark:text-white">Healthcare Team</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              Update the patient's assigned healthcare team
+              Update the patient&apos;s assigned healthcare team
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -738,7 +745,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
           <CardHeader>
             <CardTitle className="text-gray-900 dark:text-white">Consent</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              Update the patient's consent to having their medical data securely stored on the blockchain
+              Update the patient&apos;s consent to having their medical data securely stored on the blockchain
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -763,12 +770,13 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
           </CardContent>
         </Card>
 
-        <CardFooter className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => router.push(`/patients/${resolvedParams?.id}`)}
-            className="w-full sm:w-auto order-2 sm:order-1 text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="w-full sm:w-auto order-2 sm:order-1 text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600"
           >
             Cancel
           </Button>
@@ -789,7 +797,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
               </>
             )}
           </Button>
-        </CardFooter>
+        </div>
       </form>
     </div>
   );

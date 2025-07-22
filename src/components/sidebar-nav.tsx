@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { Home as HomeIcon, Users, AlertCircle, Calendar, BarChart3, Settings, Activity, AlertTriangle, MessageSquare, Shield, Mail } from "lucide-react";
 
 const links = [
@@ -67,7 +66,7 @@ export function SidebarNav({ className }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className={cn("flex flex-col space-y-1", className)}>
+    <nav className={cn("flex flex-col space-y-2", className)}>
       {links.map((link) => {
         const LinkIcon = link.icon;
         const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
@@ -77,15 +76,21 @@ export function SidebarNav({ className }: SidebarNavProps) {
             href={link.href}
             key={link.href}
             className={cn(
-              buttonVariants({ variant: "ghost" }),
+              "flex items-center rounded-lg px-3 py-3 transition-all duration-200",
               isActive
-                ? "bg-muted hover:bg-muted text-primary"
-                : "hover:bg-transparent hover:text-primary",
-              "justify-start h-10"
+                ? "bg-primary/10 text-primary border border-primary/20 font-semibold shadow-sm"
+                : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium border border-transparent",
+              "min-h-[44px] w-full"
             )}
           >
-            <LinkIcon className={cn("mr-2 h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
-            {link.title}
+            <LinkIcon className={cn("mr-3 h-5 w-5 flex-shrink-0", 
+              isActive ? "text-primary" : "text-gray-600 dark:text-gray-300"
+            )} />
+            <span className={cn("text-sm", 
+              isActive ? "text-primary font-semibold" : "text-gray-700 dark:text-gray-200"
+            )}>
+              {link.title}
+            </span>
           </Link>
         );
       })}

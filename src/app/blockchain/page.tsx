@@ -37,20 +37,20 @@ const BlockchainPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Shield className="h-8 w-8 text-blue-600" />
-            Blockchain Security
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-3">
+            <Shield className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+            <span className="truncate">Blockchain Security</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Secure patient data with blockchain encryption and immutable storage
           </p>
         </div>
         <Badge 
-          className={`${
+          className={`flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
             isConfigured 
               ? 'bg-green-100 text-green-800 border-green-200' 
               : 'bg-amber-100 text-amber-800 border-amber-200'
@@ -58,13 +58,13 @@ const BlockchainPage: React.FC = () => {
         >
           {isConfigured ? (
             <>
-              <Shield className="h-4 w-4 mr-2" />
-              Active
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Active</span>
             </>
           ) : (
             <>
-              <Settings className="h-4 w-4 mr-2" />
-              Setup Required
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Setup Required</span>
             </>
           )}
         </Badge>
@@ -72,14 +72,16 @@ const BlockchainPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Dashboard
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2 text-xs sm:text-sm py-2 px-2 sm:px-4">
+            <Database className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Dashboard</span>
+            <span className="sm:hidden">Stats</span>
           </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Configuration
+          <TabsTrigger value="config" className="flex items-center gap-2 text-xs sm:text-sm py-2 px-2 sm:px-4">
+            <Settings className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Configuration</span>
+            <span className="sm:hidden">Config</span>
           </TabsTrigger>
         </TabsList>
 
@@ -90,11 +92,11 @@ const BlockchainPage: React.FC = () => {
         <TabsContent value="config" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Blockchain Configuration
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Settings className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate">Blockchain Configuration</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Configure blockchain settings for secure patient data storage
               </CardDescription>
             </CardHeader>

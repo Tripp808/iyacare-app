@@ -101,14 +101,14 @@ export default function VitalSignsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Vital Signs</h1>
-          <p className="text-gray-600">IoT device readings and patient vital signs monitoring</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Vital Signs</h1>
+          <p className="text-sm md:text-base text-gray-600">IoT device readings and patient vital signs monitoring</p>
         </div>
         
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
+        <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-500">
           <Activity className="h-4 w-4" />
           <span>Data from IoT devices</span>
         </div>
@@ -154,12 +154,12 @@ export default function VitalSignsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <Heart className={`h-5 w-5 ${systolicStatus.color}`} />
                       <div>
-                        <p className="text-sm text-gray-600">Blood Pressure</p>
-                        <p className="font-semibold flex items-center">
+                        <p className="text-xs md:text-sm text-gray-600">Blood Pressure</p>
+                        <p className="text-sm md:text-base font-semibold flex items-center">
                           {vital.systolic}/{vital.diastolic} mmHg
                           {systolicStatus.icon && <systolicStatus.icon className="h-3 w-3 ml-1" />}
                         </p>
@@ -169,8 +169,8 @@ export default function VitalSignsPage() {
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <Activity className={`h-5 w-5 ${heartRateStatus.color}`} />
                       <div>
-                        <p className="text-sm text-gray-600">Heart Rate</p>
-                        <p className="font-semibold flex items-center">
+                        <p className="text-xs md:text-sm text-gray-600">Heart Rate</p>
+                        <p className="text-sm md:text-base font-semibold flex items-center">
                           {vital.heartRate} bpm
                           {heartRateStatus.icon && <heartRateStatus.icon className="h-3 w-3 ml-1" />}
                         </p>
@@ -180,8 +180,8 @@ export default function VitalSignsPage() {
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <Thermometer className={`h-5 w-5 ${temperatureStatus.color}`} />
                       <div>
-                        <p className="text-sm text-gray-600">Temperature</p>
-                        <p className="font-semibold flex items-center">
+                        <p className="text-xs md:text-sm text-gray-600">Temperature</p>
+                        <p className="text-sm md:text-base font-semibold flex items-center">
                           {vital.temperature}°C
                           {temperatureStatus.icon && <temperatureStatus.icon className="h-3 w-3 ml-1" />}
                         </p>
@@ -191,8 +191,8 @@ export default function VitalSignsPage() {
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <Weight className="h-5 w-5 text-purple-500" />
                       <div>
-                        <p className="text-sm text-gray-600">Weight</p>
-                        <p className="font-semibold">{vital.weight} kg</p>
+                        <p className="text-xs md:text-sm text-gray-600">Weight</p>
+                        <p className="text-sm md:text-base font-semibold">{vital.weight} kg</p>
                       </div>
                     </div>
 

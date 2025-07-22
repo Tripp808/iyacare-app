@@ -198,24 +198,25 @@ export default function AppointmentsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Appointments</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD] truncate">Appointments</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Manage patient appointments and scheduling
           </p>
         </div>
         
         <Dialog open={showNewAppointment} onOpenChange={setShowNewAppointment}>
           <DialogTrigger asChild>
-            <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          New Appointment
-        </Button>
+            <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">New Appointment</span>
+              <span className="sm:hidden">New</span>
+            </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Appointment</DialogTitle>
+              <DialogTitle className="text-lg">Create New Appointment</DialogTitle>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -235,7 +236,7 @@ export default function AppointmentsPage() {
                 </Select>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="date">Date *</Label>
                   <Input
@@ -296,11 +297,11 @@ export default function AppointmentsPage() {
                 />
               </div>
               
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setShowNewAppointment(false)}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowNewAppointment(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="w-full sm:w-auto">
                   Create Appointment
                 </Button>
               </div>
@@ -310,14 +311,14 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <CalendarDays className="h-8 w-8 text-[#2D7D89]" />
-              <div>
+              <CalendarDays className="h-6 w-6 md:h-8 md:w-8 text-[#2D7D89] flex-shrink-0" />
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Today</p>
-                <p className="text-2xl font-bold">{todayAppointments.length}</p>
+                <p className="text-xl md:text-2xl font-bold truncate">{todayAppointments.length}</p>
               </div>
             </div>
           </CardContent>
@@ -326,10 +327,10 @@ export default function AppointmentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-blue-600" />
-              <div>
+              <Clock className="h-6 w-6 md:h-8 md:w-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Upcoming</p>
-                <p className="text-2xl font-bold">{upcomingAppointments.length}</p>
+                <p className="text-xl md:text-2xl font-bold truncate">{upcomingAppointments.length}</p>
               </div>
             </div>
           </CardContent>
@@ -338,10 +339,10 @@ export default function AppointmentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <User className="h-8 w-8 text-green-600" />
-              <div>
+              <User className="h-6 w-6 md:h-8 md:w-8 text-green-600 flex-shrink-0" />
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Total Patients</p>
-                <p className="text-2xl font-bold">{patients.length}</p>
+                <p className="text-xl md:text-2xl font-bold truncate">{patients.length}</p>
               </div>
             </div>
           </CardContent>
@@ -350,10 +351,10 @@ export default function AppointmentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-8 w-8 text-gray-600" />
-              <div>
+              <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-gray-600 flex-shrink-0" />
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xl md:text-2xl font-bold truncate">
                   {filteredAppointments.filter(apt => apt.status === 'completed').length}
                 </p>
               </div>
@@ -368,12 +369,12 @@ export default function AppointmentsPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
+              <Input
                 placeholder="Search appointments..."
                 className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
@@ -412,38 +413,40 @@ export default function AppointmentsPage() {
                 </Button>
               </Link>
             ) : (
-              <Button onClick={() => setShowNewAppointment(true)}>
+              <Button onClick={() => setShowNewAppointment(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Create First Appointment
-                        </Button>
+              </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-            <div className="space-y-4">
+        <div className="space-y-4">
           {filteredAppointments.map((appointment) => (
             <Card key={appointment.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-[#2D7D89]" />
-                    <div>
-                      <h3 className="font-semibold">{appointment.patientName}</h3>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <User className="h-5 w-5 text-[#2D7D89] flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold truncate">{appointment.patientName}</h3>
                       <p className="text-sm text-muted-foreground">
                         {appointment.date} at {appointment.time}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(appointment.status)}>
-                      {appointment.status}
-                    </Badge>
-                    <Badge variant="outline">
-                      {appointment.type}
-                    </Badge>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className={getStatusColor(appointment.status)}>
+                        {appointment.status}
+                      </Badge>
+                      <Badge variant="outline">
+                        {appointment.type}
+                      </Badge>
+                    </div>
                     
                     {/* Action Buttons */}
-                    <div className="flex gap-1 ml-2">
+                    <div className="flex gap-1">
                       {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
                         <>
                           <Button
@@ -451,7 +454,7 @@ export default function AppointmentsPage() {
                             variant="outline"
                             onClick={() => handleCancelAppointment(appointment.id!, appointment.date)}
                             disabled={cancellingId === appointment.id}
-                            className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             {cancellingId === appointment.id ? (
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
@@ -460,7 +463,7 @@ export default function AppointmentsPage() {
                             )}
                           </Button>
                           <Link href={`/patients/${appointment.patientId}`}>
-                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
+                            <Button size="sm" variant="outline" className="h-8 px-2 text-xs">
                               <User className="h-3 w-3" />
                             </Button>
                           </Link>
@@ -468,7 +471,7 @@ export default function AppointmentsPage() {
                       )}
                       
                       {appointment.status === 'cancelled' && appointment.cancellationReason && (
-                        <span className="text-xs text-red-600 italic">
+                        <span className="text-xs text-red-600 italic truncate max-w-[200px]">
                           Cancelled: {appointment.cancellationReason}
                         </span>
                       )}
@@ -476,22 +479,22 @@ export default function AppointmentsPage() {
                   </div>
                 </div>
                 
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{appointment.location}</span>
+                    <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{appointment.location}</span>
                   </div>
                   {appointment.notes && (
                     <div className="flex items-start gap-2">
-                      <span className="text-muted-foreground">Notes:</span>
-                      <span>{appointment.notes}</span>
+                      <span className="text-muted-foreground flex-shrink-0">Notes:</span>
+                      <span className="break-words">{appointment.notes}</span>
                     </div>
                   )}
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-            </div>
+        </div>
       )}
     </div>
   );

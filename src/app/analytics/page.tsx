@@ -120,22 +120,22 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <div className="space-y-6">
+    <div className="p-4 md:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="space-y-4 md:space-y-6">
           {/* Header */}
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
             <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-2">
                 Comprehensive insights into patient health and system performance
               </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
               Last updated: {formatDate(analyticsData.dataStatus.lastUpdated)}
             </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
               <Select value={timeRange} onValueChange={handleTimeRangeChange}>
-              <SelectTrigger className="w-40 bg-white dark:bg-gray-800">
+              <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,12 +149,12 @@ export default function AnalyticsPage() {
                 variant="outline" 
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-              className="bg-white dark:bg-gray-800"
+              className="bg-white dark:bg-gray-800 w-full sm:w-auto"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-            <Button variant="outline" className="bg-white dark:bg-gray-800">
+            <Button variant="outline" className="bg-white dark:bg-gray-800 w-full sm:w-auto">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -162,13 +162,13 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Card className="bg-white dark:bg-gray-800 border-l-4 border-l-blue-500">
-              <CardContent className="p-4">
+              <CardContent className="p-3 md:p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                   <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Total Patients</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{analyticsData.totalPatients.toLocaleString()}</p>
+                  <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">{analyticsData.totalPatients.toLocaleString()}</p>
                   <div className="flex items-center gap-1">
                       <TrendingUp className={`h-3 w-3 ${analyticsData.patientGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`} />
                       <span className={`text-xs font-medium ${analyticsData.patientGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -177,7 +177,7 @@ export default function AnalyticsPage() {
                       <span className="text-xs text-gray-500 dark:text-gray-400">vs last period</span>
                     </div>
                   </div>
-                <div className="h-10 w-10 bg-blue-50 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 md:h-10 md:w-10 bg-blue-50 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                   <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 </div>
@@ -245,27 +245,28 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
             {/* Risk Level Trends */}
           <Card className="bg-white dark:bg-gray-800">
               <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-lg">
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white text-base md:text-lg">
                   <TrendingUp className="h-4 w-4" />
                   Risk Level Trends
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
               {analyticsData.riskTrends && analyticsData.riskTrends.length > 0 ? (
-                <div className="h-[250px]">
+                <div className="h-[200px] md:h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={analyticsData.riskTrends}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
                       <XAxis 
                         dataKey="month" 
                         className="text-gray-600 dark:text-gray-300"
-                        fontSize={12}
+                        fontSize={10}
+                        tick={{ fontSize: 10 }}
                       />
-                      <YAxis className="text-gray-600 dark:text-gray-300" fontSize={12} />
+                      <YAxis className="text-gray-600 dark:text-gray-300" fontSize={10} tick={{ fontSize: 10 }} />
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: 'white',

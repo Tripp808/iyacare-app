@@ -144,30 +144,35 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Blockchain Configuration</h2>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight truncate">Blockchain Configuration</h2>
+          <p className="text-sm md:text-base text-muted-foreground">
             Configure blockchain settings for secure patient data storage
           </p>
         </div>
-        <div className="flex items-center gap-2">
-            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2">
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200 whitespace-nowrap">
               <TestTube className="h-4 w-4 mr-2" />
-            Sepolia Testnet
+              <span className="hidden sm:inline">Sepolia Testnet</span>
+              <span className="sm:hidden">Sepolia</span>
             </Badge>
-          <Badge className={getStatusColor()}>
-            {getStatusIcon()}
-            <span className="ml-2 capitalize">{connectionStatus}</span>
-          </Badge>
+            <Badge className={`whitespace-nowrap ${getStatusColor()}`}>
+              {getStatusIcon()}
+              <span className="ml-2 capitalize">{connectionStatus}</span>
+            </Badge>
+          </div>
           {isConfigured && !isEditing && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsEditing(true)}
+              className="w-full sm:w-auto"
             >
               <Settings className="h-4 w-4 mr-2" />
-              Edit Settings
+              <span className="hidden sm:inline">Edit Settings</span>
+              <span className="sm:hidden">Edit</span>
             </Button>
           )}
         </div>
@@ -208,7 +213,7 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="rpcUrl">RPC Endpoint *</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     id="rpcUrl"
                     type="url"
@@ -217,15 +222,17 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                     onChange={(e) => handleConfigChange('rpcUrl', e.target.value)}
                     className="flex-1"
                   />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={tryAlternativeEndpoint}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={tryAlternativeEndpoint}
                     title="Try different free endpoint"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
+                    className="w-full sm:w-auto"
+                  >
+                    <RefreshCw className="h-4 w-4 sm:mr-0 mr-2" />
+                    <span className="sm:hidden">Try Alternative</span>
+                  </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Free Sepolia testnet endpoint (no API key required)
@@ -260,7 +267,7 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="encryptionKey">Encryption Key *</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <Input
                       id="encryptionKey"
@@ -268,6 +275,7 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                       placeholder="Your secure encryption key"
                       value={config.encryptionKey}
                       onChange={(e) => handleConfigChange('encryptionKey', e.target.value)}
+                      className="pr-10"
                     />
                     <Button
                       type="button"
@@ -283,9 +291,11 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                     type="button"
                     variant="outline"
                     onClick={generateEncryptionKey}
+                    className="w-full sm:w-auto"
                   >
                     <Zap className="h-4 w-4 mr-2" />
-                    Generate
+                    <span className="hidden sm:inline">Generate</span>
+                    <span className="sm:hidden">Generate Key</span>
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -293,7 +303,7 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button
                   onClick={testConnection}
                   disabled={isConnecting || !config.rpcUrl || !config.encryptionKey}
@@ -302,12 +312,14 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                   {isConnecting ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Connecting...
+                      <span className="hidden sm:inline">Connecting...</span>
+                      <span className="sm:hidden">Connecting...</span>
                     </>
                   ) : (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Save & Test Configuration
+                      <span className="hidden sm:inline">Save & Test Configuration</span>
+                      <span className="sm:hidden">Save & Test</span>
                     </>
                   )}
                 </Button>
@@ -315,6 +327,7 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
@@ -335,28 +348,28 @@ const BlockchainConfig: React.FC<BlockchainConfigProps> = ({ onConfigurationChan
               </CardTitle>
             </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <span className="text-sm font-medium">Network:</span>
               <Badge variant="secondary">Sepolia Testnet</Badge>
-                  </div>
-            <div className="flex justify-between items-center">
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <span className="text-sm font-medium">RPC Endpoint:</span>
-              <span className="text-sm text-muted-foreground">{config.rpcUrl.split('//')[1]}</span>
-                </div>
-            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground truncate max-w-[200px]">{config.rpcUrl.split('//')[1]}</span>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <span className="text-sm font-medium">Contract:</span>
               <span className="text-sm text-muted-foreground">
                 {config.contractAddress ? `${config.contractAddress.slice(0, 8)}...` : 'Not deployed yet'}
               </span>
-                  </div>
-            <div className="flex justify-between items-center">
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <span className="text-sm font-medium">Encryption:</span>
               <Badge variant="secondary">
                 <Key className="h-3 w-3 mr-1" />
                 Enabled
               </Badge>
-              </div>
-            </CardContent>
+            </div>
+          </CardContent>
           </Card>
       )}
     </div>

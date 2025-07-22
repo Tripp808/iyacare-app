@@ -238,27 +238,29 @@ const BlockchainDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Blockchain Security Dashboard</h1>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold truncate">Blockchain Security Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Secure patient data storage on Ethereum blockchain
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {!walletAddress ? (
-            <Button onClick={connectWallet} disabled={isLoading}>
+            <Button onClick={connectWallet} disabled={isLoading} className="w-full sm:w-auto">
               <Wallet className="mr-2 h-4 w-4" />
-              Connect Wallet
+              <span className="hidden sm:inline">Connect Wallet</span>
+              <span className="sm:hidden">Connect</span>
             </Button>
           ) : (
-            <Badge variant="outline" className="px-3 py-1">
+            <Badge variant="outline" className="px-3 py-1 justify-center sm:justify-start">
               <Wallet className="mr-2 h-3 w-3" />
-              {walletAddress.substring(0, 8)}...
+              <span className="truncate max-w-[120px]">{walletAddress.substring(0, 8)}...</span>
             </Badge>
           )}
-          <Button onClick={testBlockchainConnection} disabled={isLoading} variant="outline">
-            Test Connection
+          <Button onClick={testBlockchainConnection} disabled={isLoading} variant="outline" className="w-full sm:w-auto">
+            <span className="hidden sm:inline">Test Connection</span>
+            <span className="sm:hidden">Test</span>
           </Button>
         </div>
       </div>
@@ -272,25 +274,26 @@ const BlockchainDashboard: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${stats.isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="font-medium">
+              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${stats.isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="font-medium truncate">
                 {stats.isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">Network</p>
-              <p className="font-medium">{stats.networkInfo.name}</p>
+              <p className="font-medium truncate">{stats.networkInfo.name}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">Chain ID</p>
               <p className="font-medium">{stats.networkInfo.chainId || 'N/A'}</p>
             </div>
-            <div>
-              <Button onClick={viewOnEtherscan} variant="outline" size="sm">
+            <div className="flex justify-start lg:justify-end">
+              <Button onClick={viewOnEtherscan} variant="outline" size="sm" className="w-full sm:w-auto">
                 <ExternalLink className="mr-2 h-4 w-4" />
-                View on Etherscan
+                <span className="hidden sm:inline">View on Etherscan</span>
+                <span className="sm:hidden">Etherscan</span>
               </Button>
             </div>
           </div>
@@ -298,7 +301,7 @@ const BlockchainDashboard: React.FC = () => {
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
@@ -325,7 +328,7 @@ const BlockchainDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Last Activity</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -342,11 +345,11 @@ const BlockchainDashboard: React.FC = () => {
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Patient Data Synchronization</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg">Patient Data Synchronization</CardTitle>
+            <CardDescription className="text-sm">
               Sync patient data from Firebase to blockchain for enhanced security
             </CardDescription>
           </CardHeader>
@@ -356,7 +359,12 @@ const BlockchainDashboard: React.FC = () => {
               disabled={isSyncing || isLoading || !walletAddress}
               className="w-full"
             >
-              {isSyncing ? 'Syncing...' : 'Sync All Patients to Blockchain'}
+              <span className="hidden sm:inline">
+                {isSyncing ? 'Syncing...' : 'Sync All Patients to Blockchain'}
+              </span>
+              <span className="sm:hidden">
+                {isSyncing ? 'Syncing...' : 'Sync Patients'}
+              </span>
             </Button>
             {!walletAddress && (
               <p className="text-sm text-muted-foreground text-center">
@@ -368,27 +376,27 @@ const BlockchainDashboard: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Security Features</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg">Security Features</CardTitle>
+            <CardDescription className="text-sm">
               Active blockchain security measures
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                 <span className="text-sm">AES-256 Encryption</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                 <span className="text-sm">Immutable Storage</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                 <span className="text-sm">Access Logging</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                 <span className="text-sm">Data Integrity Verification</span>
               </div>
             </div>
@@ -408,18 +416,18 @@ const BlockchainDashboard: React.FC = () => {
           <CardContent>
             <div className="space-y-2">
               {accessLogs.slice(0, 5).map((log, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.authorized ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <div>
-                      <p className="text-sm font-medium">{log.accessType}</p>
-                      <p className="text-xs text-muted-foreground">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${log.authorized ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{log.accessType}</p>
+                      <p className="text-xs text-muted-foreground truncate">
                         {log.accessor.substring(0, 10)}...
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex sm:flex-col sm:text-right gap-2 sm:gap-1 items-center sm:items-end">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(log.timestamp * 1000).toLocaleString()}
                     </p>
                     <Badge variant={log.authorized ? 'default' : 'destructive'} className="text-xs">

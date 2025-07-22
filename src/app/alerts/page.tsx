@@ -119,11 +119,11 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Alerts</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Alerts</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             Monitor and manage patient alerts in real-time
           </p>
         </div>
@@ -132,22 +132,23 @@ export default function AlertsPage() {
             /* Create new alert functionality would go here */
             toast.info('Alert creation feature coming soon!');
           }}
-          className="bg-[#2D7D89] hover:bg-[#236570] text-white"
+          className="bg-[#2D7D89] hover:bg-[#236570] text-white w-full sm:w-auto"
         >
           <Plus className="mr-2 h-4 w-4" />
           Create Alert
         </Button>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             onClick={() => setFilter('all')}
-            className={filter === 'all' 
+            size="sm"
+            className={`w-full sm:w-auto ${filter === 'all' 
               ? 'bg-[#2D7D89] hover:bg-[#236570] text-white' 
               : 'border-[#2D7D89] text-[#2D7D89] hover:bg-[#2D7D89] hover:text-white'
-            }
+            }`}
           >
             All Alerts
           </Button>
