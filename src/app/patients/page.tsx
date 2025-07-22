@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,8 +47,10 @@ import { toast } from 'react-hot-toast';
 import { getVitalSignsByPatientId, VitalSigns } from '@/lib/firebase/vitals';
 import { aiPredictionService } from '@/services/ai-prediction.service';
 import { PatientService } from '@/services/patient.service';
+import { HighRiskNotificationService } from '@/services/high-risk-notification.service';
 
 export default function PatientsPage() {
+  const searchParams = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,6 +62,38 @@ export default function PatientsPage() {
   const [viewType, setViewType] = useState<'table' | 'cards'>('table');
   const itemsPerPage = 12;
   const [riskPredictions, setRiskPredictions] = useState<Record<string, { loading: boolean; prediction?: any; error?: string }>>({});
+  const [highRiskPatients, setHighRiskPatients] = useState<Array<{
+    id: string;
+    name: string;
+    riskLevel: string;
+    description: string;
+  }>>([]);
+  const [showHighRiskDropdown, setShowHighRiskDropdown] = useState(false);
+
+  // Check for risk filter from URL parameters (from notifications)
+  useEffect(() => {
+    const riskParam = searchParams.get('risk');
+    if (riskParam === 'high') {
+      setRiskFilter('high');
+    }
+  }, [searchParams]);
+
+  // Fetch high-risk patients for urgent appointments
+  const fetchHighRiskPatients = async () => {
+    try {
+      const patients = await HighRiskNotificationService.getHighRiskPatientsForDisplay();
+      setHighRiskPatients(patients);
+    } catch (error) {
+      console.error('Error fetching high-risk patients:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchHighRiskPatients();
+    // Refresh high-risk patients every 2 minutes
+    const interval = setInterval(fetchHighRiskPatients, 120000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Define the getRiskLevelFromPrediction function early
   const getRiskLevelFromPrediction = (patientId?: string): string => {
@@ -204,15 +239,29 @@ export default function PatientsPage() {
 
     // Bulk update patient risk levels in database
     if (predictionsToUpdate.length > 0) {
-      console.log(`🔄 Updating risk levels for ${predictionsToUpdate.length} patients in database...`);
+      console.log(`Updating risk levels for ${predictionsToUpdate.length} patients in database...`);
       try {
         const result = await PatientService.bulkUpdatePatientRiskLevels(predictionsToUpdate);
-        console.log(`✅ Database update completed: ${result.updated} updated, ${result.errors} errors`);
+        console.log(`Database update completed: ${result.updated} updated, ${result.errors} errors`);
         
         // Show success message
-        toast.success(`✅ Updated risk levels for ${result.updated} patients. Dashboard will reflect changes on refresh.`);
+        toast.success(`Updated risk levels for ${result.updated} patients. Dashboard will reflect changes on refresh.`);
+        
+        // Create notifications for high-risk patients
+        if (result.updated > 0) {
+          console.log('Creating notifications for high-risk patients...');
+          try {
+            const notificationResult = await HighRiskNotificationService.checkAndCreateHighRiskNotifications();
+            if (notificationResult.created > 0) {
+              toast.success(`Created ${notificationResult.created} high-risk patient alerts.`);
+            }
+            console.log(`Notification creation completed: ${notificationResult.created} created, ${notificationResult.errors} errors`);
+          } catch (notificationError) {
+            console.error('Error creating high-risk notifications:', notificationError);
+          }
+        }
       } catch (error) {
-        console.error('❌ Failed to update patient risk levels in database:', error);
+        console.error('Failed to update patient risk levels in database:', error);
         toast.error('Failed to save risk assessments to database');
       }
     }
@@ -456,33 +505,6 @@ export default function PatientsPage() {
             <Activity className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Refreshing...' : 'Refresh'}
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={async () => {
-              try {
-                toast.loading('Fixing patient ages...');
-                const result = await PatientService.fixPatientAges();
-                toast.dismiss();
-                if (result.fixed > 0) {
-                  toast.success(`✅ Fixed ${result.fixed} patient records with invalid ages`);
-                  fetchPatients(); // Refresh the list
-                } else {
-                  toast.success('✅ All patient ages are valid');
-                }
-                if (result.errors > 0) {
-                  toast.error(`⚠️ ${result.errors} errors occurred during age fix`);
-                }
-              } catch (error) {
-                toast.dismiss();
-                toast.error('Failed to fix patient ages');
-                console.error('Age fix error:', error);
-              }
-            }}
-            className="text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
-          >
-            <TrendingUp className="w-4 h-4 mr-2" />
-            Fix Ages
-          </Button>
           <Link href="/admin/populate-vitals">
             <Button 
               variant="outline" 
@@ -499,6 +521,34 @@ export default function PatientsPage() {
           >
             <Download className="w-4 h-4 mr-2" />
             Export
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              try {
+                toast.loading('Creating high-risk notifications...');
+                const result = await HighRiskNotificationService.checkAndCreateHighRiskNotifications();
+                toast.dismiss();
+                if (result.created > 0) {
+                  toast.success(`Created ${result.created} high-risk patient notifications`);
+                } else if (result.processed === 0) {
+                  toast.success('No high-risk patients found');
+                } else {
+                  toast.success('All high-risk patients already have notifications');
+                }
+                if (result.errors > 0) {
+                  toast.error(`${result.errors} errors occurred during notification creation`);
+                }
+              } catch (error) {
+                toast.dismiss();
+                toast.error('Failed to create high-risk notifications');
+                console.error('Notification creation error:', error);
+              }
+            }}
+            className="text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
+          >
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Create Risk Alerts
           </Button>
         <Link href="/patients/add">
           <Button className="bg-[#2D7D89] hover:bg-[#245A62] text-white">
@@ -547,6 +597,86 @@ export default function PatientsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* High-Risk Patients Alert Section */}
+      {highRiskPatients.length > 0 && (
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div>
+                <h3 className="font-semibold text-red-800 dark:text-red-300">
+                  High-Risk Patients Requiring Urgent Attention
+                </h3>
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {highRiskPatients.length} patient{highRiskPatients.length !== 1 ? 's' : ''} need immediate care and urgent appointments
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHighRiskDropdown(!showHighRiskDropdown)}
+              className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
+            >
+              {showHighRiskDropdown ? 'Hide' : 'View'} Details
+            </Button>
+          </div>
+          
+          {showHighRiskDropdown && (
+            <div className="mt-4 space-y-2">
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                {highRiskPatients.map((patient) => (
+                  <div key={patient.id} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          {patient.name}
+                        </p>
+                        <p className="text-xs text-red-600 dark:text-red-400">
+                          {patient.description}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 ml-2">
+                        <Link href={`/patients/${patient.id}`}>
+                          <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                        </Link>
+                        <Link href={`/appointments?patient=${patient.id}&priority=urgent`}>
+                          <Button size="sm" className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700 text-white">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Book
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-2 border-t border-red-200 dark:border-red-800">
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setRiskFilter('high')}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Filter className="h-3 w-3 mr-1" />
+                    Filter High-Risk Only
+                  </Button>
+                  <Link href="/appointments?type=urgent">
+                    <Button size="sm" variant="outline" className="text-red-700 dark:text-red-300 border-red-300">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Schedule All Urgent Appointments
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Advanced Search and Filter Bar */}
       <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">

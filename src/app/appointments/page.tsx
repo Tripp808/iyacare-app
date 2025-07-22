@@ -48,6 +48,7 @@ export default function AppointmentsPage() {
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     patientId: '',
     date: '',
@@ -101,37 +102,76 @@ export default function AppointmentsPage() {
       return;
     }
 
-    const appointmentData = {
-      patientId: formData.patientId,
-      patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
-      date: formData.date,
-      time: formData.time,
-      type: formData.type,
-      status: 'scheduled' as const,
-      location: formData.location,
-      notes: formData.notes
-    };
+    try {
+      const appointmentData = {
+        patientId: formData.patientId,
+        patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
+        date: formData.date,
+        time: formData.time,
+        type: formData.type,
+        status: 'scheduled' as const,
+        location: formData.location,
+        notes: formData.notes
+      };
 
-    const result = await appointmentsService.addAppointment(appointmentData);
+      const result = await appointmentsService.addAppointment(appointmentData);
+      
+      if (result.success) {
+        toast.success('Appointment created successfully!');
+        setShowNewAppointment(false);
+        setFormData({
+          patientId: '',
+          date: '',
+          time: '',
+          type: 'routine',
+          location: '',
+          notes: ''
+        });
+        fetchData(); // Refresh the list
+      } else {
+        toast.error(result.error || 'Failed to create appointment');
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast.error('Failed to create appointment');
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId: string, appointmentDate: string) => {
+    if (!appointmentId) {
+      toast.error('Invalid appointment ID');
+      return;
+    }
+
+    // Check if appointment is in the past
+    const appointmentDateObj = new Date(appointmentDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    if (result.success) {
-      // Reset form
-      setFormData({
-        patientId: '',
-        date: '',
-        time: '',
-        type: 'routine',
-        location: '',
-        notes: ''
-      });
+    if (appointmentDateObj < today) {
+      toast.error('Cannot cancel past appointments');
+      return;
+    }
+
+    const confirmed = window.confirm('Are you sure you want to cancel this appointment?');
+    if (!confirmed) return;
+
+    setCancellingId(appointmentId);
+    
+    try {
+      const result = await appointmentsService.cancelAppointment(appointmentId, 'Cancelled by user');
       
-      setShowNewAppointment(false);
-      toast.success('Appointment created successfully');
-      
-      // Refresh appointments list
-      fetchData();
-    } else {
-      toast.error(result.error || 'Failed to create appointment');
+      if (result.success) {
+        toast.success('Appointment cancelled successfully');
+        fetchData(); // Refresh the list
+      } else {
+        toast.error(result.error || 'Failed to cancel appointment');
+      }
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      toast.error('Failed to cancel appointment');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -393,16 +433,48 @@ export default function AppointmentsPage() {
                         {appointment.date} at {appointment.time}
                       </p>
                     </div>
-                      </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                          <Badge className={getStatusColor(appointment.status)}>
-                            {appointment.status}
-                          </Badge>
+                    <Badge className={getStatusColor(appointment.status)}>
+                      {appointment.status}
+                    </Badge>
                     <Badge variant="outline">
                       {appointment.type}
                     </Badge>
-                      </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-1 ml-2">
+                      {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCancelAppointment(appointment.id!, appointment.date)}
+                            disabled={cancellingId === appointment.id}
+                            className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            {cancellingId === appointment.id ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </Button>
+                          <Link href={`/patients/${appointment.patientId}`}>
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
+                              <User className="h-3 w-3" />
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                      
+                      {appointment.status === 'cancelled' && appointment.cancellationReason && (
+                        <span className="text-xs text-red-600 italic">
+                          Cancelled: {appointment.cancellationReason}
+                        </span>
+                      )}
                     </div>
+                  </div>
+                </div>
                 
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">

@@ -24,6 +24,10 @@ export interface Appointment {
   status: 'scheduled' | 'confirmed' | 'pending' | 'completed' | 'cancelled';
   location: string;
   notes?: string;
+  cancellationReason?: string;
+  cancelledAt?: Timestamp;
+  rescheduleReason?: string;
+  rescheduledAt?: Timestamp;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -50,20 +54,43 @@ export const appointmentsService = {
   // Get all appointments
   async getAppointments() {
     try {
-      const q = query(
-        collection(db, APPOINTMENTS_COLLECTION),
-        orderBy('date', 'desc'),
-        orderBy('time', 'asc')
-      );
+      let appointments: Appointment[] = [];
       
-      const querySnapshot = await getDocs(q);
-      const appointments: Appointment[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        appointments.push({
-          id: doc.id,
-          ...doc.data() as Omit<Appointment, 'id'>
+      try {
+        // Try the simplified query first
+        const q = query(
+          collection(db, APPOINTMENTS_COLLECTION),
+          orderBy('date', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        querySnapshot.forEach((doc) => {
+          appointments.push({
+            id: doc.id,
+            ...doc.data() as Omit<Appointment, 'id'>
+          });
         });
+      } catch (queryError) {
+        // Fallback to simple collection query without ordering
+        console.log('OrderBy query failed, using simple collection query:', queryError);
+        
+        const querySnapshot = await getDocs(collection(db, APPOINTMENTS_COLLECTION));
+        
+        querySnapshot.forEach((doc) => {
+          appointments.push({
+            id: doc.id,
+            ...doc.data() as Omit<Appointment, 'id'>
+          });
+        });
+      }
+
+      // Sort by time in JavaScript after fetching
+      appointments.sort((a, b) => {
+        // First sort by date (desc), then by time (asc)
+        const dateComparison = b.date.localeCompare(a.date);
+        if (dateComparison !== 0) return dateComparison;
+        return a.time.localeCompare(b.time);
       });
       
       return { success: true, appointments };
@@ -126,31 +153,111 @@ export const appointmentsService = {
     }
   },
 
+  // Cancel appointment (updates status instead of deleting)
+  async cancelAppointment(id: string, reason?: string) {
+    try {
+      const appointmentRef = doc(db, APPOINTMENTS_COLLECTION, id);
+      const updateData: any = {
+        status: 'cancelled' as const,
+        updatedAt: serverTimestamp()
+      };
+
+      if (reason) {
+        updateData.cancellationReason = reason;
+        updateData.cancelledAt = serverTimestamp();
+      }
+
+      await updateDoc(appointmentRef, updateData);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      return { success: false, error: 'Failed to cancel appointment' };
+    }
+  },
+
+  // Reschedule appointment
+  async rescheduleAppointment(id: string, newDate: string, newTime: string, reason?: string) {
+    try {
+      const appointmentRef = doc(db, APPOINTMENTS_COLLECTION, id);
+      const updateData: any = {
+        date: newDate,
+        time: newTime,
+        status: 'scheduled' as const,
+        updatedAt: serverTimestamp()
+      };
+
+      if (reason) {
+        updateData.rescheduleReason = reason;
+        updateData.rescheduledAt = serverTimestamp();
+      }
+
+      await updateDoc(appointmentRef, updateData);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error rescheduling appointment:', error);
+      return { success: false, error: 'Failed to reschedule appointment' };
+    }
+  },
+
   // Get next appointment for a patient
   async getNextAppointment(patientId: string) {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const q = query(
-        collection(db, APPOINTMENTS_COLLECTION),
-        where('patientId', '==', patientId),
-        where('date', '>=', today),
-        where('status', 'in', ['scheduled', 'confirmed']),
-        orderBy('date', 'asc'),
-        orderBy('time', 'asc')
-      );
+      let appointments: Appointment[] = [];
       
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        const appointment: Appointment = {
-          id: doc.id,
-          ...doc.data() as Omit<Appointment, 'id'>
-        };
-        return { success: true, appointment };
+      try {
+        // Try the simplified query first
+        const q = query(
+          collection(db, APPOINTMENTS_COLLECTION),
+          where('patientId', '==', patientId),
+          where('date', '>=', today),
+          where('status', 'in', ['scheduled', 'confirmed'])
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        querySnapshot.forEach((doc) => {
+          appointments.push({
+            id: doc.id,
+            ...doc.data() as Omit<Appointment, 'id'>
+          });
+        });
+      } catch (queryError) {
+        // Fallback to simple collection query and filter in JavaScript
+        console.log('Complex query failed, using simple collection query:', queryError);
+        
+        const querySnapshot = await getDocs(collection(db, APPOINTMENTS_COLLECTION));
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data() as Omit<Appointment, 'id'>;
+          // Filter in JavaScript
+          if (
+            data.patientId === patientId &&
+            data.date >= today &&
+            (data.status === 'scheduled' || data.status === 'confirmed')
+          ) {
+            appointments.push({
+              id: doc.id,
+              ...data
+            });
+          }
+        });
       }
+
+      // Sort in JavaScript to find the next appointment
+      appointments.sort((a, b) => {
+        // Sort by date (asc), then by time (asc)
+        const dateComparison = a.date.localeCompare(b.date);
+        if (dateComparison !== 0) return dateComparison;
+        return a.time.localeCompare(b.time);
+      });
       
-      return { success: true, appointment: null };
+      // Return the first (earliest) appointment
+      const nextAppointment = appointments.length > 0 ? appointments[0] : null;
+      
+      return { success: true, appointment: nextAppointment };
     } catch (error) {
       console.error('Error fetching next appointment:', error);
       return { success: false, error: 'Failed to fetch next appointment', appointment: null };
