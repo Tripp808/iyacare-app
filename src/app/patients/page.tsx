@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +49,7 @@ import { aiPredictionService } from '@/services/ai-prediction.service';
 import { PatientService } from '@/services/patient.service';
 import { HighRiskNotificationService } from '@/services/high-risk-notification.service';
 
-export default function PatientsPage() {
+function PatientsPageContent() {
   const searchParams = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -991,5 +991,22 @@ export default function PatientsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function PatientsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D7D89] mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading patients...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <PatientsPageContent />
+    </Suspense>
   );
 } 

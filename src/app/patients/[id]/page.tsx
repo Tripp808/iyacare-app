@@ -130,30 +130,30 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
   };
 
   const fetchPatientData = async () => {
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
       if (!resolvedParams?.id) return;
 
-      // Fetch patient data
-      const patientResult = await getPatient(resolvedParams.id);
-      if (patientResult.success) {
-        setPatient(patientResult.patient || null);
-      } else {
-        console.error('Failed to fetch patient:', patientResult.error);
-      }
+        // Fetch patient data
+        const patientResult = await getPatient(resolvedParams.id);
+        if (patientResult.success) {
+          setPatient(patientResult.patient || null);
+        } else {
+          console.error('Failed to fetch patient:', patientResult.error);
+        }
 
-      // Fetch patient alerts
-      const alertsResult = await getPatientAlerts(resolvedParams.id);
-      if (alertsResult.success) {
-        setAlerts(alertsResult.alerts || []);
-      } else {
-        console.error('Failed to fetch alerts:', alertsResult.error);
+        // Fetch patient alerts
+        const alertsResult = await getPatientAlerts(resolvedParams.id);
+        if (alertsResult.success) {
+          setAlerts(alertsResult.alerts || []);
+        } else {
+          console.error('Failed to fetch alerts:', alertsResult.error);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Mark an alert as read
@@ -807,16 +807,16 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
 
               {/* Vital Signs History */}
               <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <CardHeader>
+              <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                     <TrendingUp className="w-5 h-5 text-[#2D7D89]" />
                     Vital Signs History
                   </CardTitle>
                   <CardDescription className="text-gray-600 dark:text-gray-400">
                     Historical vital signs data and trends over time
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                   <div className="text-center py-8">
                     <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -833,10 +833,10 @@ export default function PatientDetailsPage({ params }: { params: Promise<{ id: s
                       Record New Vitals
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+            </CardContent>
+          </Card>
             </div>
-          </TabsContent>
+        </TabsContent>
         
         <TabsContent value="appointments">
           <Card>

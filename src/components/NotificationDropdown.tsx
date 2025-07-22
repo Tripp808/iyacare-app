@@ -98,7 +98,7 @@ export function NotificationDropdown() {
     try {
       console.log('NotificationDropdown: Marking notification as read:', notificationId);
       
-      await markAsRead(notificationId);
+    await markAsRead(notificationId);
       
       // Increment refresh key to force refresh of all notification data
       setRefreshKey(prev => prev + 1);
@@ -185,7 +185,7 @@ export function NotificationDropdown() {
         </DropdownMenuLabel>
         
         <DropdownMenuSeparator />
-
+        
         {/* High-Risk Patients Section */}
         {highRiskCount > 0 && (
           <>
@@ -258,59 +258,59 @@ export function NotificationDropdown() {
                 </DropdownMenuLabel>
                 
                 {notifications.slice(0, 4).map((notification) => (
-                  <DropdownMenuItem 
-                    key={notification.id} 
-                    className="flex items-start gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
-                    onClick={() => handleMarkAsRead(notification.id!)}
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getAlertIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
-                          {notification.patientName}
-                        </p>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${getAlertBadgeColor(notification.priority)}`}
-                        >
-                          {notification.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-1">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        {formatNotificationTime(notification.createdAt)}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 flex-shrink-0 hover:bg-gray-200 dark:hover:bg-gray-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMarkAsRead(notification.id!);
-                      }}
+              <DropdownMenuItem 
+                key={notification.id} 
+                className="flex items-start gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                onClick={() => handleMarkAsRead(notification.id!)}
+              >
+                <div className="flex-shrink-0 mt-0.5">
+                  {getAlertIcon(notification.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                      {notification.patientName}
+                    </p>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${getAlertBadgeColor(notification.priority)}`}
                     >
-                      <Eye className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuItem>
-                ))}
-                
+                      {notification.priority}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-1">
+                    {notification.message}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                    {formatNotificationTime(notification.createdAt)}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 flex-shrink-0 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkAsRead(notification.id!);
+                  }}
+                >
+                  <Eye className="h-3 w-3" />
+                </Button>
+              </DropdownMenuItem>
+            ))}
+            
                 {notifications.length > 4 && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link 
-                        href="/alerts" 
-                        className="text-center text-sm text-[#2D7D89] hover:text-[#236570] cursor-pointer"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        View all notifications ({notifications.length})
-                      </Link>
-                    </DropdownMenuItem>
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link 
+                    href="/alerts" 
+                    className="text-center text-sm text-[#2D7D89] hover:text-[#236570] cursor-pointer"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    View all notifications ({notifications.length})
+                  </Link>
+                </DropdownMenuItem>
                   </>
                 )}
               </>
