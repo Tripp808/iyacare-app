@@ -262,21 +262,21 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Settings</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#2D7D89] dark:text-[#4AA0AD]">Settings</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           Manage your account, notifications, and platform configuration
         </p>
         {user?.name && (
           <div className="mt-4 p-4 bg-gradient-to-r from-[#2D7D89]/10 to-[#F7913D]/10 rounded-lg border border-[#2D7D89]/20">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-[#2D7D89] flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-[#2D7D89] flex items-center justify-center flex-shrink-0">
                 <User className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <p className="text-lg font-semibold text-[#2D7D89] dark:text-[#4AA0AD]">
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-[#2D7D89] dark:text-[#4AA0AD] truncate">
                   Welcome, {user.name}!
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground truncate">
                   {user.email} • {user.role?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </p>
               </div>
@@ -286,60 +286,64 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="account" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Account
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsTrigger value="account" className="flex items-center gap-2 text-xs sm:text-sm py-2 px-2 sm:px-4">
+            <User className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Account</span>
+            <span className="sm:hidden">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
+          <TabsTrigger value="notifications" className="flex items-center gap-2 text-xs sm:text-sm py-2 px-2 sm:px-4">
+            <Bell className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Notifications</span>
+            <span className="sm:hidden">Alerts</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Security
+          <TabsTrigger value="security" className="flex items-center gap-2 text-xs sm:text-sm py-2 px-2 sm:px-4">
+            <Shield className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Security</span>
+            <span className="sm:hidden">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="platform" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Platform
+          <TabsTrigger value="platform" className="flex items-center gap-2 text-xs sm:text-sm py-2 px-2 sm:px-4">
+            <Database className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Platform</span>
+            <span className="sm:hidden">IoT</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Account Settings */}
         <TabsContent value="account" className="space-y-6">
           <Card>
-          <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Profile Information
+            <CardHeader>
+              <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <span className="text-lg">Profile Information</span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleRefreshProfile}
                   disabled={refreshing}
-                  className="ml-auto"
+                  className="w-full sm:w-auto"
                 >
                   {refreshing ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
                   ) : (
                     <Wifi className="h-4 w-4" />
                   )}
-                  {refreshing ? 'Refreshing...' : 'Refresh'}
+                  <span className="ml-2">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
                 </Button>
               </CardTitle>
-            <CardDescription>
+              <CardDescription className="text-sm">
                 Update your account details and preferences
                 <br />
                 <small className="text-xs text-muted-foreground">
                   Current user: {user?.email} | ID: {user?.id}
                 </small>
-            </CardDescription>
-          </CardHeader>
+              </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               {/* Profile Picture Section */}
               <div className="space-y-2">
                 <Label>Profile Picture</Label>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="relative flex-shrink-0">
                     <div className="h-20 w-20 rounded-full bg-muted overflow-hidden border-[1px] border-gray-200 dark:border-gray-700">
                       {profileData.profilePicture ? (
                         <img 
@@ -354,24 +358,24 @@ export default function SettingsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
                     <Button 
                       type="button"
                       variant="outline" 
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingImage}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 w-full sm:w-auto"
                     >
                       {uploadingImage ? (
                         <>
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"></div>
-                          Uploading...
+                          <span>Uploading...</span>
                         </>
                       ) : (
                         <>
                           <Camera className="h-4 w-4" />
-                          Change Picture
+                          <span>Change Picture</span>
                         </>
                       )}
                     </Button>
@@ -389,7 +393,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
                   <Input 
@@ -473,17 +477,17 @@ export default function SettingsPage() {
               <Button 
                 onClick={handleProfileSave}
                 disabled={loading}
-                className="bg-[#2D7D89] hover:bg-[#236570] text-white"
+                className="bg-[#2D7D89] hover:bg-[#236570] text-white w-full sm:w-auto"
               >
                 {loading ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-r-transparent"></div>
-                    Saving...
+                    <span>Saving...</span>
                   </>
                 ) : (
                   <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
+                    <Save className="h-4 w-4 mr-2" />
+                    <span>Save Changes</span>
                   </>
                 )}
               </Button>
@@ -502,8 +506,8 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
                     <Label className="text-foreground font-medium">Email Notifications</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive notifications via email
@@ -515,8 +519,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
                     <Label className="text-foreground font-medium">SMS Notifications</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive critical alerts via SMS
@@ -528,8 +532,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
                     <Label className="text-foreground font-medium">Push Notifications</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive real-time push notifications
@@ -541,8 +545,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
                     <Label className="text-foreground font-medium">Emergency Alerts</Label>
                     <p className="text-sm text-muted-foreground">
                       Receive emergency notifications (recommended)
@@ -554,8 +558,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
                     <Label className="text-foreground font-medium">Report Updates</Label>
                     <p className="text-sm text-muted-foreground">
                       Get notified when reports are ready
@@ -567,8 +571,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
                     <Label className="text-foreground font-medium">System Updates</Label>
                     <p className="text-sm text-muted-foreground">
                       Platform updates and announcements
@@ -582,9 +586,9 @@ export default function SettingsPage() {
               </div>
               
               <div className="pt-6">
-                <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
+                <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white w-full sm:w-auto">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Notification Settings
+                  <span>Save Notification Settings</span>
                 </Button>
               </div>
             </CardContent>
@@ -604,15 +608,15 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword">Current Password</Label>
                   <div className="relative">
-                  <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
+                    <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth="1.5" />
                     <Input 
                       id="currentPassword" 
                       type={showPassword ? "text" : "password"}
-                    value={passwordData.currentPassword}
-                    onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                    className="pl-10"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                      className="pl-10 pr-10"
                     />
-            <Button 
+                    <Button 
                       type="button"
                       variant="ghost"
                       size="sm"
@@ -623,40 +627,40 @@ export default function SettingsPage() {
                         <EyeOff className="h-4 w-4" />
                       ) : (
                         <Eye className="h-4 w-4" />
-              )}
-            </Button>
+                      )}
+                    </Button>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" strokeWidth="1" />
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={passwordData.newPassword}
-                    onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                    className="pl-10"
-                    placeholder="Min. 6 characters"
-                  />
-                </div>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" strokeWidth="1" />
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                      className="pl-10"
+                      placeholder="Min. 6 characters"
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" strokeWidth="1" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                    className="pl-10"
-                    placeholder="Confirm new password"
-                  />
+                  <div className="relative">
+                    <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" strokeWidth="1" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                      className="pl-10"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
                 </div>
-              </div>
               
               <Button 
                 onClick={handlePasswordUpdate}
@@ -680,13 +684,13 @@ export default function SettingsPage() {
           
           <Card>
             <CardHeader>
-              <CardTitle>Account Status</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-base md:text-lg">Account Status</CardTitle>
+              <CardDescription className="text-sm md:text-base">
                 Verification and security status
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="space-y-0.5">
                   <Label>Email Verification</Label>
                   <p className="text-sm text-muted-foreground">
@@ -698,7 +702,7 @@ export default function SettingsPage() {
                 </Badge>
               </div>
               
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="space-y-0.5">
                   <Label>Account Created</Label>
                   <p className="text-sm text-muted-foreground">
@@ -714,14 +718,14 @@ export default function SettingsPage() {
         <TabsContent value="platform" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>IoT Device Management</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-base md:text-lg">IoT Device Management</CardTitle>
+              <CardDescription className="text-sm md:text-base">
                 Configure settings for connected medical devices
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="space-y-0.5">
                     <Label>Auto-sync Data</Label>
                     <p className="text-sm text-muted-foreground">
@@ -740,7 +744,7 @@ export default function SettingsPage() {
                     value={iotSettings.dataRetention}
                     onValueChange={(value) => handleIotChange('dataRetention', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -759,7 +763,7 @@ export default function SettingsPage() {
                     value={iotSettings.alertThreshold}
                     onValueChange={(value) => handleIotChange('alertThreshold', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -776,7 +780,7 @@ export default function SettingsPage() {
                     value={iotSettings.backupFrequency}
                     onValueChange={(value) => handleIotChange('backupFrequency', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -789,7 +793,7 @@ export default function SettingsPage() {
                 </div>
       </div>
               
-              <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white">
+              <Button className="bg-[#2D7D89] hover:bg-[#236570] text-white w-full sm:w-auto">
                 <Database className="h-4 w-4 mr-2" />
                 Save Platform Settings
               </Button>
