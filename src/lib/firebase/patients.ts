@@ -33,6 +33,10 @@ export interface Patient {
   isPregnant?: boolean;
   dueDate?: any;
   pregnancyWeek?: number;
+  // Real-time IoT fields
+  isRealtimePatient?: boolean;
+  iotDeviceId?: string;
+  realtimeDatabasePath?: string;
   // Calculated fields
   age?: number;
   lastVisit?: any;
