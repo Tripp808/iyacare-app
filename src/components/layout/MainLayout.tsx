@@ -36,7 +36,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const protectedRoutes = [
     '/dashboard',
     '/patients',
-    '/vitals',
+    '/iot-monitoring',
     '/alerts',
     '/analytics',
     '/settings',
@@ -240,7 +240,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                           <Link href="/patients" className="flex w-full">Patient Management</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer">
-                          <Link href="/vitals" className="flex w-full">Vital Signs</Link>
+                          <Link href="/iot-monitoring" className="flex w-full">🔴 IoT Live Monitoring</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer">
                           <Link href="/alerts" className="flex w-full">Alerts System</Link>

@@ -17,8 +17,8 @@ const links = [
     icon: Users,
   },
   {
-    title: "Vital Signs",
-    href: "/vitals",
+    title: "🔴 IoT Live Monitoring",
+    href: "/iot-monitoring",
     icon: Activity,
   },
   {

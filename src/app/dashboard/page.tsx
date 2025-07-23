@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getPatients } from '@/lib/firebase/patients';
-import { getAlerts } from '@/lib/firebase/alerts';
+import { getAlerts, createAlert } from '@/lib/firebase/alerts';
 import { VitalSignsService } from '@/services/vitalsigns.service';
+import { RealtimeIoTService, IoTReading, AIPrediction } from '@/services/realtime-iot.service';
 import { formatDate } from '@/lib/utils';
 import { Timestamp } from 'firebase/firestore';
 import { 
@@ -20,7 +21,10 @@ import {
   TrendingUp,
   FileText,
   User,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  Radio,
+  Brain
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/lib/firebase/alerts';
@@ -45,9 +49,42 @@ export default function DashboardPage() {
   });
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [recentVitalSigns, setRecentVitalSigns] = useState<any[]>([]);
+  const [realtimeReading, setRealtimeReading] = useState<IoTReading | null>(null);
+  const [aiPrediction, setAiPrediction] = useState<AIPrediction | null>(null);
+  const [realtimePatient, setRealtimePatient] = useState<any>(null);
+  const [iotConnected, setIotConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastAiAlertTime, setLastAiAlertTime] = useState<number>(0);
+
+  // Function to create AI-based alerts
+  const createAIAlert = async (prediction: AIPrediction, patient: any, reading: IoTReading) => {
+    if (!prediction || !patient) return;
+    
+    // Only create alerts for high risk and avoid spam (max 1 alert per 5 minutes)
+    const now = Date.now();
+    if (prediction.risk_level === 'high risk' && now - lastAiAlertTime > 5 * 60 * 1000) {
+      try {
+        const factors = RealtimeIoTService.getFactorsFromReading(reading);
+        const alertMessage = `🤖 AI detected HIGH RISK for ${patient.firstName} ${patient.lastName}. Factors: ${factors.slice(0, 2).join(', ')}. Confidence: ${Math.round(prediction.confidence * 100)}%`;
+        
+        await createAlert({
+          patientId: patient.id,
+          patientName: `${patient.firstName} ${patient.lastName}`,
+          message: alertMessage,
+          type: 'risk',
+          priority: 'high',
+          createdBy: 'AI System'
+        });
+        
+        setLastAiAlertTime(now);
+        console.log('AI alert created for high-risk prediction');
+      } catch (error) {
+        console.error('Error creating AI alert:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -58,6 +95,60 @@ export default function DashboardPage() {
     }, 5 * 60 * 1000);
 
     return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Set up real-time IoT monitoring
+  useEffect(() => {
+    let iotUnsubscribe: (() => void) | null = null;
+    let statusUnsubscribe: (() => void) | null = null;
+
+    const setupRealtimeMonitoring = async () => {
+      // Find real-time patient
+      const result = await getPatients();
+      if (result.success && result.patients) {
+        const rtPatient = result.patients.find(p => p.isRealtimePatient === true);
+        if (rtPatient) {
+          setRealtimePatient(rtPatient);
+          
+          // Subscribe to IoT readings
+          iotUnsubscribe = RealtimeIoTService.subscribeToIoTReadings(async (reading) => {
+            if (reading) {
+              setRealtimeReading(reading);
+              setIotConnected(true);
+              
+              // Get AI prediction for the reading
+              try {
+                const prediction = await RealtimeIoTService.getAIPrediction(reading, 28);
+                setAiPrediction(prediction);
+                
+                // Create alert if high risk detected
+                if (rtPatient) {
+                  await createAIAlert(prediction, rtPatient, reading);
+                }
+              } catch (error) {
+                console.error('Error getting AI prediction:', error);
+                setAiPrediction(null);
+              }
+            } else {
+              setIotConnected(false);
+              setAiPrediction(null);
+            }
+          });
+
+          // Subscribe to connection status
+          statusUnsubscribe = RealtimeIoTService.subscribeToConnectionStatus((status) => {
+            setIotConnected(status === "ESP32 Connected");
+          });
+        }
+      }
+    };
+
+    setupRealtimeMonitoring();
+
+    return () => {
+      if (iotUnsubscribe) iotUnsubscribe();
+      if (statusUnsubscribe) statusUnsubscribe();
+    };
   }, []);
 
   const refreshDashboard = async () => {
@@ -134,7 +225,7 @@ export default function DashboardPage() {
         .slice(0, 10);
         
       // Use real patient data for statistics
-      const finalStats = {
+      let finalStats = {
         totalPatients: patients.length,
         highRiskPatients: patientRiskCounts.high || 0,
         mediumRiskPatients: patientRiskCounts.medium || 0,
@@ -142,6 +233,24 @@ export default function DashboardPage() {
         totalVitalSigns: allVitalSigns.length,
         unreadAlerts: unreadAlerts.length
       };
+      
+      // Include AI-based risk assessment for real-time patient if available
+      if (aiPrediction && realtimePatient) {
+        // Find if the real-time patient already has a manual risk assignment
+        const rtPatient = patients.find(p => p.id === realtimePatient.id);
+        const hasManualRisk = rtPatient && rtPatient.riskLevel && ['high', 'medium', 'low'].includes(rtPatient.riskLevel);
+        
+        if (!hasManualRisk) {
+          // Add AI prediction to stats if patient doesn't have manual risk level
+          if (aiPrediction.risk_level === 'high risk') {
+            finalStats.highRiskPatients += 1;
+          } else if (aiPrediction.risk_level === 'mid risk') {
+            finalStats.mediumRiskPatients += 1;
+          } else {
+            finalStats.lowRiskPatients += 1;
+          }
+        }
+      }
       
       console.log('Dashboard - Final stats:', finalStats);
       
@@ -358,15 +467,15 @@ export default function DashboardPage() {
 
       {/* Quick Access Section */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/vitals">
+        <Link href="/iot-monitoring">
           <Card className="cursor-pointer transition-all hover:shadow-md border-gray-200 hover:border-[#2D7D89]/40">
             <CardContent className="flex items-center p-4">
               <div className="p-2 bg-[#e6f3f5] dark:bg-[#2D7D89]/20 rounded-full mr-3">
                 <Activity className="h-6 w-6 text-[#2D7D89] dark:text-[#4AA0AD]" />
               </div>
               <div>
-                <p className="font-medium">Record Vital Signs</p>
-                <p className="text-sm text-muted-foreground">Add new readings</p>
+                <p className="font-medium">🔴 IoT Live Monitoring</p>
+                <p className="text-sm text-muted-foreground">Real-time ESP32 data</p>
               </div>
             </CardContent>
           </Card>
@@ -421,38 +530,106 @@ export default function DashboardPage() {
         <Card className="border-gray-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recent Vital Signs</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Recent Vital Signs
+                {iotConnected && (
+                  <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                    <Radio className="h-3 w-3 mr-1" />
+                    Live IoT
+                  </Badge>
+                )}
+              </CardTitle>
             <CardDescription>
-                {stats.totalVitalSigns > 0 
-                  ? `${stats.totalVitalSigns} total readings recorded`
-                  : 'No vital signs recorded yet'
+                {realtimeReading 
+                  ? `Live ESP32 data from ${realtimePatient?.firstName} ${realtimePatient?.lastName}`
+                  : stats.totalVitalSigns > 0 
+                    ? `${stats.totalVitalSigns} total readings recorded`
+                    : 'No vital signs recorded yet'
                 }
             </CardDescription>
             </div>
-            <Link href="/vitals">
+            <Link href="/iot-monitoring">
               <Button variant="outline" size="sm">
-                View All
+                View Live Data
               </Button>
             </Link>
           </CardHeader>
           <CardContent>
-            {recentVitalSigns.length === 0 ? (
+            {/* Real-time IoT Data (Priority Display) */}
+            {realtimeReading && realtimePatient && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <h4 className="font-semibold text-green-800">
+                      🔴 {realtimePatient.firstName} {realtimePatient.lastName} - Live IoT Data
+                    </h4>
+                  </div>
+                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                    ESP32 Live
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="text-center p-2 bg-white/50 rounded">
+                    <div className="text-lg font-bold text-red-600">
+                      {realtimeReading.SystolicBP.toFixed(0)}/{realtimeReading.DiastolicBP.toFixed(0)}
+                    </div>
+                    <div className="text-xs text-gray-600">Blood Pressure</div>
+                  </div>
+                  
+                  <div className="text-center p-2 bg-white/50 rounded">
+                    <div className="text-lg font-bold text-blue-600">
+                      {realtimeReading.HeartRate.toFixed(0)}
+                    </div>
+                    <div className="text-xs text-gray-600">Heart Rate (bpm)</div>
+                  </div>
+                  
+                  <div className="text-center p-2 bg-white/50 rounded">
+                    <div className="text-lg font-bold text-orange-600">
+                      {((realtimeReading.BodyTemperature - 32) * 5/9).toFixed(1)}°C
+                    </div>
+                    <div className="text-xs text-gray-600">Temperature</div>
+                  </div>
+                  
+                  <div className="text-center p-2 bg-white/50 rounded">
+                    <div className={`text-lg font-bold ${
+                      aiPrediction?.risk_level === 'high risk' ? 'text-red-600' :
+                      aiPrediction?.risk_level === 'mid risk' ? 'text-yellow-600' :
+                      'text-green-600'
+                    }`}>
+                      {aiPrediction ? aiPrediction.risk_level.toUpperCase() : 'ANALYZING...'}
+                    </div>
+                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                      <Brain className="h-3 w-3" />
+                      AI Risk Level
+                      {aiPrediction && (
+                        <span className="ml-1">({Math.round(aiPrediction.confidence * 100)}%)</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Traditional Vital Signs */}
+            {recentVitalSigns.length === 0 && !realtimeReading ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Activity className="h-12 w-12 text-muted-foreground mb-2" />
                 <h3 className="text-lg font-medium">No Vital Signs</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start by recording vital signs for your patients.
+                  Start by connecting IoT devices or recording vital signs for your patients.
                 </p>
-                <Link href="/vitals">
+                <Link href="/iot-monitoring">
                   <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Record First Reading
+                    <Radio className="h-4 w-4 mr-2" />
+                    View IoT Monitoring
                   </Button>
                 </Link>
               </div>
             ) : (
               <div className="space-y-3">
-                {recentVitalSigns.slice(0, 5).map((vital, index) => (
+                {recentVitalSigns.slice(0, 3).map((vital, index) => (
                   <div key={vital.id || index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <Activity className="h-4 w-4 text-blue-500" />
@@ -478,6 +655,28 @@ export default function DashboardPage() {
                     )}
                 </div>
                 ))}
+                
+                {/* Connection Status */}
+                <div className="mt-3 p-2 bg-blue-50 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    {iotConnected ? (
+                      <>
+                        <Wifi className="h-4 w-4 text-green-500" />
+                        <span className="text-green-700">ESP32 Device Connected</span>
+                      </>
+                    ) : (
+                      <>
+                        <Activity className="h-4 w-4 text-gray-500" />
+                        <span className="text-gray-600">Traditional monitoring mode</span>
+                      </>
+                    )}
+                  </div>
+                  <Link href="/iot-monitoring">
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      View Live →
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
           </CardContent>
