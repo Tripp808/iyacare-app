@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
 import { NotificationProvider } from "@/hooks/useNotifications";
+import { OfflineProvider } from "@/providers/offline-provider";
 
 export const metadata = {
   title: "IyàCare - AI-Powered Maternal Health Monitoring Platform",
@@ -52,12 +53,14 @@ export default function RootLayout({
           defaultTheme="light"
           enableSystem={false}
         >
-          <AuthProvider>
-            <NotificationProvider>
-              <MainLayout>{children}</MainLayout>
-              <Toaster />
-            </NotificationProvider>
-          </AuthProvider>
+          <OfflineProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <MainLayout>{children}</MainLayout>
+                <Toaster />
+              </NotificationProvider>
+            </AuthProvider>
+          </OfflineProvider>
         </ThemeProvider>
       </body>
     </html>
