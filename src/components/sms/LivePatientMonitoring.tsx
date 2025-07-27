@@ -114,11 +114,10 @@ const LivePatientMonitoring: React.FC = () => {
               vitals: {
                 heartRate: reading.HeartRate,
                 bloodPressure: `${Math.round(reading.SystolicBP)}/${Math.round(reading.DiastolicBP)}`,
-                temperature: parseFloat(tempCelsius.toFixed(1))
+                temperature: parseFloat(tempCelsius.toFixed(1)),
+                oxygenSaturation: reading.OxygenSaturation || 98
               },
-              lastUpdate: new Date(),
-              isConnected: true,
-              connectionStatus
+              lastUpdate: new Date()
             };
             
             setLivePatients([patientData]);
