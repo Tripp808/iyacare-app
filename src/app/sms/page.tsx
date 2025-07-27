@@ -15,6 +15,8 @@ import SMSTemplatesTab from '@/components/sms/SMSTemplatesTab';
 import SMSCampaignsTab from '@/components/sms/SMSCampaignsTab';
 import SMSAnalyticsTab from '@/components/sms/SMSAnalyticsTab';
 import TwilioConfig from '@/components/sms/TwilioConfig';
+import LivePatientMonitoring from '@/components/sms/LivePatientMonitoring';
+import MessageTemplatesManager from '@/components/sms/MessageTemplatesManager';
 
 // Services
 import { SMSService } from '@/services/sms.service';
@@ -26,7 +28,7 @@ import { PatientService } from '@/services/patient.service';
 import { SMSMessage, SMSTemplate, SMSCampaign, SMSAnalytics } from '@/types';
 
 const SMSPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('messages');
+  const [activeTab, setActiveTab] = useState('live-monitoring');
   const [isLoading, setIsLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -48,7 +50,7 @@ const SMSPage: React.FC = () => {
   }, []);
 
   const checkTwilioConfiguration = () => {
-    const configured = twilioService.isConfigured();
+    const configured = twilioService.getIsConfigured();
     setIsConfigured(configured);
     // Don't automatically show config dialog - let users choose
   };
@@ -391,14 +393,22 @@ const SMSPage: React.FC = () => {
 
       {/* Main SMS Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="live-monitoring" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            Live Monitoring
+          </TabsTrigger>
+          <TabsTrigger value="message-templates" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Templates
+          </TabsTrigger>
           <TabsTrigger value="messages" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Messages
           </TabsTrigger>
           <TabsTrigger value="templates" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Templates
+            SMS Templates
           </TabsTrigger>
           <TabsTrigger value="campaigns" className="flex items-center gap-2">
             <Zap className="h-4 w-4" />
@@ -409,6 +419,14 @@ const SMSPage: React.FC = () => {
             Analytics
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="live-monitoring" className="mt-6">
+          <LivePatientMonitoring />
+        </TabsContent>
+
+        <TabsContent value="message-templates" className="mt-6">
+          <MessageTemplatesManager />
+        </TabsContent>
 
         <TabsContent value="messages" className="mt-6">
           <SMSMessagesTab 
