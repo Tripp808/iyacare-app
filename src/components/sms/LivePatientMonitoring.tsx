@@ -107,7 +107,7 @@ const LivePatientMonitoring: React.FC = () => {
             }
             
             const patientData: LivePatientData = {
-              id: realtimePatient.id,
+              id: realtimePatient.id || 'realtime-patient-1',
               name: `${realtimePatient.firstName} ${realtimePatient.lastName}`,
               phone: '+250791848842', // SMS phone number
               riskLevel,
