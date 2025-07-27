@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/hooks/useAuth';
 import { NotificationDropdown } from '../NotificationDropdown';
+import { OfflineStatus } from '../offline-status';
 import { toast } from 'sonner';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -288,6 +289,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <ModeToggle />
               {isAuthenticated && !showCleanLayout ? (
                 <>
+                  <OfflineStatus />
                   <NotificationDropdown />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
