@@ -957,7 +957,7 @@ function PatientsPageContent() {
                           <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                             <MapPin className="w-3 h-3" />
                             {typeof patient.address === 'object' && patient.address 
-                              ? `${patient.address.city || ''}${patient.address.city && patient.address.state ? ', ' : ''}${patient.address.state || ''}`.trim() || 'Not specified'
+                              ? `${(patient.address as any)?.city || ''}${(patient.address as any)?.city && (patient.address as any)?.state ? ', ' : ''}${(patient.address as any)?.state || ''}`.trim() || 'Not specified'
                               : patient.address || 'Not specified'
                             }
                           </div>
