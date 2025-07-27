@@ -10,28 +10,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
+  Users, 
   Plus, 
   Search, 
   Filter, 
+  Download, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  MoreHorizontal, 
   User, 
   Phone, 
   MapPin, 
   Calendar, 
+  Heart, 
   AlertTriangle, 
-  Eye, 
-  Edit, 
-  Download,
-  MoreHorizontal,
-  Trash2,
+  Activity, 
+  Database,
   UserCheck,
-  Activity,
-  TrendingUp,
-  Users,
-  Heart,
-  FileDown,
-  Clock,
   Loader2,
-  Database
+  Archive,
+  TrendingUp
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -41,6 +40,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import Link from 'next/link';
 import { Patient, getPatients } from '@/lib/firebase/patients';
 import { toast } from 'react-hot-toast';
@@ -69,6 +76,8 @@ function PatientsPageContent() {
     description: string;
   }>>([]);
   const [showHighRiskDropdown, setShowHighRiskDropdown] = useState(false);
+  const [deletingPatients, setDeletingPatients] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState<{ patientId: string; patientName: string; type: 'archive' | 'delete' } | null>(null);
 
   // Check for risk filter from URL parameters (from notifications)
   useEffect(() => {
@@ -450,31 +459,118 @@ function PatientsPageContent() {
 
   const exportToCSV = () => {
     const csvContent = [
-      ['Name', 'Age', 'Phone', 'Email', 'Address', 'Risk Level', 'Pregnancy Status', 'Blood Type'].join(','),
-      ...filteredAndSortedPatients.map(patient => [
-        `"${patient.firstName} ${patient.lastName}"`,
-        getAgeFromBirthDate(patient.dateOfBirth),
-        patient.phone || '',
-        patient.email || '',
-        `"${patient.address || ''}"`,
-        getRiskLevelFromPrediction(patient.id) || 'Not Assessed',
-        patient.isPregnant ? 'Pregnant' : 'Not Pregnant',
-        patient.bloodType || ''
-      ].join(','))
+      ['Name', 'Age', 'Phone', 'Email', 'Risk Level', 'Status'].join(','),
+      ...selectedPatients.map(patientId => {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return '';
+        return [
+          `"${patient.firstName} ${patient.lastName}"`,
+          getAgeFromBirthDate(patient.dateOfBirth),
+          patient.phone || '',
+          patient.email || '',
+          getRiskLevelFromPrediction(patient.id),
+          patient.isPregnant ? 'Pregnant' : 'Not Pregnant'
+        ].join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `patients-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = 'patients.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleArchivePatient = async (patientId: string) => {
+    setDeletingPatients(prev => new Set(prev).add(patientId));
+    
+    try {
+      const result = await PatientService.deactivatePatient(patientId);
+      
+      if (result.success) {
+        toast.success('Patient archived successfully');
+        // Remove the patient from the local state
+        setPatients(prev => prev.filter(p => p.id !== patientId));
+        // Remove from selected patients if it was selected
+        setSelectedPatients(prev => prev.filter(id => id !== patientId));
+      } else {
+        toast.error(result.error || 'Failed to archive patient');
+      }
+    } catch (error) {
+      console.error('Error archiving patient:', error);
+      toast.error('Failed to archive patient');
+    } finally {
+      setDeletingPatients(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(patientId);
+        return newSet;
+      });
+      setShowDeleteDialog(null);
+    }
+  };
+
+  const handleDeletePatient = async (patientId: string) => {
+    setDeletingPatients(prev => new Set(prev).add(patientId));
+    
+    try {
+      const result = await PatientService.deletePatient(patientId);
+      
+      if (result.success) {
+        toast.success('Patient deleted permanently');
+        // Remove the patient from the local state
+        setPatients(prev => prev.filter(p => p.id !== patientId));
+        // Remove from selected patients if it was selected
+        setSelectedPatients(prev => prev.filter(id => id !== patientId));
+      } else {
+        toast.error(result.error || 'Failed to delete patient');
+      }
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      toast.error('Failed to delete patient');
+    } finally {
+      setDeletingPatients(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(patientId);
+        return newSet;
+      });
+      setShowDeleteDialog(null);
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    if (selectedPatients.length === 0) return;
+    
+    const archivePromises = selectedPatients.map(patientId => 
+      PatientService.deactivatePatient(patientId)
+    );
+    
+    try {
+      const results = await Promise.all(archivePromises);
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.length - successCount;
+      
+      if (successCount > 0) {
+        toast.success(`${successCount} patient(s) archived successfully`);
+        // Remove archived patients from local state
+        setPatients(prev => prev.filter(p => !selectedPatients.includes(p.id!)));
+        setSelectedPatients([]);
+      }
+      
+      if (failureCount > 0) {
+        toast.error(`Failed to archive ${failureCount} patient(s)`);
+      }
+    } catch (error) {
+      console.error('Error in bulk archive:', error);
+      toast.error('Failed to archive selected patients');
+    }
   };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
+        {/* ... (rest of the code remains the same) */}
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D7D89] mx-auto mb-4"></div>
@@ -860,7 +956,10 @@ function PatientsPageContent() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                             <MapPin className="w-3 h-3" />
-                            {patient.address || 'Not specified'}
+                            {typeof patient.address === 'object' && patient.address 
+                              ? `${patient.address.city || ''}${patient.address.city && patient.address.state ? ', ' : ''}${patient.address.state || ''}`.trim() || 'Not specified'
+                              : patient.address || 'Not specified'
+                            }
                           </div>
                         </TableCell>
                         <TableCell>
@@ -927,9 +1026,37 @@ function PatientsPageContent() {
                                   Export Record
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
-                                <DropdownMenuItem className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                  <Trash2 className="w-4 h-4 mr-2" />
+                                <DropdownMenuItem 
+                                  className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                  onClick={() => setShowDeleteDialog({
+                                    patientId: patient.id!,
+                                    patientName: `${patient.firstName} ${patient.lastName}`,
+                                    type: 'archive'
+                                  })}
+                                  disabled={deletingPatients.has(patient.id!)}
+                                >
+                                  {deletingPatients.has(patient.id!) ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Archive className="w-4 h-4 mr-2" />
+                                  )}
                                   Archive Patient
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  onClick={() => setShowDeleteDialog({
+                                    patientId: patient.id!,
+                                    patientName: `${patient.firstName} ${patient.lastName}`,
+                                    type: 'delete'
+                                  })}
+                                  disabled={deletingPatients.has(patient.id!)}
+                                >
+                                  {deletingPatients.has(patient.id!) ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                  )}
+                                  Delete Permanently
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1041,6 +1168,71 @@ function PatientsPageContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={!!showDeleteDialog} onOpenChange={() => setShowDeleteDialog(null)}>
+        <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white">
+              {showDeleteDialog?.type === 'archive' ? 'Archive Patient' : 'Delete Patient Permanently'}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              {showDeleteDialog?.type === 'archive' 
+                ? `Are you sure you want to archive ${showDeleteDialog?.patientName}? This will mark the patient as inactive but preserve their data.`
+                : `Are you sure you want to permanently delete ${showDeleteDialog?.patientName}? This action cannot be undone and will remove all patient data including vital signs.`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(null)}
+              disabled={showDeleteDialog ? deletingPatients.has(showDeleteDialog.patientId) : false}
+              className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={showDeleteDialog?.type === 'archive' ? 'default' : 'destructive'}
+              onClick={() => {
+                if (showDeleteDialog) {
+                  if (showDeleteDialog.type === 'archive') {
+                    handleArchivePatient(showDeleteDialog.patientId);
+                  } else {
+                    handleDeletePatient(showDeleteDialog.patientId);
+                  }
+                }
+              }}
+              disabled={showDeleteDialog ? deletingPatients.has(showDeleteDialog.patientId) : false}
+              className={showDeleteDialog?.type === 'archive' 
+                ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                : 'bg-red-600 hover:bg-red-700 text-white'
+              }
+            >
+              {showDeleteDialog && deletingPatients.has(showDeleteDialog.patientId) ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {showDeleteDialog.type === 'archive' ? 'Archiving...' : 'Deleting...'}
+                </>
+              ) : (
+                <>
+                  {showDeleteDialog?.type === 'archive' ? (
+                    <>
+                      <Archive className="w-4 h-4 mr-2" />
+                      Archive Patient
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Permanently
+                    </>
+                  )}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

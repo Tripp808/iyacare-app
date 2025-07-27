@@ -376,9 +376,51 @@ export class PatientService {
       };
     } catch (error: any) {
       console.error('Error deactivating patient:', error);
+      
+      // Handle specific case where document doesn't exist
+      if (error.code === 'not-found') {
+        return {
+          success: false,
+          error: 'Patient not found - may have already been deleted'
+        };
+      }
+      
       return {
         success: false,
         error: 'Failed to deactivate patient'
+      };
+    }
+  }
+
+  /**
+   * Hard delete a patient (permanently remove from database)
+   */
+  static async deletePatient(patientId: string): Promise<PatientResponse> {
+    try {
+      // Delete the patient document
+      await deleteDoc(doc(db, 'patients', patientId));
+
+      // Also delete related vital signs
+      const vitalsQuery = query(
+        collection(db, 'vitals'),
+        where('patientId', '==', patientId)
+      );
+      const vitalsSnapshot = await getDocs(vitalsQuery);
+      
+      // Delete all vital signs for this patient
+      const deletePromises = vitalsSnapshot.docs.map(vitalDoc => 
+        deleteDoc(doc(db, 'vitals', vitalDoc.id))
+      );
+      await Promise.all(deletePromises);
+
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('Error deleting patient:', error);
+      return {
+        success: false,
+        error: 'Failed to delete patient permanently'
       };
     }
   }

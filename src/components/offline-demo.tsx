@@ -24,9 +24,13 @@ export const OfflineDemo: React.FC = () => {
   const { offlineData, getOfflineDataCount } = useOffline();
   
   const [patientForm, setPatientForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     age: '',
     phone: '',
+    email: '',
+    gender: 'female' as 'male' | 'female' | 'other',
+    dateOfBirth: '',
   });
   
   const [vitalsForm, setVitalsForm] = useState({
@@ -42,17 +46,30 @@ export const OfflineDemo: React.FC = () => {
   });
 
   const handleSavePatient = () => {
-    if (!patientForm.name || !patientForm.age) return;
+    if (!patientForm.firstName || !patientForm.lastName || !patientForm.age) return;
     
     const success = savePatientOffline({
-      name: patientForm.name,
+      firstName: patientForm.firstName,
+      lastName: patientForm.lastName,
+      name: `${patientForm.firstName} ${patientForm.lastName}`, // For backward compatibility
       age: parseInt(patientForm.age),
       phone: patientForm.phone,
+      email: patientForm.email,
+      gender: patientForm.gender,
+      dateOfBirth: patientForm.dateOfBirth ? new Date(patientForm.dateOfBirth) : new Date(Date.now() - parseInt(patientForm.age) * 365 * 24 * 60 * 60 * 1000),
       createdAt: new Date().toISOString(),
     });
     
     if (success) {
-      setPatientForm({ name: '', age: '', phone: '' });
+      setPatientForm({ 
+        firstName: '', 
+        lastName: '', 
+        age: '', 
+        phone: '', 
+        email: '', 
+        gender: 'female' as 'male' | 'female' | 'other',
+        dateOfBirth: ''
+      });
     }
   };
 
@@ -128,24 +145,50 @@ export const OfflineDemo: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="patient-name">Name</Label>
-              <Input
-                id="patient-name"
-                value={patientForm.name}
-                onChange={(e) => setPatientForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Patient name"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="patient-first-name">First Name</Label>
+                <Input
+                  id="patient-first-name"
+                  value={patientForm.firstName}
+                  onChange={(e) => setPatientForm(prev => ({ ...prev, firstName: e.target.value }))}
+                  placeholder="First name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="patient-last-name">Last Name</Label>
+                <Input
+                  id="patient-last-name"
+                  value={patientForm.lastName}
+                  onChange={(e) => setPatientForm(prev => ({ ...prev, lastName: e.target.value }))}
+                  placeholder="Last name"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="patient-age">Age</Label>
-              <Input
-                id="patient-age"
-                type="number"
-                value={patientForm.age}
-                onChange={(e) => setPatientForm(prev => ({ ...prev, age: e.target.value }))}
-                placeholder="Age"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="patient-age">Age</Label>
+                <Input
+                  id="patient-age"
+                  type="number"
+                  value={patientForm.age}
+                  onChange={(e) => setPatientForm(prev => ({ ...prev, age: e.target.value }))}
+                  placeholder="Age"
+                />
+              </div>
+              <div>
+                <Label htmlFor="patient-gender">Gender</Label>
+                <select
+                  id="patient-gender"
+                  value={patientForm.gender}
+                  onChange={(e) => setPatientForm(prev => ({ ...prev, gender: e.target.value as 'male' | 'female' | 'other' }))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
             <div>
               <Label htmlFor="patient-phone">Phone</Label>
@@ -156,10 +199,29 @@ export const OfflineDemo: React.FC = () => {
                 placeholder="Phone number"
               />
             </div>
+            <div>
+              <Label htmlFor="patient-email">Email (Optional)</Label>
+              <Input
+                id="patient-email"
+                type="email"
+                value={patientForm.email}
+                onChange={(e) => setPatientForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Email address"
+              />
+            </div>
+            <div>
+              <Label htmlFor="patient-dob">Date of Birth (Optional)</Label>
+              <Input
+                id="patient-dob"
+                type="date"
+                value={patientForm.dateOfBirth}
+                onChange={(e) => setPatientForm(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+              />
+            </div>
             <Button 
               onClick={handleSavePatient}
               className="w-full"
-              disabled={!patientForm.name || !patientForm.age}
+              disabled={!patientForm.firstName || !patientForm.lastName || !patientForm.age}
             >
               <Save className="h-4 w-4 mr-2" />
               Save Patient
