@@ -4,6 +4,7 @@ interface TwilioConfig {
   accountSid: string;
   authToken: string;
   messagingServiceSid: string;
+  phoneNumber?: string;
 }
 
 interface SMSMessage {
@@ -154,8 +155,17 @@ class TwilioService {
     ];
   }
 
+  // Getter methods
+  getIsConfigured(): boolean {
+    return this.isConfigured;
+  }
+
+  getConfig(): TwilioConfig | null {
+    return this.config;
+  }
+
   async sendSMS(message: SMSMessage): Promise<SMSResponse> {
-    if (!this.isConfigured) {
+    if (!this.getIsConfigured()) {
       return {
         success: false,
         error: 'Twilio service not configured. Please check your credentials.'
@@ -423,14 +433,6 @@ class TwilioService {
     });
 
     return this.sendBulkSMS(messages);
-  }
-
-  getIsConfigured(): boolean {
-    return this.isConfigured && !!this.config;
-  }
-
-  getConfig(): TwilioConfig | null {
-    return this.config;
   }
 
   async initialize(config: TwilioConfig): Promise<{ success: boolean; error?: string }> {

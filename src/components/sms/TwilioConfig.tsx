@@ -32,7 +32,7 @@ const TwilioConfig: React.FC<TwilioConfigProps> = ({ onConfigUpdate }) => {
   }, []);
 
   const checkConfiguration = () => {
-    const configured = twilioService.isConfigured();
+    const configured = twilioService.getIsConfigured();
     setIsConfigured(configured);
     if (configured) {
       const currentConfig = twilioService.getConfig();
