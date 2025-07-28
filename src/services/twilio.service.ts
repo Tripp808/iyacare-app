@@ -439,28 +439,16 @@ class TwilioService {
 
   async initialize(config: TwilioConfig): Promise<{ success: boolean; error?: string }> {
     try {
+      // Validate required config fields
+      if (!config.accountSid || !config.authToken || !config.messagingServiceSid) {
+        return { success: false, error: 'Missing required Twilio configuration fields' };
+      }
+      
       this.config = config;
       this.isConfigured = true;
       
-      // Test the connection by sending a test API request
-      const testResponse = await fetch('/api/sms/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: '+250791848842', // Send test to patient number
-          message: 'Test message from IyàCare - Configuration successful!'
-        })
-      });
-      
-      if (testResponse.ok) {
-        console.log('Twilio service initialized and verified successfully');
-        return { success: true };
-      } else {
-        const error = await testResponse.json();
-        return { success: false, error: error.error || 'Failed to verify Twilio configuration' };
-      }
+      console.log('Twilio service initialized successfully');
+      return { success: true };
     } catch (error: any) {
       console.error('Failed to initialize Twilio service:', error);
       this.isConfigured = false;
