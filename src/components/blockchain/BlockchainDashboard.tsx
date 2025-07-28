@@ -167,7 +167,8 @@ const BlockchainDashboard: React.FC = () => {
       }
       
       // Log some sample data
-      allSnapshot.forEach((doc, index) => {
+      let index = 0;
+      allSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
         if (index < 3) { // Only log first 3 for debugging
           const data = doc.data();
           console.log(`🔍 Debug: Patient ${index + 1}:`, {
@@ -178,6 +179,7 @@ const BlockchainDashboard: React.FC = () => {
             hasFirstName: !!data.firstName
           });
         }
+        index++;
       });
       
       // Now try with isActive filter
