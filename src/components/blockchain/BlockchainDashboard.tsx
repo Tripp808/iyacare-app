@@ -8,6 +8,8 @@ import { AlertCircle, Shield, Users, Database, Activity, Wallet, ExternalLink } 
 import { toast } from 'sonner';
 import { PatientService, Patient } from '@/services/patient.service';
 import Web3BlockchainService from '@/services/web3-blockchain.service';
+import { collection, query, where, orderBy, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface BlockchainStats {
   totalPatients: number;
@@ -46,6 +48,9 @@ const BlockchainDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string>('');
+  const [decryptedPatients, setDecryptedPatients] = useState<any[]>([]);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const [isSyncingToLocal, setIsSyncingToLocal] = useState(false);
 
   const blockchainService = Web3BlockchainService.getInstance();
 
@@ -146,6 +151,164 @@ const BlockchainDashboard: React.FC = () => {
     }
   };
 
+  const getAllPatientsForSync = async () => {
+    try {
+      console.log('🔍 Debug: Starting getAllPatientsForSync...');
+      
+      // First, try to get ALL patients without any filtering to see if there are any
+      console.log('🔍 Debug: Getting all patients without filters...');
+      const allPatientsQuery = query(collection(db, 'patients'));
+      const allSnapshot = await getDocs(allPatientsQuery);
+      console.log(`🔍 Debug: Total patients in database: ${allSnapshot.size}`);
+      
+      if (allSnapshot.size === 0) {
+        console.log('❌ Debug: No patients found in database at all!');
+        return { success: true, patients: [] };
+      }
+      
+      // Log some sample data
+      allSnapshot.forEach((doc, index) => {
+        if (index < 3) { // Only log first 3 for debugging
+          const data = doc.data();
+          console.log(`🔍 Debug: Patient ${index + 1}:`, {
+            id: doc.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            isActive: data.isActive,
+            hasFirstName: !!data.firstName
+          });
+        }
+      });
+      
+      // Now try with isActive filter
+      console.log('🔍 Debug: Filtering for active patients...');
+      const activePatientsQuery = query(
+        collection(db, 'patients'),
+        where('isActive', '==', true)
+      );
+      
+      const activeSnapshot = await getDocs(activePatientsQuery);
+      console.log(`🔍 Debug: Active patients found: ${activeSnapshot.size}`);
+      
+      if (activeSnapshot.size === 0) {
+        console.log('❌ Debug: No active patients found! All patients might be inactive.');
+        // Let's get all patients regardless of isActive status
+        console.log('🔍 Debug: Getting all patients regardless of active status...');
+        const patients: any[] = [];
+        
+        allSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+          const data = doc.data();
+          patients.push({
+            id: doc.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            dateOfBirth: data.dateOfBirth?.toDate?.() || data.dateOfBirth,
+            age: data.age,
+            gender: data.gender,
+            phone: data.phone,
+            email: data.email,
+            address: data.address,
+            emergencyContact: data.emergencyContact,
+            medicalHistory: data.medicalInfo?.chronicConditions?.join(', ') || '',
+            currentMedications: data.medicalInfo?.medications?.join(', ') || '',
+            isPregnant: data.medicalInfo?.lastMenstrualPeriod ? true : false,
+            dueDate: data.medicalInfo?.lastMenstrualPeriod ? 
+              new Date(data.medicalInfo.lastMenstrualPeriod.toDate().getTime() + (40 * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : '',
+            assignedHealthcareProvider: data.assignedHealthcareProvider,
+            createdBy: data.createdBy,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            isActive: data.isActive,
+          });
+        });
+        
+        console.log(`🔍 Debug: Returning ${patients.length} patients (including inactive)`);
+        return { success: true, patients };
+      }
+      
+      // Try with firstName ordering
+      console.log('🔍 Debug: Adding firstName ordering...');
+      try {
+        const orderedQuery = query(
+          collection(db, 'patients'),
+          where('isActive', '==', true),
+          orderBy('firstName')
+        );
+        
+        const orderedSnapshot = await getDocs(orderedQuery);
+        console.log(`🔍 Debug: Ordered query returned: ${orderedSnapshot.size} patients`);
+        
+        const patients: any[] = [];
+        orderedSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+          const data = doc.data();
+          patients.push({
+            id: doc.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            dateOfBirth: data.dateOfBirth?.toDate?.() || data.dateOfBirth,
+            age: data.age,
+            gender: data.gender,
+            phone: data.phone,
+            email: data.email,
+            address: data.address,
+            emergencyContact: data.emergencyContact,
+            medicalHistory: data.medicalInfo?.chronicConditions?.join(', ') || '',
+            currentMedications: data.medicalInfo?.medications?.join(', ') || '',
+            isPregnant: data.medicalInfo?.lastMenstrualPeriod ? true : false,
+            dueDate: data.medicalInfo?.lastMenstrualPeriod ? 
+              new Date(data.medicalInfo.lastMenstrualPeriod.toDate().getTime() + (40 * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : '',
+            assignedHealthcareProvider: data.assignedHealthcareProvider,
+            createdBy: data.createdBy,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            isActive: data.isActive,
+          });
+        });
+        
+        console.log(`🔍 Debug: Successfully processed ${patients.length} patients`);
+        return { success: true, patients };
+        
+      } catch (orderError) {
+        console.log('⚠️ Debug: OrderBy failed, trying without ordering...', orderError);
+        
+        // Fallback: just get active patients without ordering
+        const patients: any[] = [];
+        activeSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+          const data = doc.data();
+          patients.push({
+            id: doc.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            dateOfBirth: data.dateOfBirth?.toDate?.() || data.dateOfBirth,
+            age: data.age,
+            gender: data.gender,
+            phone: data.phone,
+            email: data.email,
+            address: data.address,
+            emergencyContact: data.emergencyContact,
+            medicalHistory: data.medicalInfo?.chronicConditions?.join(', ') || '',
+            currentMedications: data.medicalInfo?.medications?.join(', ') || '',
+            isPregnant: data.medicalInfo?.lastMenstrualPeriod ? true : false,
+            dueDate: data.medicalInfo?.lastMenstrualPeriod ? 
+              new Date(data.medicalInfo.lastMenstrualPeriod.toDate().getTime() + (40 * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0] : '',
+            assignedHealthcareProvider: data.assignedHealthcareProvider,
+            createdBy: data.createdBy,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            isActive: data.isActive,
+          });
+        });
+        
+        console.log(`🔍 Debug: Fallback processed ${patients.length} patients`);
+        return { success: true, patients };
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Debug: Error in getAllPatientsForSync:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const syncAllPatients = async () => {
     setIsSyncing(true);
     try {
@@ -158,11 +321,11 @@ const BlockchainDashboard: React.FC = () => {
         return;
       }
 
-      // Get patients from Firebase
-      const patientsResponse = await PatientService.searchPatients('');
+      // Get all patients from Firebase
+      const patientsResponse = await getAllPatientsForSync();
       
       if (!patientsResponse.success || !patientsResponse.patients) {
-        toast.error('Failed to fetch patients from database');
+        toast.error(`Failed to fetch patients from database: ${patientsResponse.error || 'Unknown error'}`);
         return;
       }
 
@@ -170,7 +333,7 @@ const BlockchainDashboard: React.FC = () => {
       console.log(`📋 Found ${patients.length} patients to sync`);
 
       if (patients.length === 0) {
-        toast.info('No patients found to sync');
+        toast.info('No active patients found to sync. Please add some patients first.');
         return;
       }
 
@@ -218,6 +381,58 @@ const BlockchainDashboard: React.FC = () => {
       toast.error('Failed to sync patients to blockchain');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const syncPatientsToLocalStorage = async () => {
+    setIsSyncingToLocal(true);
+    try {
+      console.log('🔄 Syncing patient IDs to local storage...');
+      toast.info('Syncing patient IDs to local storage...');
+      
+      const result = await blockchainService.syncExistingPatientsToLocalStorage();
+      
+      if (result.success) {
+        toast.success(`✅ Synced ${result.synced} patient IDs to local storage`);
+        console.log(`📋 Successfully synced ${result.synced} patient IDs`);
+        
+        // Refresh blockchain data to show updated counts
+        await loadBlockchainData();
+      } else {
+        toast.error(`Failed to sync patient IDs: ${result.error}`);
+        console.error('❌ Sync to local storage failed:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Sync to local storage error:', error);
+      toast.error('Failed to sync patient IDs to local storage');
+    } finally {
+      setIsSyncingToLocal(false);
+    }
+  };
+
+  const decryptAllPatients = async () => {
+    setIsDecrypting(true);
+    try {
+      console.log('🔓 Decrypting patients from blockchain...');
+      toast.info('Decrypting patients from blockchain...');
+      
+      const result = await blockchainService.getAllDecryptedPatients();
+      
+      if (result.success && result.patients) {
+        setDecryptedPatients(result.patients);
+        toast.success(`✅ Successfully decrypted ${result.patients.length} patients`);
+        console.log(`🔓 Decrypted ${result.patients.length} patients:`, result.patients);
+      } else {
+        toast.error(`Failed to decrypt patients: ${result.error || 'Unknown error'}`);
+        console.error('❌ Decryption failed:', result.error);
+        setDecryptedPatients([]);
+      }
+    } catch (error) {
+      console.error('❌ Decryption error:', error);
+      toast.error('Failed to decrypt patients from blockchain');
+      setDecryptedPatients([]);
+    } finally {
+      setIsDecrypting(false);
     }
   };
 
@@ -374,6 +589,113 @@ const BlockchainDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Patient Data Decryption</CardTitle>
+            <CardDescription className="text-sm">
+              Sync patient IDs to local storage and decrypt blockchain data
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={syncPatientsToLocalStorage} 
+              disabled={isSyncingToLocal || isLoading}
+              className="w-full"
+              variant="outline"
+            >
+              <Database className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">
+                {isSyncingToLocal ? 'Syncing...' : 'Sync Patient IDs to Local Storage'}
+              </span>
+              <span className="sm:hidden">
+                {isSyncingToLocal ? 'Syncing...' : 'Sync to Local'}
+              </span>
+            </Button>
+            
+            <Button 
+              onClick={decryptAllPatients} 
+              disabled={isDecrypting || isLoading}
+              className="w-full"
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">
+                {isDecrypting ? 'Decrypting...' : 'Decrypt & View Patients'}
+              </span>
+              <span className="sm:hidden">
+                {isDecrypting ? 'Decrypting...' : 'Decrypt Patients'}
+              </span>
+            </Button>
+            
+            {decryptedPatients.length > 0 && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-medium text-green-800">
+                  ✅ {decryptedPatients.length} patients decrypted from blockchain
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Decrypted Patients Display */}
+      {decryptedPatients.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Decrypted Patient Data</CardTitle>
+            <CardDescription>
+              Patient data decrypted from blockchain with metadata
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {decryptedPatients.map((patient, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 className="font-semibold text-lg">
+                      {patient.firstName} {patient.lastName}
+                    </h3>
+                    <Badge variant="outline" className="w-fit">
+                      On-Chain Data
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>Email:</strong> {patient.email}</p>
+                      <p><strong>Phone:</strong> {patient.phone}</p>
+                      <p><strong>Date of Birth:</strong> {patient.dateOfBirth}</p>
+                      {patient.isPregnant && (
+                        <p><strong>Due Date:</strong> {patient.dueDate}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <p><strong>Medical History:</strong> {patient.medicalHistory || 'None'}</p>
+                      <p><strong>Current Medications:</strong> {patient.currentMedications || 'None'}</p>
+                      <p><strong>Emergency Contact:</strong> {patient.emergencyContact}</p>
+                    </div>
+                  </div>
+                  
+                  {patient.blockchain && (
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <h4 className="font-medium text-blue-800 mb-2">Blockchain Metadata</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-blue-700">
+                        <p><strong>Data Hash:</strong> {patient.blockchain.dataHash?.substring(0, 16)}...</p>
+                        <p><strong>Timestamp:</strong> {new Date(patient.blockchain.timestamp).toLocaleString()}</p>
+                        <p><strong>Version:</strong> {patient.blockchain.version}</p>
+                        <p><strong>Status:</strong> {patient.blockchain.onChain ? 'On-Chain' : 'Off-Chain'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Security Features</CardTitle>
