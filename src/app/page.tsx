@@ -235,19 +235,30 @@ export default function HomePage() {
                   <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path>
                 </svg>
                 <p className="text-xl md:text-2xl font-medium mb-6 text-foreground">
-                  IyàCare has revolutionized maternal healthcare in our region. The AI risk prediction tool has helped us identify high-risk pregnancies early, reducing maternal complications by over 30%. The real-time monitoring features are life-saving in our rural communities.
+                  "As a clinical health worker and nursing student, I can really see how IyàCare could make a big difference. It could help us catch issues early, support mothers better, and close some of the gaps we face in maternal care. I truly believe this platform has the potential to change how we care for pregnant women, especially in communities that need it most."
                 </p>
                 <div>
-                  <p className="font-semibold">Dr. Sarah Johnson</p>
-                  <p className="text-sm text-muted-foreground">Maternal Health Director, Central Hospital</p>
+                  <p className="font-semibold">Marcelina Elebesunu</p>
+                  <p className="text-sm text-muted-foreground">Clinical Health Worker & Nursing Student, Mount Kenya University</p>
                 </div>
               </div>
-              <div className="flex-shrink-0 w-full md:w-1/3">
+              <div className="flex-shrink-0 w-full md:w-2/5">
                 <div className="aspect-video bg-white rounded-lg overflow-hidden">
-                  <div className="w-full h-full bg-[#e6f3f5] dark:bg-[#2D7D89]/30 flex items-center justify-center">
-                    <svg className="h-12 w-12 text-[#2D7D89] dark:text-[#4AA0AD]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
+                  <div className="relative w-full h-full">
+                    <Image
+                      src="/images/marce-yacare.jpg"
+                      alt="Marcelina Elebesunu - Clinical Health Worker"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      className="object-cover object-center rounded-lg"
+                      onError={() => handleImageError("/images/marce-yacare.jpg")}
+                      style={{display: imageError["/images/marce-yacare.jpg"] ? "none" : "block"}}
+                    />
+                    {imageError["/images/marce-yacare.jpg"] && (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-lg">
+                        <p className="text-gray-500">Image not available</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

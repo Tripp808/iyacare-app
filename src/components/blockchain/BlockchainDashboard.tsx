@@ -87,20 +87,45 @@ const BlockchainDashboard: React.FC = () => {
   };
 
   const connectWallet = async () => {
+    // Prevent multiple simultaneous connection attempts
+    if (isLoading) {
+      toast.info('Wallet connection already in progress, please wait...');
+      return;
+    }
+    
     setIsLoading(true);
     try {
+      console.log('🦊 Attempting to connect wallet...');
       const result = await blockchainService.connectWallet();
       
       if (result.success && result.address) {
         setWalletAddress(result.address);
         toast.success(`Wallet connected: ${result.address.substring(0, 8)}...`);
+        console.log('✅ Wallet connected successfully:', result.address);
         await loadBlockchainData(); // Refresh data after connecting wallet
       } else {
-        toast.error(result.error || 'Failed to connect wallet');
+        console.error('❌ Wallet connection failed:', result.error);
+        
+        // Handle specific MetaMask errors
+        if (result.error?.includes('already pending')) {
+          toast.error('MetaMask request already pending. Please check MetaMask popup or refresh the page.');
+        } else if (result.error?.includes('User rejected')) {
+          toast.error('Wallet connection cancelled by user.');
+        } else {
+          toast.error(result.error || 'Failed to connect wallet');
+        }
       }
-    } catch (error) {
-      console.error('Wallet connection error:', error);
-      toast.error('Failed to connect wallet');
+    } catch (error: any) {
+      console.error('❌ Wallet connection error:', error);
+      
+      // Handle specific error types
+      if (error.message?.includes('already pending')) {
+        toast.error('MetaMask request already pending. Please wait or refresh the page.');
+      } else if (error.message?.includes('User rejected')) {
+        toast.error('Wallet connection was cancelled.');
+      } else {
+        toast.error('Failed to connect wallet. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
