@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
-import { Patient } from './patient.service';
+import { Patient } from '@/services/patient.service';
+import CryptoJS from 'crypto-js';
 
 // Smart contract ABI (Application Binary Interface)
 const PATIENT_DATA_STORAGE_ABI = [
@@ -11,6 +12,7 @@ const PATIENT_DATA_STORAGE_ABI = [
   "function getAllPatientIds() external view returns (string[])",
   "function authorizeProvider(address provider) external",
   "function isAuthorizedProvider(address provider) external view returns (bool)",
+  "function hasRole(bytes32 role, address account) external view returns (bool)",
   "event PatientDataStored(string indexed patientId, address indexed provider, uint256 timestamp)",
   "event PatientDataAccessed(string indexed patientId, address indexed accessor, string accessType)"
 ];
@@ -42,7 +44,7 @@ interface Web3BlockchainStats {
   };
 }
 
-export class Web3BlockchainService {
+class Web3BlockchainService {
   private static instance: Web3BlockchainService;
   private provider: ethers.JsonRpcProvider | null = null;
   private contract: ethers.Contract | null = null;
@@ -140,8 +142,12 @@ export class Web3BlockchainService {
                   }]
                 });
                 console.log('✅ Sepolia testnet added to MetaMask');
+              } else {
+                console.error('❌ Failed to switch network:', switchError);
+                console.log('📝 Network switch failed - continuing with current network');
+                console.log('⚠️ WARNING: You are not on Sepolia testnet. Transactions may fail or cost real money!');
+                // Don't throw error - let user continue but warn them
               }
-              // Network switching handled gracefully - continue with initialization
             }
           }
           
@@ -251,16 +257,6 @@ export class Web3BlockchainService {
       // Wait for confirmation
       const receipt = await tx.wait();
       console.log('✅ Transaction confirmed in block:', receipt.blockNumber);
-
-      // Save patient ID to local storage for tracking
-      const storedIds = this.getStoredPatientIds();
-      if (!storedIds.includes(patient.id!)) {
-        storedIds.push(patient.id!);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('blockchain_patient_ids', JSON.stringify(storedIds));
-          console.log(`💾 Saved patient ID ${patient.id} to local storage. Total stored: ${storedIds.length}`);
-        }
-      }
 
       return { success: true, txHash: tx.hash };
 
@@ -387,47 +383,12 @@ export class Web3BlockchainService {
    * Get stored patient IDs from local storage
    */
   getStoredPatientIds(): string[] {
-    if (typeof window === 'undefined') return [];
-    
     try {
       const stored = localStorage.getItem('blockchain_patient_ids');
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.error('Failed to get stored patient IDs:', error);
       return [];
-    }
-  }
-
-  /**
-   * Sync existing blockchain patient IDs to local storage
-   */
-  async syncExistingPatientsToLocalStorage(): Promise<{ success: boolean; synced: number; error?: string }> {
-    try {
-      if (!this.isInitialized || !this.contract) {
-        const initResult = await this.initialize();
-        if (!initResult.success) {
-          return { success: false, synced: 0, error: initResult.error };
-        }
-      }
-
-      console.log('🔄 Syncing existing blockchain patients to local storage...');
-      
-      // Get all patient IDs from blockchain
-      const allPatientIds = await (this.contract as any).getAllPatientIds();
-      console.log(`📋 Found ${allPatientIds.length} patients on blockchain:`, allPatientIds);
-      
-      // Save to local storage
-      if (typeof window !== 'undefined' && allPatientIds.length > 0) {
-        localStorage.setItem('blockchain_patient_ids', JSON.stringify(allPatientIds));
-        console.log(`💾 Synced ${allPatientIds.length} patient IDs to local storage`);
-        return { success: true, synced: allPatientIds.length };
-      }
-      
-      return { success: true, synced: 0 };
-      
-    } catch (error: any) {
-      console.error('❌ Failed to sync existing patients to local storage:', error);
-      return { success: false, synced: 0, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
@@ -516,6 +477,92 @@ export class Web3BlockchainService {
   }
 
   /**
+   * Get and decrypt patient data from blockchain with decryption key
+   */
+  async getDecryptedPatientData(patientId: string, decryptionKey: string): Promise<{ success: boolean; patient?: any; error?: string }> {
+    try {
+      if (!this.isInitialized || !this.contract) {
+        const initResult = await this.initialize();
+        if (!initResult.success) {
+          return { success: false, error: initResult.error };
+        }
+      }
+
+      console.log('🔍 Retrieving encrypted patient data from blockchain...');
+      
+      // Get encrypted data from blockchain
+      const [encryptedData, dataHash, timestamp, updatedBy] = await (this.contract as any).getPatientData(patientId);
+      
+      if (!encryptedData) {
+        return { success: false, error: 'Patient data not found on blockchain' };
+      }
+
+      console.log('🔐 Attempting to decrypt patient data...');
+      
+      // Decrypt the data using the provided key
+      try {
+        const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, decryptionKey);
+        const decryptedString = decryptedBytes.toString(CryptoJS.enc.Utf8);
+        
+        if (!decryptedString) {
+          return { success: false, error: 'Invalid decryption key. Unable to decrypt patient data.' };
+        }
+        
+        const patientData = JSON.parse(decryptedString);
+        
+        // Add blockchain metadata
+        const enrichedData = {
+          ...patientData,
+          blockchainMetadata: {
+            dataHash,
+            timestamp: Number(timestamp),
+            updatedBy,
+            retrievedAt: new Date().toISOString()
+          }
+        };
+        
+        console.log('✅ Patient data decrypted successfully');
+        return { success: true, patient: enrichedData };
+        
+      } catch (decryptError) {
+        console.error('❌ Decryption failed:', decryptError);
+        return { success: false, error: 'Invalid decryption key or corrupted data' };
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Failed to retrieve patient data:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
+   * Get list of all patient IDs stored on blockchain (admin only)
+   */
+  async getBlockchainPatientIds(): Promise<{ success: boolean; patientIds?: string[]; error?: string }> {
+    try {
+      if (!this.isInitialized || !this.contract) {
+        const initResult = await this.initialize();
+        if (!initResult.success) {
+          return { success: false, error: initResult.error };
+        }
+      }
+
+      // Check if user is admin
+      const adminCheck = await this.isAdmin();
+      if (!adminCheck.success || !adminCheck.isAdmin) {
+        return { success: false, error: 'Admin privileges required to view all patient IDs' };
+      }
+
+      const patientIds = await (this.contract as any).getAllPatientIds();
+      return { success: true, patientIds };
+      
+    } catch (error: any) {
+      console.error('❌ Failed to get patient IDs:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
    * Get access logs for a patient
    */
   async getAccessLogs(patientId: string): Promise<Web3AccessLog[]> {
@@ -527,30 +574,13 @@ export class Web3BlockchainService {
         }
       }
 
-      // Try to get access logs with error handling
-      try {
-        const logs = await (this.contract as any).getAccessLogs(patientId, 0, 10);
-        
-        return logs.map((log: any) => ({
-          accessor: log.accessor,
-          timestamp: Number(log.timestamp),
-          accessType: log.accessType,
-          authorized: log.authorized
-        }));
-      } catch (contractError: any) {
-        // If getAccessLogs function doesn't exist or fails, return mock data for now
-        console.warn('getAccessLogs not available in contract, using fallback:', contractError.message);
-        
-        // Return mock access log data
-        return [
-          {
-            accessor: await this.signer?.getAddress() || '0x0000000000000000000000000000000000000000',
-            timestamp: Math.floor(Date.now() / 1000),
-            accessType: 'Patient Data Access',
-            authorized: true
-          }
-        ];
-      }
+      const logs = await (this.contract as any).getAccessLogs(patientId, 0, 100);
+      return logs.map((log: any) => ({
+        accessor: log.accessor,
+        timestamp: Number(log.timestamp),
+        accessType: log.accessType,
+        authorized: log.authorized
+      }));
     } catch (error) {
       console.error('Failed to get access logs:', error);
       return [];
@@ -632,10 +662,10 @@ export class Web3BlockchainService {
    */
   private async encryptPatientData(patient: Patient): Promise<string> {
     try {
-      // In a real implementation, you'd use proper encryption
-      // For now, we'll use base64 encoding as a placeholder
       const patientJson = JSON.stringify(patient);
-      return Buffer.from(patientJson).toString('base64');
+      const encryptionKey = this.getEncryptionKey();
+      const encrypted = CryptoJS.AES.encrypt(patientJson, encryptionKey).toString();
+      return encrypted;
     } catch (error) {
       throw new Error('Failed to encrypt patient data');
     }
@@ -646,109 +676,27 @@ export class Web3BlockchainService {
    */
   private async decryptPatientData(encryptedData: string): Promise<Patient> {
     try {
-      // Decrypt the base64 encoded data
-      const patientJson = Buffer.from(encryptedData, 'base64').toString('utf8');
-      return JSON.parse(patientJson);
+      const encryptionKey = this.getEncryptionKey();
+      const decryptedBytes = CryptoJS.AES.decrypt(encryptedData, encryptionKey);
+      const decryptedString = decryptedBytes.toString(CryptoJS.enc.Utf8);
+      
+      if (!decryptedString) {
+        throw new Error('Invalid encryption key or corrupted data');
+      }
+      
+      return JSON.parse(decryptedString);
     } catch (error) {
       throw new Error('Failed to decrypt patient data');
     }
   }
 
   /**
-   * Get all decrypted patients from blockchain
+   * Get encryption key for patient data
    */
-  async getAllDecryptedPatients(): Promise<{ success: boolean; patients?: any[]; error?: string }> {
-    try {
-      console.log('🔍 Starting getAllDecryptedPatients...');
-      
-      if (!this.isInitialized || !this.contract) {
-        console.log('⚠️ Service not initialized, attempting to initialize...');
-        const initResult = await this.initialize();
-        if (!initResult.success) {
-          return { success: false, error: initResult.error };
-        }
-      }
-
-      // Get stored patient IDs from local storage
-      const storedIds = this.getStoredPatientIds();
-      console.log(`📋 Found ${storedIds.length} patient IDs in local storage:`, storedIds);
-      
-      if (storedIds.length === 0) {
-        console.log('⚠️ No patient IDs found in local storage');
-        return { success: true, patients: [] };
-      }
-
-      const decryptedPatients = [];
-      
-      for (const patientId of storedIds) {
-        try {
-          console.log(`🔓 Decrypting patient: ${patientId}`);
-          const result = await this.getDecryptedPatient(patientId);
-          if (result.success && result.patient) {
-            decryptedPatients.push(result.patient);
-            console.log(`✅ Successfully decrypted patient: ${patientId}`);
-          } else {
-            console.log(`❌ Failed to decrypt patient ${patientId}:`, result.error);
-          }
-        } catch (error) {
-          console.error(`❌ Error decrypting patient ${patientId}:`, error);
-        }
-      }
-      
-      console.log(`🎉 Successfully decrypted ${decryptedPatients.length} patients`);
-      return { success: true, patients: decryptedPatients };
-      
-    } catch (error: any) {
-      console.error('❌ Failed to get all decrypted patients:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-    }
+  private getEncryptionKey(): string {
+    // In production, this should be securely managed
+    return process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'iyacare-default-encryption-key-2024';
   }
-
-  /**
-   * Get a single decrypted patient from blockchain
-   */
-  async getDecryptedPatient(patientId: string): Promise<{ success: boolean; patient?: Patient; error?: string }> {
-    try {
-      console.log(`🔍 Fetching patient ${patientId} from blockchain...`);
-      
-      if (!this.isInitialized || !this.contract) {
-        const initResult = await this.initialize();
-        if (!initResult.success) {
-          return { success: false, error: initResult.error };
-        }
-      }
-
-      console.log(`📡 Fetching data from blockchain for patient: ${patientId}`);
-      const [encryptedData, dataHash, timestamp, updatedBy] = await (this.contract as any).getPatientData(patientId);
-      
-      if (!encryptedData) {
-        return { success: false, error: 'Patient not found on blockchain' };
-      }
-
-      // Decrypt the patient data
-      const decryptedPatient = await this.decryptPatientData(encryptedData);
-      
-      // Add blockchain metadata
-      const patientWithMetadata = {
-        ...decryptedPatient,
-        blockchainInfo: {
-          dataHash,
-          timestamp: Number(timestamp),
-          updatedBy,
-          storedAt: new Date(Number(timestamp) * 1000).toISOString()
-        }
-      };
-
-      console.log(`✅ Successfully decrypted: ${decryptedPatient.firstName} ${decryptedPatient.lastName}`);
-      return { success: true, patient: patientWithMetadata };
-      
-    } catch (error: any) {
-      console.error(`❌ Failed to decrypt patient ${patientId}:`, error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-    }
-  }
-
-
 
   /**
    * Check if the service is properly configured
@@ -777,4 +725,5 @@ declare global {
   }
 }
 
-export default Web3BlockchainService; 
+export default Web3BlockchainService;
+export { Web3BlockchainService }; 
