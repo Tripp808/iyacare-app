@@ -25,9 +25,9 @@ NEXT_PUBLIC_NETWORK_ID=11155111
 PRIVATE_KEY=your_admin_wallet_private_key
 
 # Twilio Configuration (REQUIRED)
-TWILIO_ACCOUNT_SID=AC7492d8058f2979e81d5cecf199380951
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
 TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_MESSAGING_SERVICE_SID=MG06c466898dc98f6321aa1f2382f19e20
+TWILIO_MESSAGING_SERVICE_SID=your_twilio_messaging_service_sid
 
 # Firebase Configuration (if not already set)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
