@@ -415,7 +415,7 @@ class AutomatedMessagingService {
 
   // Check Twilio service status
   isServiceAvailable(): boolean {
-    return twilioService.isConfigured();
+    return twilioService.getIsConfigured();
   }
 }
 
