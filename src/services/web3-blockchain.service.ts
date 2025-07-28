@@ -655,99 +655,51 @@ export class Web3BlockchainService {
   }
 
   /**
-   * Get all patients from blockchain and decrypt them
+   * Get all decrypted patients from blockchain
    */
-  async getAllDecryptedPatients(): Promise<{ success: boolean; patients?: Patient[]; error?: string }> {
+  async getAllDecryptedPatients(): Promise<{ success: boolean; patients?: any[]; error?: string }> {
     try {
+      console.log('🔍 Starting getAllDecryptedPatients...');
+      
       if (!this.isInitialized || !this.contract) {
+        console.log('⚠️ Service not initialized, attempting to initialize...');
         const initResult = await this.initialize();
         if (!initResult.success) {
           return { success: false, error: initResult.error };
         }
       }
 
-      console.log('🔍 Fetching all patients from blockchain...');
-      console.log('🔍 Contract address:', this.config?.contractAddress);
-      console.log('🔍 Contract initialized:', !!this.contract);
-      
-      // First, try to get total patients from contract
-      let totalPatients = 0;
-      try {
-        totalPatients = await (this.contract as any).getTotalPatients();
-        console.log('📊 Total patients on blockchain:', Number(totalPatients));
-      } catch (error) {
-        console.log('⚠️ Could not get total patients from contract:', error);
-      }
-      
       // Get stored patient IDs from local storage
-      const patientIds = this.getStoredPatientIds();
-      console.log('📋 Patient IDs in local storage:', patientIds);
+      const storedIds = this.getStoredPatientIds();
+      console.log(`📋 Found ${storedIds.length} patient IDs in local storage:`, storedIds);
       
-      if (patientIds.length === 0) {
-        console.log('⚠️ No patient IDs found in local storage. Patients may not have been synced yet.');
-        return { success: true, patients: [], error: 'No patients found in local storage. Please sync patients first.' };
+      if (storedIds.length === 0) {
+        console.log('⚠️ No patient IDs found in local storage');
+        return { success: true, patients: [] };
       }
 
-      const decryptedPatients: Patient[] = [];
+      const decryptedPatients = [];
       
-      for (const patientId of patientIds) {
+      for (const patientId of storedIds) {
         try {
-          console.log(`🔓 Attempting to decrypt patient: ${patientId}`);
-          
-          // Get encrypted data from blockchain
-          console.log(`🔍 Calling getPatientData for: ${patientId}`);
-          const result = await (this.contract as any).getPatientData(patientId);
-          console.log(`📊 Raw blockchain result for ${patientId}:`, result);
-          
-          const [encryptedData, dataHash, timestamp, updatedBy] = result;
-          
-          console.log(`🔍 Patient ${patientId} data:`, {
-            hasEncryptedData: !!encryptedData,
-            encryptedDataLength: encryptedData ? encryptedData.length : 0,
-            dataHash: dataHash,
-            timestamp: Number(timestamp),
-            updatedBy: updatedBy
-          });
-          
-          if (encryptedData && encryptedData.length > 0) {
-            console.log(`🔓 Decrypting data for patient: ${patientId}`);
-            
-            // Decrypt the patient data
-            const decryptedPatient = await this.decryptPatientData(encryptedData);
-            console.log(`🎉 Decrypted patient data:`, decryptedPatient);
-            
-            // Add blockchain metadata
-            const patientWithMetadata = {
-              ...decryptedPatient,
-              blockchainInfo: {
-                patientId,
-                dataHash,
-                timestamp: Number(timestamp),
-                updatedBy,
-                storedAt: new Date(Number(timestamp) * 1000).toISOString()
-              }
-            };
-            
-            decryptedPatients.push(patientWithMetadata);
-            console.log(`✅ Successfully decrypted: ${decryptedPatient.firstName} ${decryptedPatient.lastName}`);
+          console.log(`🔓 Decrypting patient: ${patientId}`);
+          const result = await this.getDecryptedPatient(patientId);
+          if (result.success && result.patient) {
+            decryptedPatients.push(result.patient);
+            console.log(`✅ Successfully decrypted patient: ${patientId}`);
           } else {
-            console.log(`⚠️ No encrypted data found for patient: ${patientId}`);
+            console.log(`❌ Failed to decrypt patient ${patientId}:`, result.error);
           }
         } catch (error) {
-          console.error(`❌ Failed to decrypt patient ${patientId}:`, error);
-          console.error(`❌ Error details:`, {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined
-          });
-          // Continue with other patients even if one fails
+          console.error(`❌ Error decrypting patient ${patientId}:`, error);
         }
       }
-
-      console.log(`🎉 Successfully decrypted ${decryptedPatients.length} patients from blockchain`);
+      
+      console.log(`🎉 Successfully decrypted ${decryptedPatients.length} patients`);
       return { success: true, patients: decryptedPatients };
       
     } catch (error: any) {
-      console.error('❌ Failed to get decrypted patients:', error);
+      console.error('❌ Failed to get all decrypted patients:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -757,6 +709,8 @@ export class Web3BlockchainService {
    */
   async getDecryptedPatient(patientId: string): Promise<{ success: boolean; patient?: Patient; error?: string }> {
     try {
+      console.log(`🔍 Fetching patient ${patientId} from blockchain...`);
+      
       if (!this.isInitialized || !this.contract) {
         const initResult = await this.initialize();
         if (!initResult.success) {
@@ -764,9 +718,7 @@ export class Web3BlockchainService {
         }
       }
 
-      console.log(`🔍 Fetching patient ${patientId} from blockchain...`);
-      
-      // Get encrypted data from blockchain
+      console.log(`📡 Fetching data from blockchain for patient: ${patientId}`);
       const [encryptedData, dataHash, timestamp, updatedBy] = await (this.contract as any).getPatientData(patientId);
       
       if (!encryptedData) {
