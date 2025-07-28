@@ -80,6 +80,7 @@ const TwilioConfig: React.FC<TwilioConfigProps> = ({ onConfigUpdate }) => {
       const result = await twilioService.initialize({
         accountSid: config.accountSid,
         authToken: config.authToken,
+        messagingServiceSid: 'MG06c466898dc98f6321aa1f2382f19e20',
         phoneNumber: config.phoneNumber
       });
 

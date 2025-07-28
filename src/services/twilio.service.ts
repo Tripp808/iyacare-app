@@ -32,7 +32,7 @@ interface MessageTemplate {
   variables?: string[];
 }
 
-interface LivePatientData {
+export interface LivePatientData {
   id: string;
   name: string;
   phone: string;
@@ -41,9 +41,11 @@ interface LivePatientData {
     heartRate: number;
     bloodPressure: string;
     temperature: number;
-    oxygenSaturation: number;
+    oxygenSaturation?: number;
   };
   lastUpdate: Date;
+  isConnected: boolean;
+  connectionStatus?: string;
 }
 
 class TwilioService {

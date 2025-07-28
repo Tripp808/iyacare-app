@@ -25,25 +25,10 @@ import {
   WifiOff
 } from 'lucide-react';
 import { twilioService } from '@/services/twilio.service';
+import type { LivePatientData } from '@/services/twilio.service';
 import { RealtimeIoTService, IoTReading, AIPrediction } from '@/services/realtime-iot.service';
 import { getPatients, Patient } from '@/lib/firebase/patients';
 import { toast } from 'sonner';
-
-interface LivePatientData {
-  id: string;
-  name: string;
-  phone: string;
-  riskLevel: 'low' | 'medium' | 'high';
-  vitals: {
-    heartRate: number;
-    bloodPressure: string;
-    temperature: number;
-    oxygenSaturation?: number;
-  };
-  lastUpdate: Date;
-  isConnected: boolean;
-  connectionStatus?: string;
-}
 
 interface MessageTemplate {
   id: string;
@@ -114,10 +99,11 @@ const LivePatientMonitoring: React.FC = () => {
               vitals: {
                 heartRate: reading.HeartRate,
                 bloodPressure: `${Math.round(reading.SystolicBP)}/${Math.round(reading.DiastolicBP)}`,
-                temperature: parseFloat(tempCelsius.toFixed(1)),
-                oxygenSaturation: reading.OxygenSaturation || 98
+                temperature: parseFloat(tempCelsius.toFixed(1))
               },
-              lastUpdate: new Date()
+              lastUpdate: new Date(),
+              isConnected: true,
+              connectionStatus: connectionStatus || undefined
             };
             
             setLivePatients([patientData]);
@@ -136,7 +122,7 @@ const LivePatientMonitoring: React.FC = () => {
           // Update patient as disconnected
           if (realtimePatient) {
             const disconnectedPatient: LivePatientData = {
-              id: realtimePatient.id,
+              id: realtimePatient.id || 'realtime-patient-disconnected',
               name: `${realtimePatient.firstName} ${realtimePatient.lastName}`,
               phone: '+250791848842',
               riskLevel: 'low',
