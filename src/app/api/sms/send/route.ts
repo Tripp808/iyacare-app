@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 
-// Twilio configuration from environment variables
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-
-// Initialize Twilio client
-const client = twilio(accountSid, authToken);
-
 export async function POST(request: NextRequest) {
   try {
+    // Get Twilio configuration from environment variables
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+
+    console.log('Twilio Environment Check:', {
+      accountSid: accountSid ? 'Set' : 'Missing',
+      authToken: authToken ? 'Set' : 'Missing',
+      messagingServiceSid: messagingServiceSid ? 'Set' : 'Missing'
+    });
+
     const body = await request.json();
     const { to, message, templateId, language, variables } = body;
 
@@ -22,11 +25,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (!accountSid || !authToken || !messagingServiceSid) {
+      console.error('Missing Twilio credentials:', {
+        accountSid: !!accountSid,
+        authToken: !!authToken,
+        messagingServiceSid: !!messagingServiceSid
+      });
       return NextResponse.json(
-        { error: 'Twilio credentials not configured' },
+        { error: 'Twilio credentials not configured in environment variables' },
         { status: 500 }
       );
     }
+
+    // Initialize Twilio client with credentials
+    const client = twilio(accountSid, authToken);
 
     // Validate phone number format
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
@@ -37,11 +48,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Sending SMS:', {
+      to,
+      messagingServiceSid,
+      messageLength: message.length
+    });
+
     // Send SMS using Twilio Messaging Service
     const response = await client.messages.create({
       body: message,
       messagingServiceSid: messagingServiceSid,
       to: to
+    });
+
+    console.log('SMS sent successfully:', {
+      messageId: response.sid,
+      status: response.status
     });
 
     return NextResponse.json({
