@@ -13,8 +13,8 @@ const char* ssid = "home_eric";
 const char* password = "homeeric231";
 
 // Replace with your Firebase credentials
-#define API_KEY "AIzaSyCvlfGLVtfvAWIONgalq1Nv7rNbAvP_TDE"
-#define DATABASE_URL "https://iyacare-default-rtdb.firebaseio.com/"
+#define API_KEY "my_api_key"
+#define DATABASE_URL "the_url"
 
 // Valid ranges for health parameters
 #define MIN_BODY_TEMP_F 98.0
